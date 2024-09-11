@@ -5,6 +5,6 @@ This is a group project for the CPSC 471 Fall 2024 course at the University of C
 TODO
 
 # Group Members
-Dane Beliveau
-Daniel Bogorad
-Isaac Shiells Thomas
+- Dane Beliveau
+- Daniel Bogorad
+- Isaac Shiells Thomas
