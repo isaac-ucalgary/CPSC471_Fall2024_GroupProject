@@ -3,12 +3,15 @@ services:
     image: mariadb:11.5.2-ubi
     container_name: mariadb-CPSC471_Fall2024_GroupProject
     environment:
-      MYSQL_ROOT_PASSWORD: "SuperSecretPassword123"
-      MYSQL_DATABASE: "Project_Database"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: Project_Database
+    volumes:
+      - "./data/mysql:/var/lib/mysql"
     ports:
       - "49152:3306"
     networks:
       - backend
+    restart: unless-stopped
 
 networks:
   backend:
