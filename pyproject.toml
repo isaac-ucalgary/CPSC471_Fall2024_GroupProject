@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "Home IMS"
+version = "0.1.0"
+description = ""
+authors = [
+	"Author Name <author@example.com>"
+	"Dane"
+	"Daniel"
+	"Isaac Shiells Thomas <isaac.shiellsthomas@ucalgary.ca"
+]
+readme = "README.md"
+# license = "BSD"
+packages = [
+  { include = "home_ims" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pyqt6 = "^6.7.1"
+
+[build-system]
+requires = []
