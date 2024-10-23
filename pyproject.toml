@@ -3,9 +3,8 @@ name = "Home IMS"
 version = "0.1.0"
 description = ""
 authors = [
-	"Author Name <author@example.com>"
-	"Dane"
-	"Daniel"
+	"Dane Beliveau <dane.beliveau@ucalgary.ca>"
+	"Daniel Bogorad <daniel.bogorad@ucalgary.ca>"
 	"Isaac Shiells Thomas <isaac.shiellsthomas@ucalgary.ca"
 ]
 readme = "README.md"
