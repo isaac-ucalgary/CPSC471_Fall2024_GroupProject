@@ -59,7 +59,7 @@ sql_tables = [
     CREATE TABLE Recipe ( 
         recipe_name VARCHAR(255) NOT NULL, 
         food_name VARCHAR(255) NOT NULL, 
-        PRIMARY KEY (name), 
+        PRIMARY KEY (recipe_name, food_name), 
         FOREIGN KEY (recipe_name) REFERENCES Template(name), 
         FOREIGN KEY (food_name) REFERENCES Food(name) 
     );
@@ -78,6 +78,22 @@ sql_tables = [
     CREATE TABLE User ( 
         name VARCHAR(255) NOT NULL, 
         PRIMARY KEY (name) 
+    ); 
+    ''',
+
+    '''
+    CREATE TABLE Dependent ( 
+        name VARCHAR(255) NOT NULL, 
+        PRIMARY KEY (name),
+        FOREIGN KEY (name) REFERENCES User (name)
+    ); 
+    ''',
+
+    '''
+    CREATE TABLE Parent ( 
+        name VARCHAR(255) NOT NULL, 
+        PRIMARY KEY (name),
+        FOREIGN KEY (name) REFERENCES User (name)
     ); 
     ''',
 
@@ -117,7 +133,102 @@ sql_tables = [
         capacity FLOAT NOT NULL, 
         PRIMARY KEY (storage_name), 
         FOREIGN KEY (location_name) REFERENCES Location(name), 
-        CHECK (capacity >= 0) 
+        CHECK (capacity >= 0 AND capacity <= 2) 
     ); 
+    ''',
+
+    '''
+    CREATE TABLE Dry (
+        name VARCHAR(255) NOT NULL,
+        PRIMARY KEY (name),
+        FOREIGN KEY (name) REFERENCES Storage(storage_name)
+    );
+    ''',
+
+    '''
+    CREATE TABLE Appliance (
+        name VARCHAR(255) NOT NULL,
+        PRIMARY KEY (name),
+        FOREIGN KEY (name) REFERENCES Storage(storage_name)
+    );
+    ''',
+
+    '''
+    CREATE TABLE Fridge (
+        name VARCHAR(255) NOT NULL,
+        PRIMARY KEY (name),
+        FOREIGN KEY (name) REFERENCES Appliance (name)
+    );
+    ''',
+
+    '''
+    CREATE TABLE Freezer (
+        name VARCHAR(255) NOT NULL,
+        PRIMARY KEY (name),
+        FOREIGN KEY (name) REFERENCES Appliance (name)
+    );
+    ''', 
+
+    '''
+    CREATE TABLE Inventory (
+        item_name VARCHAR(255) NOT NULL,
+        storage_name VARCHAR(255) NOT NULL,  
+        quantity FLOAT NOT NULL,
+        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (item_name, storage_name, timestamp),
+        FOREIGN KEY (item_name) REFERENCES ItemType (name),
+        FOREIGN KEY (storage_name) REFERENCES Storage (storage_name),
+        CHECK (quantity >= 0)  
+    );
+    ''', #:)
+
+    '''
+    CREATE TABLE Purchase (
+        item_name VARCHAR(255) NOT NULL,
+        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        quantity FLOAT NOT NULL,
+        price FLOAT NOT NULL,
+        store VARCHAR(255) NOT NULL,
+        parent_name VARCHAR(255) NOT NULL,
+        PRIMARY KEY (item_name, timestamp),
+        FOREIGN KEY (parent_name) REFERENCES Parent (name), 
+        FOREIGN KEY (item_name) REFERENCES ItemType (name),
+        CHECK (quantity > 0)
+    );
+    ''',
+
+    '''
+    CREATE TABLE History (
+        item_name VARCHAR(255) NOT NULL,
+        date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        quantity FLOAT NOT NULL,
+        PRIMARY KEY (item_name, date_used),
+        FOREIGN KEY (item_name),
+        CHECK (quantity > 0) 
+    );
+    ''',
+
+    '''
+    CREATE TABLE Wasted (
+        item_name VARCHAR(255) NOT NULL,
+        date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (item_name, date_used),
+        FOREIGN KEY (item_name) REFERENCES History (item_name),
+        FOREIGN KEY (date_used) REFERENCES History (date_used),
+        CHECK (quantity > 0) 
+    );
+    ''',
+
+    '''
+    CREATE TABLE Used (
+        item_name VARCHAR(255) NOT NULL,
+        date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        user_name VARCHAR(255),
+        PRIMARY KEY (item_name, date_used),
+        FOREIGN KEY (item_name) REFERENCES History (item_name),
+        FOREIGN KEY (date_used) REFERENCES History (date_used),
+        FOREIGN KEY (user_name) REFERENCES User (name),
+        CHECK (quantity > 0) 
+    );
     '''
 ]
