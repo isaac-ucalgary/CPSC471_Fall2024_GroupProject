@@ -29,7 +29,7 @@ def connect(db_name=str):
 def create_db(connection, db_name=str):
     cursor = connection.cursor()
     try:
-        cursor.execute(f"CREATE DATABASE {db_name}")
+        cursor.execute("CREATE DATABASE %s;", db_name)
     except Error as e:
         print(e)
 
