@@ -121,8 +121,8 @@ sql_tables = [
         quantity FLOAT NOT NULL, 
         PRIMARY KEY (food_name, recipe_name), 
         FOREIGN KEY (food_name) REFERENCES Food(name), 
-        FOREIGN KEY (recipe_name) REFERENCES Recipe(name), 
-        CHECK (quantity > 0) 
+        FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name), 
+        CHECK (quantity > 0)
     ); 
     ''',
 
@@ -203,7 +203,7 @@ sql_tables = [
         date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         quantity FLOAT NOT NULL,
         PRIMARY KEY (item_name, date_used),
-        FOREIGN KEY (item_name),
+        FOREIGN KEY (item_name) REFERENCES ItemType(name),
         CHECK (quantity > 0) 
     );
     ''',
@@ -213,9 +213,7 @@ sql_tables = [
         item_name VARCHAR(255) NOT NULL,
         date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (item_name, date_used),
-        FOREIGN KEY (item_name) REFERENCES History (item_name),
-        FOREIGN KEY (date_used) REFERENCES History (date_used),
-        CHECK (quantity > 0) 
+        FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)
     );
     ''',
 
@@ -225,10 +223,8 @@ sql_tables = [
         date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         user_name VARCHAR(255),
         PRIMARY KEY (item_name, date_used),
-        FOREIGN KEY (item_name) REFERENCES History (item_name),
-        FOREIGN KEY (date_used) REFERENCES History (date_used),
-        FOREIGN KEY (user_name) REFERENCES User (name),
-        CHECK (quantity > 0) 
+        FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),
+        FOREIGN KEY (user_name) REFERENCES User (name)
     );
     '''
 ]
