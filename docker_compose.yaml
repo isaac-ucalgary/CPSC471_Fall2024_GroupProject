@@ -1,0 +1,14 @@
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "Home_IMS"
+      MYSQL_USER: "Home_IMS_app"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+    volumes:
+      - ./mariadb-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    restart: unless-stopped
