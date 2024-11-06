@@ -6,7 +6,7 @@ from mysql.connector import Error
 
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
-from secrets import MARIADB_PASSWORD
+from secrets import MARIADB_PASSWORD # (ignore error, it's caused by .gitignore file and is expected.)
 from sql_statements import *
 
 
@@ -22,7 +22,6 @@ class Build_Database:
                  db_name:str=MARIADB_DATABASE_NAME
                  ):
 
-
         self.db_host = db_host
         self.db_port = db_port
         self.db_user = db_user
@@ -34,14 +33,14 @@ class Build_Database:
 
 
 
-
-
     # Connect to database
     # Creates a connection and a cursor
     def __connect(self) -> bool:
 
+        # Used to record the status of the operation.
         connection_success:bool = True
 
+        # Try to connect to the database.
         try:
             self.__connection = mysql.connector.connect(
                 host=self.db_host,
@@ -57,14 +56,17 @@ class Build_Database:
             self.__connection = None
             connection_success = False
 
+        # If no error is raised
         else:
             if self.db_name:
                 print(f"Connected to \"{self.db_name}\".")
             else:
                 print("Connected to MariaDB.")
 
+            # Make the cursor on the newly created connection.
             self.__cursor = self.__connection.cursor()
 
+        # Returns the status of connecting to the database.
         return connection_success
 
 
@@ -72,9 +74,11 @@ class Build_Database:
 
     # Closes cursor and connection to the database.
     def __close_connection(self) -> None:
+        # Close cursor.
         if self.__cursor is not None:
             self.__cursor.close()
 
+        # Close connection.
         if self.__connection is not None:
             self.__connection.close()
 
@@ -84,25 +88,25 @@ class Build_Database:
     # Create database
     def __create_db(self) -> bool:
 
-        # Nothing has failed yet
+        # Used to record the status of the operation.
         operation_successful:bool = True
 
-        # Try to create the database
+        # Try to create the database.
         if self.__cursor is not None:
             try:
                 self.__cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.db_name};")
             except Error as e:
                 print(e)
-                operation_successful = False # Record failure
+                operation_successful = False # Record failure.
         
         else:
-            operation_successful = False # Record failure 
+            operation_successful = False # Record failure.
             if self.__connection is None:
                 print("Could not create database. Connection and cursor not established.")
             else:
                 print("Could not create database. Connection not established.")
 
-        # Return success status
+        # Return success status.
         return operation_successful
 
 
