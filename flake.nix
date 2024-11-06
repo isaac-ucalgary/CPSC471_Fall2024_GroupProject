@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    #poetry2nix.url = "github:nix-community/poetry2nix";
   };
 
   outputs = inputs: 
@@ -16,6 +15,7 @@
           python3
           qt6.full
           python312Packages.pyqt6
+          python312Packages.mysql-connector
         ];
       };
     };
