@@ -69,9 +69,11 @@ sql_tables = [
     CREATE TABLE MealSchedule ( 
         recipe_name VARCHAR(255) NOT NULL, 
         timestamp DATETIME NOT NULL,
-        meal_type VARCHAR(31), 
-        PRIMARY KEY (recipe_name, timestamp),
-        FOREIGN KEY recipe_name REFERENCES Recipe(recipe_name)
+        location_name VARCHAR(255) NOT NULL,
+        meal_type VARCHAR(31),
+        PRIMARY KEY (recipe_name, timestamp, location_name),
+        FOREIGN KEY recipe_name REFERENCES Recipe(recipe_name),
+        FOREIGN KEY location_name REFERENCES Location(name)
     ); 
     ''',
 
@@ -165,7 +167,7 @@ sql_tables = [
         item_name VARCHAR(255) NOT NULL,
         storage_name VARCHAR(255) NOT NULL,  
         quantity FLOAT NOT NULL,
-        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (item_name, storage_name, timestamp),
         FOREIGN KEY (item_name) REFERENCES ItemType (name),
         FOREIGN KEY (storage_name) REFERENCES Storage (storage_name),
@@ -176,7 +178,7 @@ sql_tables = [
     '''
     CREATE TABLE Purchase (
         item_name VARCHAR(255) NOT NULL,
-        timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         quantity FLOAT NOT NULL,
         price FLOAT NOT NULL,
         store VARCHAR(255) NOT NULL,
@@ -191,7 +193,7 @@ sql_tables = [
     '''
     CREATE TABLE History (
         item_name VARCHAR(255) NOT NULL,
-        date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         quantity FLOAT NOT NULL,
         PRIMARY KEY (item_name, date_used),
         FOREIGN KEY (item_name) REFERENCES ItemType(name),
@@ -202,7 +204,7 @@ sql_tables = [
     '''
     CREATE TABLE Wasted (
         item_name VARCHAR(255) NOT NULL,
-        date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (item_name, date_used),
         FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)
     );
@@ -211,7 +213,7 @@ sql_tables = [
     '''
     CREATE TABLE Used (
         item_name VARCHAR(255) NOT NULL,
-        date_used TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         user_name VARCHAR(255),
         PRIMARY KEY (item_name, date_used),
         FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),
