@@ -26,9 +26,9 @@ sql_tables = [
 
     '''
     CREATE TABLE NotFood ( 
-        name VARCHAR(255) NOT NULL, 
+        namel VARCHAR(255) NOT NULL, 
         PRIMARY KEY (name), 
-        FOREIGN KEY (name) REFERENCES ItemType(name) 
+        FOREIGN KEY (name) REFERENCES Consumable(name) 
     ); 
     ''',
 
@@ -36,7 +36,7 @@ sql_tables = [
     CREATE TABLE Food ( 
         name VARCHAR(255) NOT NULL, 
         PRIMARY KEY (name), 
-        FOREIGN KEY (name) REFERENCES ItemType(name) 
+        FOREIGN KEY (name) REFERENCES Consumable(name) 
     ); 
     ''',
 
@@ -61,7 +61,7 @@ sql_tables = [
         food_name VARCHAR(255) NOT NULL, 
         PRIMARY KEY (recipe_name, food_name), 
         FOREIGN KEY (recipe_name) REFERENCES Template(name), 
-        FOREIGN KEY (food_name) REFERENCES Food(name) 
+        FOREIGN KEY (food_name) REFERENCES Food(name)
     );
     ''',
 
@@ -88,7 +88,7 @@ sql_tables = [
     CREATE TABLE Dependent ( 
         name VARCHAR(255) NOT NULL, 
         PRIMARY KEY (name),
-        FOREIGN KEY (name) REFERENCES User (name)
+        FOREIGN KEY (name) REFERENCES User(name)
     ); 
     ''',
 
@@ -96,7 +96,7 @@ sql_tables = [
     CREATE TABLE Parent ( 
         name VARCHAR(255) NOT NULL, 
         PRIMARY KEY (name),
-        FOREIGN KEY (name) REFERENCES User (name)
+        FOREIGN KEY (name) REFERENCES User(name)
     ); 
     ''',
 
@@ -123,7 +123,7 @@ sql_tables = [
     CREATE TABLE Storage ( 
         storage_name VARCHAR(255) NOT NULL, 
         location_name VARCHAR(255) NOT NULL, 
-        capacity FLOAT NOT NULL, 
+        capacity FLOAT NOT NULL DEFAULT 0, 
         PRIMARY KEY (storage_name), 
         FOREIGN KEY (location_name) REFERENCES Location(name), 
         CHECK (capacity >= 0 AND capacity <= 2) 
@@ -150,7 +150,7 @@ sql_tables = [
     CREATE TABLE Fridge (
         name VARCHAR(255) NOT NULL,
         PRIMARY KEY (name),
-        FOREIGN KEY (name) REFERENCES Appliance (name)
+        FOREIGN KEY (name) REFERENCES Appliance(name)
     );
     ''',
 
@@ -158,7 +158,7 @@ sql_tables = [
     CREATE TABLE Freezer (
         name VARCHAR(255) NOT NULL,
         PRIMARY KEY (name),
-        FOREIGN KEY (name) REFERENCES Appliance (name)
+        FOREIGN KEY (name) REFERENCES Appliance(name)
     );
     ''', 
 
@@ -169,8 +169,8 @@ sql_tables = [
         quantity FLOAT NOT NULL,
         timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (item_name, storage_name, timestamp),
-        FOREIGN KEY (item_name) REFERENCES ItemType (name),
-        FOREIGN KEY (storage_name) REFERENCES Storage (storage_name),
+        FOREIGN KEY (item_name) REFERENCES ItemType(name),
+        FOREIGN KEY (storage_name) REFERENCES Storage(storage_name),
         CHECK (quantity >= 0)  
     );
     ''', #:)
@@ -184,8 +184,8 @@ sql_tables = [
         store VARCHAR(255) NOT NULL,
         parent_name VARCHAR(255) NOT NULL,
         PRIMARY KEY (item_name, timestamp),
-        FOREIGN KEY (parent_name) REFERENCES Parent (name), 
-        FOREIGN KEY (item_name) REFERENCES ItemType (name),
+        FOREIGN KEY (parent_name) REFERENCES Parent(name), 
+        FOREIGN KEY (item_name) REFERENCES ItemType(name),
         CHECK (quantity > 0)
     );
     ''',
@@ -204,20 +204,20 @@ sql_tables = [
     '''
     CREATE TABLE Wasted (
         item_name VARCHAR(255) NOT NULL,
-        date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        date_used DATETIME NOT NULL,
         PRIMARY KEY (item_name, date_used),
-        FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)
+        FOREIGN KEY (item_name, date_used) REFERENCES History(item_name, date_used)
     );
     ''',
 
     '''
     CREATE TABLE Used (
         item_name VARCHAR(255) NOT NULL,
-        date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        date_used DATETIME NOT NULL,
         user_name VARCHAR(255),
         PRIMARY KEY (item_name, date_used),
-        FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),
-        FOREIGN KEY (user_name) REFERENCES User (name)
+        FOREIGN KEY (item_name, date_used) REFERENCES History(item_name, date_used),
+        FOREIGN KEY (user_name) REFERENCES User(name)
     );
     '''
 ]

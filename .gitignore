@@ -1,5 +1,4 @@
 **/.env
 **/secrets.py
 data/
-**/__pycache__
-
+**/__pycache__/

@@ -28,8 +28,8 @@ class Build_Database:
         self.db_password = db_password
         self.db_name = db_name
 
-        self.__connection = None;
-        self.__cursor = None;
+        self.__connection = None
+        self.__cursor = None
 
 
 
@@ -47,7 +47,8 @@ class Build_Database:
                 port=self.db_port,
                 user=self.db_user,
                 password=self.db_password,
-                database=self.db_name
+                database=self.db_name,
+                collation="utf8mb4_unicode_ci"
             )
 
         except Error as e:
