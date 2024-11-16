@@ -12,7 +12,8 @@
     devShells.${system} = {
       default = pkgs.mkShell {
         packages = with pkgs; [
-          python3
+          (python3.withPackages (python-pkgs: [
+          ]))
           qt6.full
           python312Packages.pyqt6
           python312Packages.mysql-connector
