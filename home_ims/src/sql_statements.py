@@ -66,11 +66,12 @@ sql_tables = [
     ''',
 
     '''
-    CREATE TABLE Meal ( 
-        id INT NOT NULL AUTO_INCREMENT, 
-        meal_type VARCHAR(16), 
-        date DATE NOT NULL, 
-        PRIMARY KEY (id) 
+    CREATE TABLE MealSchedule ( 
+        recipe_name VARCHAR(255) NOT NULL, 
+        timestamp DATETIME NOT NULL,
+        meal_type VARCHAR(31), 
+        PRIMARY KEY (recipe_name, timestamp),
+        FOREIGN KEY recipe_name REFERENCES Recipe(recipe_name)
     ); 
     ''',
 
@@ -102,16 +103,6 @@ sql_tables = [
         name VARCHAR(255) NOT NULL, 
         PRIMARY KEY (name) 
     ); 
-    ''',
-
-    '''
-    CREATE TABLE Schedule ( 
-        meal_id INT NOT NULL, 
-        food_name VARCHAR(255) NOT NULL, 
-        PRIMARY KEY (meal_id, food_name), 
-        FOREIGN KEY (meal_id) REFERENCES Meal(id), 
-        FOREIGN KEY (food_name) REFERENCES Food(name) 
-    );
     ''',
 
     '''
