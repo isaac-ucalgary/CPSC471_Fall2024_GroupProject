@@ -327,7 +327,7 @@
             "query": [
                 "CREATE TABLE Wasted (",
                 "item_name VARCHAR(255) NOT NULL,",
-                "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "date_used DATETIME NOT NULL,",
                 "PRIMARY KEY (item_name, date_used),",
                 "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)",
                 ");"
@@ -341,7 +341,7 @@
             "query": [
                 "CREATE TABLE Used (",
                 "item_name VARCHAR(255) NOT NULL,",
-                "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "date_used DATETIME NOT NULL,",
                 "user_name VARCHAR(255),",
                 "PRIMARY KEY (item_name, date_used),",
                 "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),",
@@ -370,7 +370,7 @@
                 "query": [
                     "INSERT INTO Home_IMS.Recipe (recipe_name, food_name)",
                     "VALUES (%s, %s);"
-                ],
+                ]
             },
             {
                 "function": "Delete recipe",
@@ -383,7 +383,7 @@
                     "DELETE FROM Home_IMS.Recipe AS R",
                     "WHERE R.recipe_name = %s",
                     "AND R.food_name = %s"
-                ],
+                ]
             },
             {
                 "function": "View recipes",
@@ -397,8 +397,8 @@
                     "FROM Home_IMS.Recipe AS R",
                     "WHERE R.recipe_name LIKE %s",
                     "AND R.food_name LIKE %s"
-                ],
-            },
+                ]
+            }
         ],
         "Ingredients": [],
         "Inventory": [
@@ -407,20 +407,20 @@
                 "inputs": [
                     "@item_name",
                     "@storage_name",
-                    "@quantity",
+                    "@quantity"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
                     "VALUES (%s, %s, %s);"
-                ],
+                ]
             },
             {
                 "function": "Remove item from inventory",
                 "inputs": [
                     "@item_name",
                     "@storage_name",
-                    "@timestamp",
+                    "@timestamp"
                 ],
                 "outputs": [],
                 "query": [
@@ -428,7 +428,7 @@
                     "WHERE I.item_name = %s",
                     "AND I.storage_name = %s",
                     "AND I.timestamp = %s;"
-                ],
+                ]
             },
             {
                 "function": "Change item quantity",
@@ -445,8 +445,8 @@
                     "WHERE I.item_name = %s",
                     "AND I.storage_name = %s",
                     "AND I.timestamp = %s;",
-                    "SELECT ...
-                ],
+                    "SELECT ..."
+                ]
             },
             {
                 "function": "Move item storage location",
@@ -459,7 +459,7 @@
                 "outputs": [],
                 "query": [
                     "TODO Daniel"
-                ],
+                ]
             },
             {
                 "function": "View all",
@@ -467,7 +467,7 @@
                     "@item_name",
                     "@storage_name",
                     "@timestamp_from",
-                    "@timestamp_to",
+                    "@timestamp_to"
                 ],
                 "outputs": [],
                 "query": [
@@ -476,8 +476,8 @@
                     "WHERE I.item_name LIKE %s",
                     "AND I.storage_name LIKE %s",
                     "AND I.timestamp BETWEEN %s AND %s"
-                ],
+                ]
             }
         ]
-    },
+    }
 }
