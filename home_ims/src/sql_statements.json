@@ -1,0 +1,483 @@
+{
+    "ddl": [
+        {
+            "function": "Create Database",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE DATABASE Home_IMS;"
+            ],
+            "order": 0
+        },
+        {
+            "function": "Create Table ItemType",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE ItemType (",
+                "name VARCHAR(255) NOT NULL,",
+                "unit VARCHAR(16),",
+                "PRIMARY KEY (name)",
+                ");"
+            ],
+            "order": 1
+        },
+        {
+            "function": "Create Table Consumable",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Consumable (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES ItemType(name)",
+                ");"
+            ],
+            "order": 2
+        },
+        {
+            "function": "Create Table Durable",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Durable (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES ItemType(name)",
+                ");"
+            ],
+            "order": 3
+        },
+        {
+            "function": "Create Table NotFood",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE NotFood (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES ItemType(name)",
+                ");"
+            ],
+            "order": 4
+        },
+        {
+            "function": "Create Table Food",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Food (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES ItemType(name)",
+                ");"
+            ],
+            "order": 5
+        },
+        {
+            "function": "Create Table Template",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Template (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name)",
+                ");"
+            ],
+            "order": 6
+        },
+        {
+            "function": "Create Table OtherTemplate",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE OtherTemplate (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES Template(name)",
+                ");"
+            ],
+            "order": 7
+        },
+        {
+            "function": "Create Table Recipe",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Recipe (",
+                "recipe_name VARCHAR(255) NOT NULL,",
+                "food_name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (recipe_name, food_name),",
+                "FOREIGN KEY (recipe_name) REFERENCES Template(name),",
+                "FOREIGN KEY (food_name) REFERENCES Food(name)",
+                ");"
+            ],
+            "order": 8
+        },
+        {
+            "function": "Create Table MealSchedule",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE MealSchedule (",
+                "recipe_name VARCHAR(255) NOT NULL,",
+                "timestamp DATETIME NOT NULL,",
+                "location_name VARCHAR(255) NOT NULL,",
+                "meal_type VARCHAR(31),",
+                "PRIMARY KEY (recipe_name, timestamp, location_name),",
+                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name),",
+                "FOREIGN KEY (location_name) REFERENCES Location(name)",
+                ");"
+            ],
+            "order": 9
+        },
+        {
+            "function": "Create Table User",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE User (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name)",
+                ");"
+            ],
+            "order": 10
+        },
+        {
+            "function": "Create Table Dependent",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Dependent (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES User(name)",
+                ");"
+            ],
+            "order": 11
+        },
+        {
+            "function": "Create Table Parent",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Parent (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES User(name)",
+                ");"
+            ],
+            "order": 12
+        },
+        {
+            "function": "Create Table Location",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Location (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name)",
+                ");"
+            ],
+            "order": 13
+        },
+        {
+            "function": "Create Table Ingredients",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Ingredients (",
+                "food_name VARCHAR(255) NOT NULL,",
+                "recipe_name VARCHAR(255) NOT NULL,",
+                "quantity FLOAT NOT NULL,",
+                "PRIMARY KEY (food_name, recipe_name),",
+                "FOREIGN KEY (food_name) REFERENCES Food(name),",
+                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name),",
+                "CHECK (quantity > 0)",
+                ");"
+            ],
+            "order": 14
+        },
+        {
+            "function": "Create Table Storage",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Storage (",
+                "storage_name VARCHAR(255) NOT NULL,",
+                "location_name VARCHAR(255) NOT NULL,",
+                "capacity FLOAT NOT NULL,",
+                "PRIMARY KEY (storage_name),",
+                "FOREIGN KEY (location_name) REFERENCES Location(name),",
+                "CHECK (capacity >= 0 AND capacity <= 2)",
+                ");"
+            ],
+            "order": 15
+        },
+        {
+            "function": "Create Table Dry",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Dry (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES Storage(storage_name)",
+                ");"
+            ],
+            "order": 16
+        },
+        {
+            "function": "Create Table Appliance",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Appliance (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES Storage(storage_name)",
+                ");"
+            ],
+            "order": 17
+        },
+        {
+            "function": "Create Table Fridge",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Fridge (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES Appliance (name)",
+                ");"
+            ],
+            "order": 18
+        },
+        {
+            "function": "Create Table Freezer",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Freezer (",
+                "name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (name),",
+                "FOREIGN KEY (name) REFERENCES Appliance (name)",
+                ");"
+            ],
+            "order": 19
+        },
+        {
+            "function": "Create Table Inventory",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Inventory (",
+                "item_name VARCHAR(255) NOT NULL,",
+                "storage_name VARCHAR(255) NOT NULL,",
+                "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "quantity FLOAT NOT NULL,",
+                "PRIMARY KEY (item_name, storage_name, timestamp),",
+                "FOREIGN KEY (item_name) REFERENCES ItemType (name),",
+                "FOREIGN KEY (storage_name) REFERENCES Storage (storage_name),",
+                "CHECK (quantity >= 0)",
+                ");"
+            ],
+            "order": 20
+        },
+        {
+            "function": "Create Table Purchase",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Purchase (",
+                "item_name VARCHAR(255) NOT NULL,",
+                "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "quantity FLOAT NOT NULL,",
+                "price FLOAT NOT NULL,",
+                "store VARCHAR(255) NOT NULL,",
+                "parent_name VARCHAR(255) NOT NULL,",
+                "PRIMARY KEY (item_name, timestamp),",
+                "FOREIGN KEY (parent_name) REFERENCES Parent (name),",
+                "FOREIGN KEY (item_name) REFERENCES ItemType (name),",
+                "CHECK (quantity > 0)",
+                ");"
+            ],
+            "order": 21
+        },
+        {
+            "function": "Create Table History",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE History (",
+                "item_name VARCHAR(255) NOT NULL,",
+                "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "quantity FLOAT NOT NULL,",
+                "PRIMARY KEY (item_name, date_used),",
+                "FOREIGN KEY (item_name) REFERENCES ItemType(name),",
+                "CHECK (quantity > 0)",
+                ");"
+            ],
+            "order": 22
+        },
+        {
+            "function": "Create Table Wasted",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Wasted (",
+                "item_name VARCHAR(255) NOT NULL,",
+                "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "PRIMARY KEY (item_name, date_used),",
+                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)",
+                ");"
+            ],
+            "order": 23
+        },
+        {
+            "function": "Create Table Used",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Used (",
+                "item_name VARCHAR(255) NOT NULL,",
+                "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "user_name VARCHAR(255),",
+                "PRIMARY KEY (item_name, date_used),",
+                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),",
+                "FOREIGN KEY (user_name) REFERENCES User (name)",
+                ");"
+            ],
+            "order": 24
+        }
+    ],
+    "dml/dql": {
+        "MealSchedule": [],
+        "ItemType": [],
+        "Location": [],
+        "Storage": [],
+        "User": [],
+        "History": [],
+        "Purchase": [],
+        "Recipe": [
+            {
+                "function": "Create recipe",
+                "inputs": [
+                    "@recipe_name",
+                    "@food_name"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Recipe (recipe_name, food_name)",
+                    "VALUES (%s, %s);"
+                ],
+            },
+            {
+                "function": "Delete recipe",
+                "inputs": [
+                    "@recipe_name",
+                    "@food_name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Recipe AS R",
+                    "WHERE R.recipe_name = %s",
+                    "AND R.food_name = %s"
+                ],
+            },
+            {
+                "function": "View recipes",
+                "inputs": [
+                    "@recipe_name",
+                    "@food_name"
+                ],
+                "outputs": [],
+                "query": [
+                    "SELECT R.recipe_name, R.food_name",
+                    "FROM Home_IMS.Recipe AS R",
+                    "WHERE R.recipe_name LIKE %s",
+                    "AND R.food_name LIKE %s"
+                ],
+            },
+        ],
+        "Ingredients": [],
+        "Inventory": [
+            {
+                "function": "Add item to inventory",
+                "inputs": [
+                    "@item_name",
+                    "@storage_name",
+                    "@quantity",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
+                    "VALUES (%s, %s, %s);"
+                ],
+            },
+            {
+                "function": "Remove item from inventory",
+                "inputs": [
+                    "@item_name",
+                    "@storage_name",
+                    "@timestamp",
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Inventory AS I",
+                    "WHERE I.item_name = %s",
+                    "AND I.storage_name = %s",
+                    "AND I.timestamp = %s;"
+                ],
+            },
+            {
+                "function": "Change item quantity",
+                "inputs": [
+                    "@new_quantity",
+                    "@item_name",
+                    "@storage_name",
+                    "@timestamp"
+                ],
+                "outputs": [],
+                "query": [
+                    "UPDATE Home_IMS.Inventory AS I",
+                    "SET I.quantity = %s",
+                    "WHERE I.item_name = %s",
+                    "AND I.storage_name = %s",
+                    "AND I.timestamp = %s;",
+                    "SELECT ...
+                ],
+            },
+            {
+                "function": "Move item storage location",
+                "inputs": [
+                    "@new_storage_name",
+                    "@item_name",
+                    "@old_storage_name",
+                    "@timestamp"
+                ],
+                "outputs": [],
+                "query": [
+                    "TODO Daniel"
+                ],
+            },
+            {
+                "function": "View all",
+                "inputs": [
+                    "@item_name",
+                    "@storage_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                ],
+                "outputs": [],
+                "query": [
+                    "SELECT I.item_name, I.storage_name, I.timestamp, I.quantity",
+                    "FROM Home_IMS.Inventory AS I",
+                    "WHERE I.item_name LIKE %s",
+                    "AND I.storage_name LIKE %s",
+                    "AND I.timestamp BETWEEN %s AND %s"
+                ],
+            }
+        ]
+    },
+}
