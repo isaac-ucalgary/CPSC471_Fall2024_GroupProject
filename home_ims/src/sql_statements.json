@@ -389,9 +389,15 @@
                     "@location_name",
                     "@meal_type"
                 ],
-                "outputs": [],
+                "outputs": [
+                    "recipe_name",
+                    "timestamp",
+                    "location_name",
+                    "meal_type",
+                ],
                 "query": [
-                    "SELECT recipe_name, timestamp, location_name, meal_type FROM Home_IMS.MealSchedule",
+                    "SELECT recipe_name, timestamp, location_name, meal_type",
+                    "FROM Home_IMS.MealSchedule",
                     "WHERE recipe_name LIKE %s",
                     "AND timestamp BETWEEN %s AND %s",
                     "AND location_name LIKE %s",
@@ -422,7 +428,8 @@
                     "unit"
                 ],
                 "query": [
-                    "SELECT name, unit FROM Home_IMS.ItemType",
+                    "SELECT name, unit",
+                    "FROM Home_IMS.ItemType",
                     "WHERE name LIKE %s;",
                 ]
             },
@@ -468,7 +475,8 @@
                     "unit"
                 ],
                 "query": [
-                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "SELECT I.name, I.unit",
+                    "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.Consumable AS C ON I.name = C.name",
                     "WHERE name LIKE %s;"
                 ]
@@ -496,7 +504,8 @@
                     "unit"
                 ],
                 "query": [
-                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "SELECT I.name, I.unit",
+                    "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.Durable AS C ON I.name = C.name",
                     "WHERE name LIKE %s;"
                 ]
@@ -524,7 +533,8 @@
                     "unit"
                 ],
                 "query": [
-                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "SELECT I.name, I.unit",
+                    "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.Food AS C ON I.name = C.name",
                     "WHERE name LIKE %s;"
                 ]
@@ -552,7 +562,8 @@
                     "unit"
                 ],
                 "query": [
-                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "SELECT I.name, I.unit",
+                    "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.NotFood AS C ON I.name = C.name",
                     "WHERE name LIKE %s;"
                 ]
@@ -590,7 +601,8 @@
                     "name"
                 ],
                 "query": [
-                    "SELECT name FROM Home_IMS.Location ",
+                    "SELECT name",
+                    "FROM Home_IMS.Location",
                     "WHERE name LIKE %s;",
                 ]
             },
@@ -630,7 +642,8 @@
                     "location_name"
                 ],
                 "query": [
-                    "SELECT storage_name, location_name FROM Home_IMS.Storage",
+                    "SELECT storage_name, location_name",
+                    "FROM Home_IMS.Storage",
                     "WHERE storage_name LIKE %s",
                     "AND location_name LIKE %s;",
                 ]
@@ -670,7 +683,8 @@
                     "location_name"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "SELECT S.storage_name, S.location_name",
+                    "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Dry as D ON S.storage_name = D.name",
                     "WHERE S.storage_name LIKE %s",
                     "AND S.location_name LIKE %s;",
@@ -711,7 +725,8 @@
                     "location_name"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "SELECT S.storage_name, S.location_name",
+                    "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Appliance as A ON S.storage_name = A.name",
                     "WHERE S.storage_name LIKE %s",
                     "AND S.location_name LIKE %s;",
@@ -752,7 +767,8 @@
                     "location_name"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "SELECT S.storage_name, S.location_name",
+                    "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Fridge as F ON S.storage_name = F.name",
                     "WHERE S.storage_name LIKE %s",
                     "AND S.location_name LIKE %s;",
@@ -793,7 +809,8 @@
                     "location_name"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "SELECT S.storage_name, S.location_name",
+                    "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Freezer as F ON S.storage_name = F.name",
                     "WHERE S.storage_name LIKE %s",
                     "AND S.location_name LIKE %s;",
@@ -821,7 +838,8 @@
                     "name"
                 ],
                 "query": [
-                    "SELECT name from HomeIMS.User",
+                    "SELECT name",
+                    "FROM HomeIMS.User",
                     "WHERE name LIKE %s;",
                 ]
             },
@@ -835,7 +853,8 @@
                     "date_used"
                 ],
                 "query": [
-                    "SELECT item_name, date_used FROM Home_IMS.Used",
+                    "SELECT item_name, date_used",
+                    "FROM Home_IMS.Used",
                     "WHERE user_name = %s;",
                 ]
             },
@@ -1229,7 +1248,7 @@
                 "query": [
                     "DELETE FROM Home_IMS.Recipe AS R",
                     "WHERE R.recipe_name = %s",
-                    "AND R.food_name = %s"
+                    "AND R.food_name = %s;"
                 ]
             },
             {
@@ -1246,7 +1265,7 @@
                     "SELECT R.recipe_name, R.food_name",
                     "FROM Home_IMS.Recipe AS R",
                     "WHERE R.recipe_name LIKE %s",
-                    "AND R.food_name LIKE %s"
+                    "AND R.food_name LIKE %s;"
                 ]
             },
             {
@@ -1319,7 +1338,9 @@
                 "inputs": [
                     "@recipe_name",
                 ],
-                "outputs": [],
+                "outputs": [
+                    "food_name"
+                ],
                 "query": [
                     "SELECT food_name",
                     "FROM Home_IMS.Ingredients",
@@ -1371,7 +1392,6 @@
                     "WHERE I.item_name = %s",
                     "AND I.storage_name = %s",
                     "AND I.timestamp = %s;",
-                    "SELECT ..."
                 ]
             },
             {
@@ -1395,13 +1415,18 @@
                     "@timestamp_from",
                     "@timestamp_to"
                 ],
-                "outputs": [],
+                "outputs": [
+                    "item_name",
+                    "storage_name",
+                    "timestamp",
+                    "quantity"
+                ],
                 "query": [
                     "SELECT I.item_name, I.storage_name, I.timestamp, I.quantity",
                     "FROM Home_IMS.Inventory AS I",
                     "WHERE I.item_name LIKE %s",
                     "AND I.storage_name LIKE %s",
-                    "AND I.timestamp BETWEEN %s AND %s"
+                    "AND I.timestamp BETWEEN %s AND %s;"
                 ]
             }
         ]
