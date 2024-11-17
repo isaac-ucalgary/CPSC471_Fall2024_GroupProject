@@ -1238,16 +1238,95 @@
                     "@recipe_name",
                     "@food_name"
                 ],
-                "outputs": [],
+                "outputs": [
+                    "recipe_name",
+                    "food_name"
+                ],
                 "query": [
                     "SELECT R.recipe_name, R.food_name",
                     "FROM Home_IMS.Recipe AS R",
                     "WHERE R.recipe_name LIKE %s",
                     "AND R.food_name LIKE %s"
                 ]
+            },
+            {
+                "function": "Get estimated recipe cost",
+                "inputs": [
+                    "@recipe_name"
+                ],
+                "outputs": [
+                    "recipe_name",
+                    "cost"
+                ],
+                "query": [
+                    "SELECT R.recipe_name, SUM(P.avg_item_price) as cost",
+                    "FROM Home_IMS.Recipe AS R, Home_IMS.Ingredients AS I,",
+                    "( SELECT item_name, AVG(price) as avg_item_price",
+                    "FROM Home_IMS.Purchase",
+                    "GROUP BY item_name",
+                    ") AS P",
+                    "GROUP BY R.recipe_name",
+                    "WHERE R.recipe_name = I.recipe_name",
+                    "AND I.food_name = P.item_name",
+                    "AND R.recipe_name LIKE %s;",
+                ]
             }
         ],
-        "Ingredients": [],
+        "Ingredients": [
+            {
+                "function": "Add ingredient",
+                "inputs": [
+                    "@food_name",
+                    "@recipe_name",
+                    "@quantity"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)",
+                    "VALUES (%s, %s, %s);"
+                ]
+            },
+            {
+                "function": "Remove ingredient",
+                "inputs": [
+                    "@food_name",
+                    "@recipe_name",
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Ingredients AS I",
+                    "WHERE I.food_name = %s",
+                    "AND I.recipe_name = %s;",
+                ]
+            },
+            {
+                "function": "Change ingredient quantity",
+                "inputs": [
+                    "@new_quantity",
+                    "@food_name",
+                    "@recipe_name",
+                ],
+                "outputs": [],
+                "query": [
+                    "UPDATE Home_IMS.Ingredients AS I",
+                    "SET I.quantity = %s",
+                    "WHERE I.food_name = %s",
+                    "AND I.recipe_name = %s;",
+                ]
+            },
+            {
+                "function": "View ingredients for a recipe",
+                "inputs": [
+                    "@recipe_name",
+                ],
+                "outputs": [],
+                "query": [
+                    "SELECT food_name",
+                    "FROM Home_IMS.Ingredients",
+                    "WHERE recipe_name LIKE %s;"
+                ]
+            },
+        ],
         "Inventory": [
             {
                 "function": "Add item to inventory",
