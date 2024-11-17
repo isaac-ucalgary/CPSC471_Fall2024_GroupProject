@@ -558,7 +558,43 @@
                 ]
             },
         ],
-        "Location": [],
+        "Location": [
+            {
+                "function": "Add location",
+                "inputs": [
+                    "@name"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Location (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Delete location",
+                "inputs": [
+                    "@name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Location",
+                    "WHERE name = %s;",
+                ]
+            },
+            {
+                "function": "Select locations",
+                "inputs": [
+                    "@name"
+                ],
+                "outputs": [
+                    "name"
+                ],
+                "query": [
+                    "SELECT name FROM Home_IMS.Location ",
+                    "WHERE name LIKE %s;",
+                ]
+            },
+        ],
         "Storage": [],
         "User": [],
         "History": [],
