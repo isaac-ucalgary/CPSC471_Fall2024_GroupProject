@@ -595,7 +595,211 @@
                 ]
             },
         ],
-        "Storage": [],
+        "Storage": [
+            {
+                "function": "Add storage",
+                "inputs": [
+                    "@storage_name",
+                    "@location_name"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Storage (storage_name, location_name)",
+                    "VALUES (%s, %s);",
+                ]
+            },
+            {
+                "function": "Delete storage",
+                "inputs": [
+                    "@storage_name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Storage",
+                    "WHERE storage_name = %s;",
+                ]
+            },
+            {
+                "function": "Select storage",
+                "inputs": [
+                    "@storage_name",
+                    "@location_name"
+                ],
+                "outputs": [
+                    "storage_name",
+                    "location_name"
+                ],
+                "query": [
+                    "SELECT storage_name, location_name FROM Home_IMS.Storage",
+                    "WHERE storage_name LIKE %s",
+                    "AND location_name LIKE %s;",
+                ]
+            },
+        ],
+        "Dry": [
+            {
+                "function": "Add dry storage",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Dry (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Delete dry storage",
+                "inputs": [
+                    "@name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Dry",
+                    "WHERE name = %s;",
+                ]
+            },
+            {
+                "function": "Select dry storage",
+                "inputs": [
+                    "@storage_name",
+                    "@location_name"
+                ],
+                "outputs": [
+                    "storage_name",
+                    "location_name"
+                ],
+                "query": [
+                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "JOIN Home_IMS.Dry as D ON S.storage_name = D.name",
+                    "WHERE S.storage_name LIKE %s",
+                    "AND S.location_name LIKE %s;",
+                ]
+            },
+        ],
+        "Appliance": [
+            {
+                "function": "Add appliance",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Appliance (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Delete appliance",
+                "inputs": [
+                    "@name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Appliance",
+                    "WHERE name = %s;",
+                ]
+            },
+            {
+                "function": "Select appliance",
+                "inputs": [
+                    "@storage_name",
+                    "@location_name"
+                ],
+                "outputs": [
+                    "storage_name",
+                    "location_name"
+                ],
+                "query": [
+                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "JOIN Home_IMS.Appliance as A ON S.storage_name = A.name",
+                    "WHERE S.storage_name LIKE %s",
+                    "AND S.location_name LIKE %s;",
+                ]
+            },
+        ],
+        "Fridge": [
+            {
+                "function": "Add fridge",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Fridge (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Delete fridge",
+                "inputs": [
+                    "@name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Fridge",
+                    "WHERE name = %s;",
+                ]
+            },
+            {
+                "function": "Select fridge",
+                "inputs": [
+                    "@storage_name",
+                    "@location_name"
+                ],
+                "outputs": [
+                    "storage_name",
+                    "location_name"
+                ],
+                "query": [
+                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "JOIN Home_IMS.Fridge as F ON S.storage_name = F.name",
+                    "WHERE S.storage_name LIKE %s",
+                    "AND S.location_name LIKE %s;",
+                ]
+            },
+        ],
+        "Freezer": [
+            {
+                "function": "Add freezer",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Freezer (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Delete freezer",
+                "inputs": [
+                    "@name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Freezer",
+                    "WHERE name = %s;",
+                ]
+            },
+            {
+                "function": "Select freezer",
+                "inputs": [
+                    "@storage_name",
+                    "@location_name"
+                ],
+                "outputs": [
+                    "storage_name",
+                    "location_name"
+                ],
+                "query": [
+                    "SELECT S.storage_name, S.location_name FROM Home_IMS.Storage as S",
+                    "JOIN Home_IMS.Freezer as F ON S.storage_name = F.name",
+                    "WHERE S.storage_name LIKE %s",
+                    "AND S.location_name LIKE %s;",
+                ]
+            },
+        ],
         "User": [],
         "History": [],
         "Purchase": [],
