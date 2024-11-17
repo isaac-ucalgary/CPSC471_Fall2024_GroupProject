@@ -7,7 +7,6 @@ from mysql.connector import Error
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
 from secrets import MARIADB_PASSWORD # (ignore error, it's caused by .gitignore file and is expected.)
-from home_ims.src import sql_statements
 from sql_statements import get_ddl_sql_functions
 from sql_statements import get_dmldql_sql_functions
 
@@ -54,10 +53,28 @@ class Database:
             )
 
         except Error as e:
-            print("Failed to connect to database")
-            print(e)
-            self.__connection = None
-            connection_success = False
+            print("Could not connect to database by name, trying to connect without one...")
+
+            try:
+                self.__connection = mysql.connector.connect(
+                    host=self.db_host,
+                    port=self.db_port,
+                    user=self.db_user,
+                    password=self.db_password,
+                    collation="utf8mb4_unicode_ci"
+                )
+
+            except Error as e:
+                print("Failed to connect to database")
+                print(e)
+                self.__connection = None
+                connection_success = False
+            else:
+                print("Connected to MariaDB.")
+
+                # Make the cursor on the newly created connection.
+                self.__cursor = self.__connection.cursor()
+
 
         # If no error is raised
         else:
@@ -84,33 +101,6 @@ class Database:
         # Close connection.
         if self.__connection is not None:
             self.__connection.close()
-
-
-
-
-    # Create database
-    def __create_db(self) -> bool:
-
-        # Used to record the status of the operation.
-        operation_successful:bool = True
-
-        # Try to create the database.
-        if self.__cursor is not None:
-            try:
-                self.__cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.db_name};")
-            except Error as e:
-                print(e)
-                operation_successful = False # Record failure.
-        
-        else:
-            operation_successful = False # Record failure.
-            if self.__connection is None:
-                print("Could not create database. Connection and cursor not established.")
-            else:
-                print("Could not create database. Connection not established.")
-
-        # Return success status.
-        return operation_successful
 
 
 
@@ -148,22 +138,29 @@ class Database:
         # Nothing has failed yet
         operation_successful:bool = True
 
-
         # Get the ddl sql statements to build the database
-        ddl = [x["query"] for x in get_ddl_sql_functions()]
+        ddl = [x for x in get_ddl_sql_functions()]
 
         # Connect to the database
         operation_successful = self.__connect() and operation_successful
 
         # Create the database and tables.
         if self.__connection:
-            operation_successful = self.__create_db() and operation_successful
 
             # Loop through the SQL statements for creating tables
-            for statement in ddl:
+            for function in ddl:
+                function_name = function["function"]
+                statement = function["query"]
+
+                # Execute the statement
                 operation_successful = self.__exec_sql(statement) and operation_successful
+
                 # Print statements for debugging
-                print(f"Success: {statement.split()[:3]}") # TODO Implement proper logging using the logging library
+                if operation_successful:
+                    print(f"Success: {function_name}") # TODO Implement proper logging using the logging library
+                else:
+                    print(f"An error occurred whilst creating {function_name}. Not executing further statements.")
+                    break
 
         else:
             operation_successful = False
