@@ -7,11 +7,13 @@ from mysql.connector import Error
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
 from secrets import MARIADB_PASSWORD # (ignore error, it's caused by .gitignore file and is expected.)
-from sql_statements import *
+from home_ims.src import sql_statements
+from sql_statements import get_ddl_sql_functions
+from sql_statements import get_dmldql_sql_functions
 
 
 
-class Build_Database:
+class Database:
 
 
     def __init__(self,
@@ -146,6 +148,10 @@ class Build_Database:
         # Nothing has failed yet
         operation_successful:bool = True
 
+
+        # Get the ddl sql statements to build the database
+        ddl = [x["query"] for x in get_ddl_sql_functions()]
+
         # Connect to the database
         operation_successful = self.__connect() and operation_successful
 
@@ -154,7 +160,7 @@ class Build_Database:
             operation_successful = self.__create_db() and operation_successful
 
             # Loop through the SQL statements for creating tables
-            for statement in sql_tables:
+            for statement in ddl:
                 operation_successful = self.__exec_sql(statement) and operation_successful
                 # Print statements for debugging
                 print(f"Success: {statement.split()[:3]}") # TODO Implement proper logging using the logging library
