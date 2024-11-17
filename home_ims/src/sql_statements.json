@@ -800,7 +800,72 @@
                 ]
             },
         ],
-        "User": [],
+        "User": [
+            {
+                "function": "Add user",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.User (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Select users",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [
+                    "name"
+                ],
+                "query": [
+                    "SELECT name from HomeIMS.User",
+                    "WHERE name LIKE %s;",
+                ]
+            },
+            {
+                "function": "Select items used by user",
+                "inputs": [
+                    "@user_name",
+                ],
+                "outputs": [
+                    "item_name",
+                    "date_used"
+                ],
+                "query": [
+                    "SELECT item_name, date_used FROM Home_IMS.Used",
+                    "WHERE user_name = %s;",
+                ]
+            },
+        ],
+        "Parent": [
+            {
+                "function": "Add parent",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Parent (name)",
+                    "VALUES (%s);",
+                ]
+            },
+        ],
+        "Dependent": [
+            {
+                "function": "Add dependent",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Dependent (name)",
+                    "VALUES (%s);",
+                ]
+            },
+        ],
         "History": [],
         "Purchase": [],
         "Recipe": [
