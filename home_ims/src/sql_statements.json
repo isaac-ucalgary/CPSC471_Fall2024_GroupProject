@@ -292,7 +292,7 @@
                 "CREATE TABLE Home_IMS.Purchase (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
-                "quantity FLOAT NOT NULL,",
+                "quantity INT NOT NULL,",
                 "price FLOAT NOT NULL,",
                 "store VARCHAR(255) NOT NULL,",
                 "parent_name VARCHAR(255) NOT NULL,",
@@ -952,7 +952,260 @@
                 ]
             },
         ],
-        "Purchase": [],
+        "Purchase": [
+            {
+                "function": "Add purchase record",
+                "inputs": [
+                    "@item_name",
+                    "@quantity",
+                    "@item_price",
+                    "@store",
+                    "@parent_name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)",
+                    "VALUES (%s, %s, %s, %s, %s);"
+                ]
+            },
+            {
+                "function": "Select purchases",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@item_price_min",
+                    "@item_price_max",
+                    "@store",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "item_name",
+                    "timestamp",
+                    "quantity",
+                    "price",
+                    "store",
+                    "parent_name"
+                ],
+                "query": [
+                    "SELECT item_name, timestamp, quantity, price, store, parent_name",
+                    "FROM Home_IMS.Purchase",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND item_price BETWEEN %s AND %s",
+                    "AND store LIKE %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+            {
+                "function": "Get most expensive purchase",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@store",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "max_price"
+                ],
+                "query": [
+                    "SELECT MAX(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND store LIKE %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+            {
+                "function": "Get most expensive purchase price by item name",
+                "inputs": [
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@store",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "max_price"
+                ],
+                "query": [
+                    "SELECT MAX(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "GROUP BY item_name",
+                    "WHERE timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND store LIKE %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+            {
+                "function": "Get most expensive purchase price by parent name",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@store",
+                ],
+                "outputs": [
+                    "max_price"
+                ],
+                "query": [
+                    "SELECT MAX(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "GROUP BY parent_name",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND store LIKE %s;",
+                ]
+            },
+            {
+                "function": "Get most expensive purchase price by store",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "max_price"
+                ],
+                "query": [
+                    "SELECT MAX(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "GROUP BY store",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+            {
+                "function": "Get average purchase price",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@store",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "average_price"
+                ],
+                "query": [
+                    "SELECT AVG(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND store LIKE %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+            {
+                "function": "Get average purchase price by item name",
+                "inputs": [
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@store",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "average_price"
+                ],
+                "query": [
+                    "SELECT AVG(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "GROUP BY item_name",
+                    "WHERE timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND store LIKE %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+            {
+                "function": "Get average purchase price by parent name",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@store",
+                ],
+                "outputs": [
+                    "average_price"
+                ],
+                "query": [
+                    "SELECT AVG(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "GROUP BY parent_name",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND store LIKE %s;",
+                ]
+            },
+            {
+                "function": "Get average purchase price by store",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@quantity_min",
+                    "@quantity_max",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "average_price"
+                ],
+                "query": [
+                    "SELECT AVG(price) AS price",
+                    "FROM Home_IMS.Purchase",
+                    "GROUP BY store",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND quantity BETWEEN %s AND %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+            {
+                "function": "Get total cost",
+                "inputs": [
+                    "@item_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@parent_name",
+                ],
+                "outputs": [
+                    "total_cost"
+                ],
+                "query": [
+                    "SELECT SUM(price * quantity)",
+                    "FROM Home_IMS.Purchase",
+                    "WHERE item_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND parent_name LIKE %s;"
+                ]
+            },
+        ],
         "Recipe": [
             {
                 "function": "Create recipe",
