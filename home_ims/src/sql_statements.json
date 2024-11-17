@@ -866,7 +866,92 @@
                 ]
             },
         ],
-        "History": [],
+        "History": [
+            {
+                "function": "Add history record",
+                "inputs": [
+                    "@item_name",
+                    "@quantity"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.History (item_name, quantity)",
+                    "VALUES (%s, %s);",
+                ]
+            },
+        ],
+        "Wasted": [
+            {
+                "function": "Add item wasted record",
+                "inputs": [
+                    "@item_name",
+                    "@date_used"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Wasted (item_name, date_used)",
+                    "VALUES (%s, %s);",
+                ]
+            },
+            {
+                "function": "Select waste records",
+                "inputs": [
+                    "@item_name",
+                    "@date_used_from",
+                    "@date_used_to",
+                ],
+                "outputs": [
+                    "item_name",
+                    "date_used"
+                ],
+                "query": [
+                    "SELECT H.item_name, H.date_used",
+                    "FROM Home_IMS.History AS H",
+                    "JOIN Home_IMS.Wasted AS W",
+                    "ON H.item_name = W.item_name AND H.date_used = W.date_used",
+                    "WHERE H.item_name LIKE %s",
+                    "AND H.date_used BETWEEN %s AND %s;",
+                ]
+            },
+        ],
+        "Used": [
+            {
+                "function": "Add item used record",
+                "inputs": [
+                    "@item_name",
+                    "@date_used",
+                    "@user_name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Used (item_name, date_used, user_name)",
+                    "VALUES (%s, %s, %s);",
+                ]
+            },
+            {
+                "function": "Select waste records",
+                "inputs": [
+                    "@item_name",
+                    "@date_used_from",
+                    "@date_used_to",
+                    "@user_name",
+                ],
+                "outputs": [
+                    "item_name",
+                    "date_used",
+                    "user_name",
+                ],
+                "query": [
+                    "SELECT H.item_name, H.date_used, U.user_name",
+                    "FROM Home_IMS.History AS H",
+                    "JOIN Home_IMS.Used AS U",
+                    "ON H.item_name = U.item_name AND H.date_used = U.date_used",
+                    "WHERE H.item_name LIKE %s",
+                    "AND H.date_used BETWEEN %s AND %s",
+                    "AND U.user_name LIKE %s;",
+                ]
+            },
+        ],
         "Purchase": [],
         "Recipe": [
             {
