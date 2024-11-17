@@ -352,8 +352,212 @@
         }
     ],
     "dml/dql": {
-        "MealSchedule": [],
-        "ItemType": [],
+        "MealSchedule": [
+            {
+                "function": "Create a meal schedule",
+                "inputs": [
+                    "@recipe_name",
+                    "@timestamp",
+                    "@location_name",
+                    "@meal_type"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)",
+                    "VALUES (%s, %s, %s, %s);"
+                ]
+            },
+            {
+                "function": "Delete a meal schedule",
+                "inputs": [
+                    "@recipe_name",
+                    "@timestamp"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.MealSchedule",
+                    "WHERE recipe_name = %s",
+                    "AND timestamp = %s;"
+                ]
+            },
+            {
+                "function": "Select meal schedules",
+                "inputs": [
+                    "@recipe_name",
+                    "@timestamp_from",
+                    "@timestamp_to",
+                    "@location_name",
+                    "@meal_type"
+                ],
+                "outputs": [],
+                "query": [
+                    "SELECT recipe_name, timestamp, location_name, meal_type FROM Home_IMS.MealSchedule",
+                    "WHERE recipe_name LIKE %s",
+                    "AND timestamp BETWEEN %s AND %s",
+                    "AND location_name LIKE %s",
+                    "AND meal_type LIKE %s;",
+                ]
+            },
+        ],
+        "ItemType": [
+            {
+                "function": "Add item type",
+                "inputs": [
+                    "@name",
+                    "@unit",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.ItemType (name, unit)",
+                    "VALUES (%s, %s);",
+                ]
+            },
+            {
+                "function": "Select item type",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [
+                    "name",
+                    "unit"
+                ],
+                "query": [
+                    "SELECT name, unit FROM Home_IMS.ItemType",
+                    "WHERE name LIKE %s;",
+                ]
+            },
+            {
+                "function": "TODO: Daniel I have no idea what this does",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [
+                    "recipe_name",
+                    "food_name",
+                    "timestamp",
+                    "location_name",
+                    "meal_type"
+                ],
+                "query": [
+                    "SELECT R.recipe_name, R.food_name, M.timestamp, M.location_name, M.meal_type",
+                    "FROM Home_IMS.MealSchedule AS M",
+                    "JOIN Home_IMS.Recipe AS R ON M.recipe_name = R.recipe_name",
+                    "WHERE R.food_name = %s;",
+                ]
+            },
+        ],
+        "Consumable": [
+            {
+                "function": "Add consumable",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Consumable (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Select consumable",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [
+                    "name",
+                    "unit"
+                ],
+                "query": [
+                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "JOIN Home_IMS.Consumable AS C ON I.name = C.name",
+                    "WHERE name LIKE %s;"
+                ]
+            },
+        ],
+        "Durable": [
+            {
+                "function": "Add durable",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Durable (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Select durable",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [
+                    "name",
+                    "unit"
+                ],
+                "query": [
+                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "JOIN Home_IMS.Durable AS C ON I.name = C.name",
+                    "WHERE name LIKE %s;"
+                ]
+            },
+        ],
+        "Food": [
+            {
+                "function": "Add food",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Food (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Select food",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [
+                    "name",
+                    "unit"
+                ],
+                "query": [
+                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "JOIN Home_IMS.Food AS C ON I.name = C.name",
+                    "WHERE name LIKE %s;"
+                ]
+            },
+        ],
+        "NotFood": [
+            {
+                "function": "Add not food",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.NotFood (name)",
+                    "VALUES (%s);",
+                ]
+            },
+            {
+                "function": "Select not food",
+                "inputs": [
+                    "@name",
+                ],
+                "outputs": [
+                    "name",
+                    "unit"
+                ],
+                "query": [
+                    "SELECT I.name, I.unit FROM Home_IMS.ItemType AS I",
+                    "JOIN Home_IMS.NotFood AS C ON I.name = C.name",
+                    "WHERE name LIKE %s;"
+                ]
+            },
+        ],
         "Location": [],
         "Storage": [],
         "User": [],
