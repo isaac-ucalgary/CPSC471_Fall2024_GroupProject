@@ -1,0 +1,69 @@
+- MealSchedule:
+    - Create
+    - Delete (warn if in use)
+    - View all or filter by meal type/recipe/time.
+    -- Check if inventory contains sufficient ingredients (filter on location)
+    -- Consume (automatically handles inventory and usage history [warn if not yet consumed?])
+        -- NOTE: Don't forbid user from consuming if not enough inventory.
+
+- ItemType (+ subclasses):
+    - Create
+    - View all or filter by name or type (food/notfood/consumable/etc.)
+    - View meals requiring item
+
+- Location:
+    - Create
+    - Delete (warn if in use)
+    - View all or filter by name
+    -- List all storage? (hard to justify)
+
+- Storage (+ subclasses):
+    - Create
+    - Delete (warn if in use)
+    - View all or filter by name/location
+
+- User (+ subclasses):
+    - Create
+    - View all or filter by name
+    -- View purchase/consumption records
+
+- History (+ subclasses):
+    - Create
+    - View all or filter by item/date range/[quantity?] 
+        - Include who used the item
+
+- Purchase:
+    - Create
+    - View all or filter by item/date range/[quantity?]
+        - Include who purchased the item, price, store, quantity, time, etc.
+
+- Recipe:
+    - Create (after associated food/item type if necessary + template)
+    - Delete (warn if in use)
+    - View all or filter by name [toggle filter out single-ingredient "recipes"]
+    -- Clone recipe (along with ingredients)
+
+- Ingredients:
+    - Create
+    - Delete
+    - Change quantity
+    - View all
+
+- Inventory:
+    - Create
+    - Delete (possibly record to history)
+    - Change quantity
+    - Move items between storages. (remember "on duplicate key update" for storage change conflicts)
+    - View all (with units) or filter [by storage/(location?)]
+    -- View in specific storarge types (e.g. freezer, fridge, appliance, dry)
+
+* Analytics
+    - For particular item:
+        - Quantity currently in stock (careful with locations)
+        - Average/min/max age
+    - Spoilage rate [within date range] [per item] [per storage]
+    -- Spoilage rate change [per item?] [per storage] (between date ranges?)
+    - Total consumed [per user] [per item]
+    - Total purchased [by parent] [per item?]
+    -- Number of different item types per storage
+    - Total money spent [per item] [within date range] [per user]

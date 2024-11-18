@@ -177,6 +177,11 @@
   VALUES (%s, %s, %s);
 
 -- TODO: Filter by quantity?
+- SELECT item_name, date_used FROM Home_IMS.History
+  WHERE item_name LIKE %s
+  AND date_used BETWEEN %s AND %s;
+
+-- TODO: Filter by quantity?
 - SELECT H.item_name, H.date_used FROM Home_IMS.History AS H
   JOIN Home_IMS.Wasted AS W ON H.item_name = W.item_name AND H.date_used = W.date_used
   WHERE H.item_name LIKE %s
@@ -188,6 +193,9 @@
   WHERE H.item_name LIKE %s
   AND H.date_used BETWEEN %s AND %s
   AND U.user_name LIKE %s;
+
+- INSERT INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)
+  VALUES (%s, %s, %s, %s, %s);
 
 -- TODO May need something like SELECT name, unit FROM ItemType NATURAL JOIN Food;
 
