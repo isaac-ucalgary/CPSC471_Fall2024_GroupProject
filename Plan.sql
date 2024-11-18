@@ -201,16 +201,16 @@ INSERT INTO Home_IMS.ItemType (name, unit)
 VALUES (%s, %s);
 
 INSERT INTO Home_IMS.Consumable (name)
-VALUES (%s, %s);
+VALUES (%s);
 
 INSERT INTO Home_IMS.Durable (name)
-VALUES (%s, %s);
+VALUES (%s);
 
 INSERT INTO Home_IMS.Food (name)
-VALUES (%s, %s);
+VALUES (%s);
 
 INSERT INTO Home_IMS.NotFood (name)
-VALUES (%s, %s);
+VALUES (%s);
 
 -- Search item types (by name and type)
 SELECT name, unit FROM Home_IMS.ItemType
