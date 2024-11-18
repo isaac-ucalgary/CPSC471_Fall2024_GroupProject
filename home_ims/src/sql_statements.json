@@ -292,7 +292,7 @@
                 "CREATE TABLE Home_IMS.Purchase (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
-                "quantity INT NOT NULL,",
+                "quantity FLOAT NOT NULL,",
                 "price FLOAT NOT NULL,",
                 "store VARCHAR(255) NOT NULL,",
                 "parent_name VARCHAR(255) NOT NULL,",
