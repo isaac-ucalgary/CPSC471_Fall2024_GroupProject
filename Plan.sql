@@ -96,7 +96,7 @@ CREATE TABLE Home_IMS.Ingredients (
 CREATE TABLE Home_IMS.Storage (
   storage_name VARCHAR(255) NOT NULL,
   location_name VARCHAR(255) NOT NULL,
-  capacity FLOAT NOT NULL,
+  capacity FLOAT NOT NULL DEFAULT 0,
   PRIMARY KEY (storage_name),
   FOREIGN KEY (location_name) REFERENCES Location(name),
   CHECK (capacity >= 0 AND capacity <= 2)
