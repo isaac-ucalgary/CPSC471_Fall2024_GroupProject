@@ -58,12 +58,11 @@
     -- View in specific storarge types (e.g. freezer, fridge, appliance, dry)
 
 * Analytics
-    - For particular item:
-        - Quantity currently in stock (careful with locations)
-        - Average/min/max age
-    - Spoilage rate [within date range] [per item] [per storage]
+    - Waste vs. use per item [for time period] (also how much money was spent/wasted)
+
+    -- Spoilage rate [within date range] [per item] [per storage]
     -- Spoilage rate change [per item?] [per storage] (between date ranges?)
-    - Total consumed [per user] [per item]
-    - Total purchased [by parent] [per item?]
+    -- Total consumed [per user] [per item]
+    -- Total purchased [by parent] [per item?]
     -- Number of different item types per storage
-    - Total money spent [per item] [within date range] [per user]
+    -- Total money spent [per item] [within date range] [per user]
