@@ -502,11 +502,11 @@ WHERE M.timestamp <= %s
 GROUP BY I.food_name;
 
 -- Get total stock for ingredients needed in meals scheduled no later than provided date.
-SELECT S.item_name, SUM(quantity) AS total_quantity FROM Home_IMS.Inventory
+SELECT S.item_name, SUM(S.quantity) AS total_quantity FROM Home_IMS.Inventory AS S
 AND EXISTS (
   SELECT * FROM Home_IMS.MealSchedule AS M
   JOIN Home_IMS.Ingredients AS I ON M.recipe_name = I.recipe_name
   WHERE M.timestamp <= %s
   AND I.food_name = S.item_name
 )
-GROUP BY item_name;
+GROUP BY S.item_name;
