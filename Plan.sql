@@ -1,11 +1,3 @@
--- TODO: Decide on ordering for each select statement if necessary.
--- TODO: Do we want pruning for Inventory?
--- TODO: Find any SELECT * then decide what columns to query.
--- TODO: Tag %s:@varname
--- TODO: Syntax check if time permits.
--- TODO: Check that primary keys are fully being used with insert/update/delete.
--- TODO: Add "note" column to Template in RM diagram.
-
 ----------------------
 --- Database setup ---
 ----------------------
@@ -69,11 +61,9 @@ CREATE TABLE Home_IMS.Recipe (
 CREATE TABLE Home_IMS.MealSchedule (
   recipe_name VARCHAR(255) NOT NULL,
   timestamp DATETIME NOT NULL,
-  location_name VARCHAR(255) NOT NULL,
   meal_type VARCHAR(31),
-  PRIMARY KEY (recipe_name, timestamp, location_name),
-  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name),
-  FOREIGN KEY (location_name) REFERENCES Location(name)
+  PRIMARY KEY (recipe_name, timestamp),
+  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name)
 );
 
 CREATE TABLE Home_IMS.User (
@@ -140,7 +130,7 @@ CREATE TABLE Home_IMS.Inventory (
   item_name VARCHAR(255) NOT NULL,
   storage_name VARCHAR(255) NOT NULL,
   timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  expiry DATETIME
+  expiry DATETIME,
   quantity FLOAT NOT NULL,
   PRIMARY KEY (item_name, storage_name, timestamp),
   FOREIGN KEY (item_name) REFERENCES ItemType (name),
@@ -190,17 +180,16 @@ CREATE TABLE Home_IMS.Used (
 --- MealSchedule ---
 --------------------
 
-INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)
+INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, meal_type)
 VALUES (%s, %s, %s, %s);
 
 DELETE FROM Home_IMS.MealSchedule
 WHERE recipe_name = %s
 AND timestamp = %s;
 
-SELECT recipe_name, timestamp, location_name, meal_type FROM Home_IMS.MealSchedule
+SELECT recipe_name, timestamp, meal_type FROM Home_IMS.MealSchedule
 WHERE recipe_name LIKE %s ESCAPE '!'
 AND timestamp BETWEEN %s AND %s
-AND location_name LIKE %s ESCAPE '!'
 AND meal_type LIKE %s ESCAPE '!';
 
 -----------------
@@ -481,5 +470,31 @@ AND I.expiry BETWEEN %s AND %s
 AND I.storage_name LIKE %s ESCAPE '!'
 AND S.location_name LIKE %s ESCAPE '!';
 
--- TODO Analytics
--- TODO Shopping list (difference query)
+-----------------
+--- Analytics ---
+-----------------
+
+-- Get total quantity used per item type (filtered by item name)
+SELECT H.item_name, SUM(H.quantity)
+
+GROUP BY H.item_name
+
+---------------------
+--- Shopping list ---
+---------------------
+
+-- Get total ingredients needed for meals scheduled no later than provided date.
+SELECT I.food_name, SUM(I.quantity) AS total_quantity FROM Home_IMS.MealSchedule AS M
+JOIN Home_IMS.Ingredients AS I ON I.recipe_name = M.recipe_name
+WHERE M.timestamp <= %s
+GROUP BY I.food_name;
+
+-- Get total stock for ingredients needed in meals scheduled no later than provided date.
+SELECT S.item_name, SUM(quantity) AS total_quantity FROM Home_IMS.Inventory
+AND EXISTS (
+  SELECT * FROM Home_IMS.MealSchedule AS M
+  JOIN Home_IMS.Ingredients AS I ON M.recipe_name = I.recipe_name
+  WHERE M.timestamp <= %s
+  AND I.food_name = S.item_name
+)
+GROUP BY item_name;
