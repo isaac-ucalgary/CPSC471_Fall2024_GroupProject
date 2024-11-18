@@ -474,10 +474,22 @@ AND S.location_name LIKE %s ESCAPE '!';
 --- Analytics ---
 -----------------
 
--- Get total quantity used per item type (filtered by item name)
-SELECT H.item_name, SUM(H.quantity)
+-- Get total quantity used per item type (filtered by item type)
+SELECT H.item_name, SUM(H.quantity) FROM Home_IMS.History AS H
+JOIN Home_IMS.Used AS U ON U.item_name = H.item_name AND U.date_used = H.date_used
+WHERE H.item_name LIKE %s ESCAPE '!'
+GROUP BY H.item_name;
 
-GROUP BY H.item_name
+-- Get total quantity wasted per item type (filtered by item type)
+SELECT H.item_name, SUM(H.quantity) FROM Home_IMS.History AS H
+JOIN Home_IMS.Wasted AS W ON W.item_name = H.item_name AND W.date_used = H.date_used
+WHERE H.item_name LIKE %s ESCAPE '!'
+GROUP BY H.item_name;
+
+-- Get total expenditure per item type (filtered by item type)
+SELECT item_name, SUM(price) FROM Home_IMS.Purchase
+WHERE item_name LIKE %s ESCAPE '!'
+GROUP BY item_name;
 
 ---------------------
 --- Shopping list ---
