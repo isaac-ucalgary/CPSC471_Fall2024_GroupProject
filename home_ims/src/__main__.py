@@ -8,8 +8,8 @@ def click():
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    window = uic.loadUi("mainwindow.ui")
-    window.pushButton.pressed.connect(click)
+    window = uic.loadUi("main.ui")
+    window.shoppingListButton.pressed.connect(click)
     window.show()
     app.exec()
 
