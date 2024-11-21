@@ -56,7 +56,7 @@
                 "CREATE TABLE Home_IMS.NotFood (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
-                "FOREIGN KEY (name) REFERENCES ItemType(name)",
+                "FOREIGN KEY (name) REFERENCES Consumable(name)",
                 ");"
             ],
             "order": 4
@@ -69,7 +69,7 @@
                 "CREATE TABLE Home_IMS.Food (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
-                "FOREIGN KEY (name) REFERENCES ItemType(name)",
+                "FOREIGN KEY (name) REFERENCES Consumable(name)",
                 ");"
             ],
             "order": 5
@@ -352,48 +352,51 @@
         }
     ],
     "dml/dql": {
-        "MealSchedule": [
-            {
-                "function": "Create a meal schedule",
+        "MealSchedule": {
+            "Create a meal schedule": {
                 "inputs": [
-                    "@recipe_name",
-                    "@timestamp",
-                    "@location_name",
-                    "@meal_type"
+                    "recipe_name",
+                    "timestamp",
+                    "location_name",
+                    "meal_type"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)",
                     "VALUES (%s, %s, %s, %s);"
+                ],
+                "notes": [
+                    "Create a meal schedule"
                 ]
             },
-            {
-                "function": "Delete a meal schedule",
+            "Delete a meal schedule": {
                 "inputs": [
-                    "@recipe_name",
-                    "@timestamp"
+                    "recipe_name",
+                    "timestamp"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.MealSchedule",
                     "WHERE recipe_name = %s",
                     "AND timestamp = %s;"
+                ],
+                "notes": [
+                    "Delete a meal schedule"
                 ]
             },
-            {
-                "function": "Select meal schedules",
+            "Select meal schedules": {
                 "inputs": [
-                    "@recipe_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@location_name",
-                    "@meal_type"
+                    "recipe_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "location_name",
+                    "meal_type"
                 ],
                 "outputs": [
                     "recipe_name",
                     "timestamp",
                     "location_name",
-                    "meal_type",
+                    "meal_type"
                 ],
                 "query": [
                     "SELECT recipe_name, timestamp, location_name, meal_type",
@@ -401,27 +404,31 @@
                     "WHERE recipe_name LIKE %s",
                     "AND timestamp BETWEEN %s AND %s",
                     "AND location_name LIKE %s",
-                    "AND meal_type LIKE %s;",
+                    "AND meal_type LIKE %s;"
+                ],
+                "notes": [
+                    "Select meal schedules"
                 ]
-            },
-        ],
-        "ItemType": [
-            {
-                "function": "Add item type",
+            }
+        },
+        "ItemType": {
+            "Add item type": {
                 "inputs": [
-                    "@name",
-                    "@unit",
+                    "name",
+                    "unit"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.ItemType (name, unit)",
-                    "VALUES (%s, %s);",
+                    "VALUES (%s, %s);"
+                ],
+                "notes": [
+                    "Add item type"
                 ]
             },
-            {
-                "function": "Select item type",
+            "Select item type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [
                     "name",
@@ -430,13 +437,16 @@
                 "query": [
                     "SELECT name, unit",
                     "FROM Home_IMS.ItemType",
-                    "WHERE name LIKE %s;",
+                    "WHERE name LIKE %s",
+                    "AND I.unit LIKE %s;"
+                ],
+                "notes": [
+                    "Select item type"
                 ]
             },
-            {
-                "function": "TODO: Daniel I have no idea what this does",
+            "TODO: Daniel I have no idea what this does": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [
                     "recipe_name",
@@ -449,26 +459,30 @@
                     "SELECT R.recipe_name, R.food_name, M.timestamp, M.location_name, M.meal_type",
                     "FROM Home_IMS.MealSchedule AS M",
                     "JOIN Home_IMS.Recipe AS R ON M.recipe_name = R.recipe_name",
-                    "WHERE R.food_name = %s;",
+                    "WHERE R.food_name = %s;"
+                ],
+                "notes": [
+                    "TODO: Daniel I have no idea what this does"
                 ]
-            },
-        ],
-        "Consumable": [
-            {
-                "function": "Add consumable",
+            }
+        },
+        "Consumable": {
+            "Add consumable type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Consumable (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add consumable"
                 ]
             },
-            {
-                "function": "Select consumable",
+            "Select consumable type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [
                     "name",
@@ -478,26 +492,31 @@
                     "SELECT I.name, I.unit",
                     "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.Consumable AS C ON I.name = C.name",
-                    "WHERE name LIKE %s;"
+                    "WHERE I.name LIKE %s",
+                    "AND I.unit LIKE %s;"
+                ],
+                "notes": [
+                    "Select consumable"
                 ]
-            },
-        ],
-        "Durable": [
-            {
-                "function": "Add durable",
+            }
+        },
+        "Durable": {
+            "Add durable type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Durable (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add durable"
                 ]
             },
-            {
-                "function": "Select durable",
+            "Select durable type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [
                     "name",
@@ -507,26 +526,31 @@
                     "SELECT I.name, I.unit",
                     "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.Durable AS C ON I.name = C.name",
-                    "WHERE name LIKE %s;"
+                    "WHERE I.name LIKE %s",
+                    "AND I.unit LIKE %s;"
+                ],
+                "notes": [
+                    "Select durable"
                 ]
-            },
-        ],
-        "Food": [
-            {
-                "function": "Add food",
+            }
+        },
+        "Food": {
+            "Add food type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Food (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add food"
                 ]
             },
-            {
-                "function": "Select food",
+            "Select food type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [
                     "name",
@@ -536,26 +560,31 @@
                     "SELECT I.name, I.unit",
                     "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.Food AS C ON I.name = C.name",
-                    "WHERE name LIKE %s;"
+                    "WHERE I.name LIKE %s",
+                    "AND I.unit LIKE %s;"
+                ],
+                "notes": [
+                    "Select food"
                 ]
-            },
-        ],
-        "NotFood": [
-            {
-                "function": "Add not food",
+            }
+        },
+        "NotFood": {
+            "Add notfood type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.NotFood (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add not food"
                 ]
             },
-            {
-                "function": "Select not food",
+            "Select not food type": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [
                     "name",
@@ -565,37 +594,44 @@
                     "SELECT I.name, I.unit",
                     "FROM Home_IMS.ItemType AS I",
                     "JOIN Home_IMS.NotFood AS C ON I.name = C.name",
-                    "WHERE name LIKE %s;"
+                    "WHERE I.name LIKE %s",
+                    "AND I.unit LIKE %s;"
+                ],
+                "notes": [
+                    "Select not food"
                 ]
-            },
-        ],
-        "Location": [
-            {
-                "function": "Add location",
+            }
+        },
+        "Location": {
+            "Add location": {
                 "inputs": [
-                    "@name"
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Location (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add location"
                 ]
             },
-            {
-                "function": "Delete location",
+            "Delete location": {
                 "inputs": [
-                    "@name"
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Location",
-                    "WHERE name = %s;",
+                    "WHERE name = %s;"
+                ],
+                "notes": [
+                    "Delete location"
                 ]
             },
-            {
-                "function": "Select locations",
+            "Select locations": {
                 "inputs": [
-                    "@name"
+                    "name"
                 ],
                 "outputs": [
                     "name"
@@ -603,39 +639,45 @@
                 "query": [
                     "SELECT name",
                     "FROM Home_IMS.Location",
-                    "WHERE name LIKE %s;",
+                    "WHERE name LIKE %s;"
+                ],
+                "notes": [
+                    "Select locations"
                 ]
-            },
-        ],
-        "Storage": [
-            {
-                "function": "Add storage",
+            }
+        },
+        "Storage": {
+            "Add storage": {
                 "inputs": [
-                    "@storage_name",
-                    "@location_name"
+                    "storage_name",
+                    "location_name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Storage (storage_name, location_name)",
-                    "VALUES (%s, %s);",
+                    "VALUES (%s, %s);"
+                ],
+                "notes": [
+                    "Add storage"
                 ]
             },
-            {
-                "function": "Delete storage",
+            "Delete storage": {
                 "inputs": [
-                    "@storage_name"
+                    "storage_name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Storage",
-                    "WHERE storage_name = %s;",
+                    "WHERE storage_name = %s;"
+                ],
+                "notes": [
+                    "Delete storage"
                 ]
             },
-            {
-                "function": "Select storage",
+            "Select storage": {
                 "inputs": [
-                    "@storage_name",
-                    "@location_name"
+                    "storage_name",
+                    "location_name"
                 ],
                 "outputs": [
                     "storage_name",
@@ -645,38 +687,44 @@
                     "SELECT storage_name, location_name",
                     "FROM Home_IMS.Storage",
                     "WHERE storage_name LIKE %s",
-                    "AND location_name LIKE %s;",
+                    "AND location_name LIKE %s;"
+                ],
+                "notes": [
+                    "Select storage"
                 ]
-            },
-        ],
-        "Dry": [
-            {
-                "function": "Add dry storage",
+            }
+        },
+        "Dry": {
+            "Add dry storage": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Dry (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add dry storage"
                 ]
             },
-            {
-                "function": "Delete dry storage",
+            "Delete dry storage": {
                 "inputs": [
-                    "@name"
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Dry",
-                    "WHERE name = %s;",
+                    "WHERE name = %s;"
+                ],
+                "notes": [
+                    "Delete dry storage"
                 ]
             },
-            {
-                "function": "Select dry storage",
+            "Select dry storage": {
                 "inputs": [
-                    "@storage_name",
-                    "@location_name"
+                    "storage_name",
+                    "location_name"
                 ],
                 "outputs": [
                     "storage_name",
@@ -687,38 +735,44 @@
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Dry as D ON S.storage_name = D.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;",
+                    "AND S.location_name LIKE %s;"
+                ],
+                "notes": [
+                    "Select dry storage"
                 ]
-            },
-        ],
-        "Appliance": [
-            {
-                "function": "Add appliance",
+            }
+        },
+        "Appliance": {
+            "Add appliance": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Appliance (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add appliance"
                 ]
             },
-            {
-                "function": "Delete appliance",
+            "Delete appliance": {
                 "inputs": [
-                    "@name"
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Appliance",
-                    "WHERE name = %s;",
+                    "WHERE name = %s;"
+                ],
+                "notes": [
+                    "Delete appliance"
                 ]
             },
-            {
-                "function": "Select appliance",
+            "Select appliance": {
                 "inputs": [
-                    "@storage_name",
-                    "@location_name"
+                    "storage_name",
+                    "location_name"
                 ],
                 "outputs": [
                     "storage_name",
@@ -729,38 +783,44 @@
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Appliance as A ON S.storage_name = A.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;",
+                    "AND S.location_name LIKE %s;"
+                ],
+                "notes": [
+                    "Select appliance"
                 ]
-            },
-        ],
-        "Fridge": [
-            {
-                "function": "Add fridge",
+            }
+        },
+        "Fridge": {
+            "Add fridge": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Fridge (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add fridge"
                 ]
             },
-            {
-                "function": "Delete fridge",
+            "Delete fridge": {
                 "inputs": [
-                    "@name"
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Fridge",
-                    "WHERE name = %s;",
+                    "WHERE name = %s;"
+                ],
+                "notes": [
+                    "Delete fridge"
                 ]
             },
-            {
-                "function": "Select fridge",
+            "Select fridge": {
                 "inputs": [
-                    "@storage_name",
-                    "@location_name"
+                    "storage_name",
+                    "location_name"
                 ],
                 "outputs": [
                     "storage_name",
@@ -771,38 +831,44 @@
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Fridge as F ON S.storage_name = F.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;",
+                    "AND S.location_name LIKE %s;"
+                ],
+                "notes": [
+                    "Select fridge"
                 ]
-            },
-        ],
-        "Freezer": [
-            {
-                "function": "Add freezer",
+            }
+        },
+        "Freezer": {
+            "Add freezer": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Freezer (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add freezer"
                 ]
             },
-            {
-                "function": "Delete freezer",
+            "Delete freezer": {
                 "inputs": [
-                    "@name"
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Freezer",
-                    "WHERE name = %s;",
+                    "WHERE name = %s;"
+                ],
+                "notes": [
+                    "Delete freezer"
                 ]
             },
-            {
-                "function": "Select freezer",
+            "Select freezer": {
                 "inputs": [
-                    "@storage_name",
-                    "@location_name"
+                    "storage_name",
+                    "location_name"
                 ],
                 "outputs": [
                     "storage_name",
@@ -813,26 +879,30 @@
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Freezer as F ON S.storage_name = F.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;",
+                    "AND S.location_name LIKE %s;"
+                ],
+                "notes": [
+                    "Select freezer"
                 ]
-            },
-        ],
-        "User": [
-            {
-                "function": "Add user",
+            }
+        },
+        "User": {
+            "Add user": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.User (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add user"
                 ]
             },
-            {
-                "function": "Select users",
+            "Select users": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [
                     "name"
@@ -840,13 +910,15 @@
                 "query": [
                     "SELECT name",
                     "FROM HomeIMS.User",
-                    "WHERE name LIKE %s;",
+                    "WHERE name LIKE %s;"
+                ],
+                "notes": [
+                    "Select users"
                 ]
             },
-            {
-                "function": "Select items used by user",
+            "Select items used by user": {
                 "inputs": [
-                    "@user_name",
+                    "user_name"
                 ],
                 "outputs": [
                     "item_name",
@@ -855,69 +927,79 @@
                 "query": [
                     "SELECT item_name, date_used",
                     "FROM Home_IMS.Used",
-                    "WHERE user_name = %s;",
+                    "WHERE user_name = %s;"
+                ],
+                "notes": [
+                    "Select items used by user"
                 ]
-            },
-        ],
-        "Parent": [
-            {
-                "function": "Add parent",
+            }
+        },
+        "Parent": {
+            "Add parent": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Parent (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add parent"
                 ]
-            },
-        ],
-        "Dependent": [
-            {
-                "function": "Add dependent",
+            }
+        },
+        "Dependent": {
+            "Add dependent": {
                 "inputs": [
-                    "@name",
+                    "name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Dependent (name)",
-                    "VALUES (%s);",
+                    "VALUES (%s);"
+                ],
+                "notes": [
+                    "Add dependent"
                 ]
-            },
-        ],
-        "History": [
-            {
-                "function": "Add history record",
+            }
+        },
+        "History": {
+            "Add history record": {
                 "inputs": [
-                    "@item_name",
-                    "@quantity"
+                    "item_name",
+                    "quantity"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.History (item_name, quantity)",
-                    "VALUES (%s, %s);",
+                    "VALUES (%s, %s);"
+                ],
+                "notes": [
+                    "Add history record"
                 ]
-            },
-        ],
-        "Wasted": [
-            {
-                "function": "Add item wasted record",
+            }
+        },
+        "Wasted": {
+            "Add item wasted record": {
                 "inputs": [
-                    "@item_name",
-                    "@date_used"
+                    "item_name",
+                    "date_used"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Wasted (item_name, date_used)",
-                    "VALUES (%s, %s);",
+                    "VALUES (%s, %s);"
+                ],
+                "notes": [
+                    "Add item wasted record"
                 ]
             },
-            {
-                "function": "Select waste records",
+            "Select waste records": {
                 "inputs": [
-                    "@item_name",
-                    "@date_used_from",
-                    "@date_used_to",
+                    "item_name",
+                    "date_used_from",
+                    "date_used_to"
                 ],
                 "outputs": [
                     "item_name",
@@ -929,36 +1011,40 @@
                     "JOIN Home_IMS.Wasted AS W",
                     "ON H.item_name = W.item_name AND H.date_used = W.date_used",
                     "WHERE H.item_name LIKE %s",
-                    "AND H.date_used BETWEEN %s AND %s;",
+                    "AND H.date_used BETWEEN %s AND %s;"
+                ],
+                "notes": [
+                    "Select waste records"
                 ]
-            },
-        ],
-        "Used": [
-            {
-                "function": "Add item used record",
+            }
+        },
+        "Used": {
+            "Add item used record": {
                 "inputs": [
-                    "@item_name",
-                    "@date_used",
-                    "@user_name",
+                    "item_name",
+                    "date_used",
+                    "user_name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Used (item_name, date_used, user_name)",
-                    "VALUES (%s, %s, %s);",
+                    "VALUES (%s, %s, %s);"
+                ],
+                "notes": [
+                    "Add item used record"
                 ]
             },
-            {
-                "function": "Select waste records",
+            "Select waste records": {
                 "inputs": [
-                    "@item_name",
-                    "@date_used_from",
-                    "@date_used_to",
-                    "@user_name",
+                    "item_name",
+                    "date_used_from",
+                    "date_used_to",
+                    "user_name"
                 ],
                 "outputs": [
                     "item_name",
                     "date_used",
-                    "user_name",
+                    "user_name"
                 ],
                 "query": [
                     "SELECT H.item_name, H.date_used, U.user_name",
@@ -967,38 +1053,42 @@
                     "ON H.item_name = U.item_name AND H.date_used = U.date_used",
                     "WHERE H.item_name LIKE %s",
                     "AND H.date_used BETWEEN %s AND %s",
-                    "AND U.user_name LIKE %s;",
+                    "AND U.user_name LIKE %s;"
+                ],
+                "notes": [
+                    "Select waste records"
                 ]
-            },
-        ],
-        "Purchase": [
-            {
-                "function": "Add purchase record",
+            }
+        },
+        "Purchase": {
+            "Add purchase record": {
                 "inputs": [
-                    "@item_name",
-                    "@quantity",
-                    "@item_price",
-                    "@store",
-                    "@parent_name",
+                    "item_name",
+                    "quantity",
+                    "item_price",
+                    "store",
+                    "parent_name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)",
                     "VALUES (%s, %s, %s, %s, %s);"
+                ],
+                "notes": [
+                    "Add purchase record"
                 ]
             },
-            {
-                "function": "Select purchases",
+            "Select purchases": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@item_price_min",
-                    "@item_price_max",
-                    "@store",
-                    "@parent_name",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "item_price_min",
+                    "item_price_max",
+                    "store",
+                    "parent_name"
                 ],
                 "outputs": [
                     "item_name",
@@ -1017,18 +1107,20 @@
                     "AND item_price BETWEEN %s AND %s",
                     "AND store LIKE %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Select purchases"
                 ]
             },
-            {
-                "function": "Get most expensive purchase",
+            "Get most expensive purchase": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@store",
-                    "@parent_name",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "store",
+                    "parent_name"
                 ],
                 "outputs": [
                     "max_price"
@@ -1041,17 +1133,19 @@
                     "AND quantity BETWEEN %s AND %s",
                     "AND store LIKE %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get most expensive purchase"
                 ]
             },
-            {
-                "function": "Get most expensive purchase price by item name",
+            "Get most expensive purchase price by item name": {
                 "inputs": [
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@store",
-                    "@parent_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "store",
+                    "parent_name"
                 ],
                 "outputs": [
                     "max_price"
@@ -1064,17 +1158,19 @@
                     "AND quantity BETWEEN %s AND %s",
                     "AND store LIKE %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get most expensive purchase price by item name"
                 ]
             },
-            {
-                "function": "Get most expensive purchase price by parent name",
+            "Get most expensive purchase price by parent name": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@store",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "store"
                 ],
                 "outputs": [
                     "max_price"
@@ -1086,18 +1182,20 @@
                     "WHERE item_name LIKE %s",
                     "AND timestamp BETWEEN %s AND %s",
                     "AND quantity BETWEEN %s AND %s",
-                    "AND store LIKE %s;",
+                    "AND store LIKE %s;"
+                ],
+                "notes": [
+                    "Get most expensive purchase price by parent name"
                 ]
             },
-            {
-                "function": "Get most expensive purchase price by store",
+            "Get most expensive purchase price by store": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@parent_name",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "parent_name"
                 ],
                 "outputs": [
                     "max_price"
@@ -1110,18 +1208,20 @@
                     "AND timestamp BETWEEN %s AND %s",
                     "AND quantity BETWEEN %s AND %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get most expensive purchase price by store"
                 ]
             },
-            {
-                "function": "Get average purchase price",
+            "Get average purchase price": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@store",
-                    "@parent_name",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "store",
+                    "parent_name"
                 ],
                 "outputs": [
                     "average_price"
@@ -1134,17 +1234,19 @@
                     "AND quantity BETWEEN %s AND %s",
                     "AND store LIKE %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get average purchase price"
                 ]
             },
-            {
-                "function": "Get average purchase price by item name",
+            "Get average purchase price by item name": {
                 "inputs": [
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@store",
-                    "@parent_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "store",
+                    "parent_name"
                 ],
                 "outputs": [
                     "average_price"
@@ -1157,17 +1259,19 @@
                     "AND quantity BETWEEN %s AND %s",
                     "AND store LIKE %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get average purchase price by item name"
                 ]
             },
-            {
-                "function": "Get average purchase price by parent name",
+            "Get average purchase price by parent name": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@store",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "store"
                 ],
                 "outputs": [
                     "average_price"
@@ -1179,18 +1283,20 @@
                     "WHERE item_name LIKE %s",
                     "AND timestamp BETWEEN %s AND %s",
                     "AND quantity BETWEEN %s AND %s",
-                    "AND store LIKE %s;",
+                    "AND store LIKE %s;"
+                ],
+                "notes": [
+                    "Get average purchase price by parent name"
                 ]
             },
-            {
-                "function": "Get average purchase price by store",
+            "Get average purchase price by store": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@quantity_min",
-                    "@quantity_max",
-                    "@parent_name",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "quantity_min",
+                    "quantity_max",
+                    "parent_name"
                 ],
                 "outputs": [
                     "average_price"
@@ -1203,15 +1309,17 @@
                     "AND timestamp BETWEEN %s AND %s",
                     "AND quantity BETWEEN %s AND %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get average purchase price by store"
                 ]
             },
-            {
-                "function": "Get total cost",
+            "Get total cost": {
                 "inputs": [
-                    "@item_name",
-                    "@timestamp_from",
-                    "@timestamp_to",
-                    "@parent_name",
+                    "item_name",
+                    "timestamp_from",
+                    "timestamp_to",
+                    "parent_name"
                 ],
                 "outputs": [
                     "total_cost"
@@ -1222,40 +1330,46 @@
                     "WHERE item_name LIKE %s",
                     "AND timestamp BETWEEN %s AND %s",
                     "AND parent_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get total cost"
                 ]
-            },
-        ],
-        "Recipe": [
-            {
-                "function": "Create recipe",
+            }
+        },
+        "Recipe": {
+            "Create recipe": {
                 "inputs": [
-                    "@recipe_name",
-                    "@food_name"
+                    "recipe_name",
+                    "food_name"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Recipe (recipe_name, food_name)",
                     "VALUES (%s, %s);"
+                ],
+                "notes": [
+                    "Create recipe"
                 ]
             },
-            {
-                "function": "Delete recipe",
+            "Delete recipe": {
                 "inputs": [
-                    "@recipe_name",
-                    "@food_name"
+                    "recipe_name",
+                    "food_name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Recipe AS R",
                     "WHERE R.recipe_name = %s",
                     "AND R.food_name = %s;"
+                ],
+                "notes": [
+                    "Delete recipe"
                 ]
             },
-            {
-                "function": "View recipes",
+            "View recipes": {
                 "inputs": [
-                    "@recipe_name",
-                    "@food_name"
+                    "recipe_name",
+                    "food_name"
                 ],
                 "outputs": [
                     "recipe_name",
@@ -1266,12 +1380,14 @@
                     "FROM Home_IMS.Recipe AS R",
                     "WHERE R.recipe_name LIKE %s",
                     "AND R.food_name LIKE %s;"
+                ],
+                "notes": [
+                    "View recipes"
                 ]
             },
-            {
-                "function": "Get estimated recipe cost",
+            "Get estimated recipe cost": {
                 "inputs": [
-                    "@recipe_name"
+                    "recipe_name"
                 ],
                 "outputs": [
                     "recipe_name",
@@ -1287,56 +1403,64 @@
                     "GROUP BY R.recipe_name",
                     "WHERE R.recipe_name = I.recipe_name",
                     "AND I.food_name = P.item_name",
-                    "AND R.recipe_name LIKE %s;",
+                    "AND R.recipe_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get estimated recipe cost"
                 ]
             }
-        ],
-        "Ingredients": [
-            {
-                "function": "Add ingredient",
+        },
+        "Ingredients": {
+            "Add ingredient": {
                 "inputs": [
-                    "@food_name",
-                    "@recipe_name",
-                    "@quantity"
+                    "food_name",
+                    "recipe_name",
+                    "quantity"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)",
                     "VALUES (%s, %s, %s);"
+                ],
+                "notes": [
+                    "Add ingredient"
                 ]
             },
-            {
-                "function": "Remove ingredient",
+            "Remove ingredient": {
                 "inputs": [
-                    "@food_name",
-                    "@recipe_name",
+                    "food_name",
+                    "recipe_name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Ingredients AS I",
                     "WHERE I.food_name = %s",
-                    "AND I.recipe_name = %s;",
+                    "AND I.recipe_name = %s;"
+                ],
+                "notes": [
+                    "Remove ingredient"
                 ]
             },
-            {
-                "function": "Change ingredient quantity",
+            "Change ingredient quantity": {
                 "inputs": [
-                    "@new_quantity",
-                    "@food_name",
-                    "@recipe_name",
+                    "new_quantity",
+                    "food_name",
+                    "recipe_name"
                 ],
                 "outputs": [],
                 "query": [
                     "UPDATE Home_IMS.Ingredients AS I",
                     "SET I.quantity = %s",
                     "WHERE I.food_name = %s",
-                    "AND I.recipe_name = %s;",
+                    "AND I.recipe_name = %s;"
+                ],
+                "notes": [
+                    "Change ingredient quantity"
                 ]
             },
-            {
-                "function": "View ingredients for a recipe",
+            "View ingredients for a recipe": {
                 "inputs": [
-                    "@recipe_name",
+                    "recipe_name"
                 ],
                 "outputs": [
                     "food_name"
@@ -1345,29 +1469,33 @@
                     "SELECT food_name",
                     "FROM Home_IMS.Ingredients",
                     "WHERE recipe_name LIKE %s;"
+                ],
+                "notes": [
+                    "View ingredients for a recipe"
                 ]
-            },
-        ],
-        "Inventory": [
-            {
-                "function": "Add item to inventory",
+            }
+        },
+        "Inventory": {
+            "Add item to inventory": {
                 "inputs": [
-                    "@item_name",
-                    "@storage_name",
-                    "@quantity"
+                    "item_name",
+                    "storage_name",
+                    "quantity"
                 ],
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
                     "VALUES (%s, %s, %s);"
+                ],
+                "notes": [
+                    "Add item to inventory"
                 ]
             },
-            {
-                "function": "Remove item from inventory",
+            "Remove item from inventory": {
                 "inputs": [
-                    "@item_name",
-                    "@storage_name",
-                    "@timestamp"
+                    "item_name",
+                    "storage_name",
+                    "timestamp"
                 ],
                 "outputs": [],
                 "query": [
@@ -1375,15 +1503,17 @@
                     "WHERE I.item_name = %s",
                     "AND I.storage_name = %s",
                     "AND I.timestamp = %s;"
+                ],
+                "notes": [
+                    "Remove item from inventory"
                 ]
             },
-            {
-                "function": "Change item quantity",
+            "Change item quantity": {
                 "inputs": [
-                    "@new_quantity",
-                    "@item_name",
-                    "@storage_name",
-                    "@timestamp"
+                    "new_quantity",
+                    "item_name",
+                    "storage_name",
+                    "timestamp"
                 ],
                 "outputs": [],
                 "query": [
@@ -1391,29 +1521,33 @@
                     "SET I.quantity = %s",
                     "WHERE I.item_name = %s",
                     "AND I.storage_name = %s",
-                    "AND I.timestamp = %s;",
+                    "AND I.timestamp = %s;"
+                ],
+                "notes": [
+                    "Change item quantity"
                 ]
             },
-            {
-                "function": "Move item storage location",
+            "Move item storage location": {
                 "inputs": [
-                    "@new_storage_name",
-                    "@item_name",
-                    "@old_storage_name",
-                    "@timestamp"
+                    "new_storage_name",
+                    "item_name",
+                    "old_storage_name",
+                    "timestamp"
                 ],
                 "outputs": [],
                 "query": [
                     "TODO Daniel"
+                ],
+                "notes": [
+                    "Move item storage location"
                 ]
             },
-            {
-                "function": "View all",
+            "View all": {
                 "inputs": [
-                    "@item_name",
-                    "@storage_name",
-                    "@timestamp_from",
-                    "@timestamp_to"
+                    "item_name",
+                    "storage_name",
+                    "timestamp_from",
+                    "timestamp_to"
                 ],
                 "outputs": [
                     "item_name",
@@ -1427,8 +1561,11 @@
                     "WHERE I.item_name LIKE %s",
                     "AND I.storage_name LIKE %s",
                     "AND I.timestamp BETWEEN %s AND %s;"
+                ],
+                "notes": [
+                    "View all"
                 ]
             }
-        ]
+        }
     }
 }
