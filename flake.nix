@@ -17,6 +17,7 @@
           qt6.full
           python312Packages.pyqt6
           python312Packages.mysql-connector
+          python312Packages.numpydoc
         ];
       };
     };
