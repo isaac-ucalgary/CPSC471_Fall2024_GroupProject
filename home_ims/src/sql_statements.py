@@ -3,11 +3,18 @@ import os
 
 STATEMENTS_FILE = os.path.abspath(os.path.dirname(__file__) + "/sql_statements.json")
 
-# Gets the ddl sql functions from the json file
-# Assumes the json file is in the same directory as this script
-# The ddl sql functions will be returned sorted in the order they 
-# should be ran in in order to create the database
-def get_ddl_sql_functions() -> list[dict]:
+def get_ddl_sql_functions() -> list[dict[str, str|int|list[str]|list[int]]]:
+    """
+    Gets the ddl sql functions from the json file.
+    Assumes the json file is in the same directory as this script.
+    The ddl sql functions will be returned sorted in the order they 
+    should be ran in in order to create the database.
+
+    Returns
+    -------
+    list[dict[str, str|int|list[str]|list[int]]]:
+        The list of ddl sql functions.
+    """
 
     ddl_sql_functions:list[dict]
 
@@ -30,9 +37,26 @@ def get_ddl_sql_functions() -> list[dict]:
 
 
 
-def get_dmldql_sql_functions() -> dict[str, list[dict]]:
+def get_dmldql_sql_functions() -> dict[str, dict[str, dict[str, str|int|list[str]|list[int]]]]:
+    """
+    Gets the dml/dql sql functions from the json file.
+    Assumes the json file is in the same directory as this script.
 
-    sql_functions:dict[str, list[dict]]
+    Returns
+    -------
+    dict[str, list[dict[str, str|int|list[str]|list[int]]]]
+        The dictionary of dml/dql sql functions.
+
+        The key is the name of a table or context group.
+
+        The value is a list of function of which their statements act
+        upon the table of the same name as the key, or their function 
+        is most similar to the others in the rest of the group for 
+        that table.
+        Said list is a list of dictionaries of functions.
+    """
+
+    sql_functions:dict[str, dict[str, dict]]
 
     # Get the ddl functions from the json file
     with open(STATEMENTS_FILE, "r") as file:
@@ -40,9 +64,9 @@ def get_dmldql_sql_functions() -> dict[str, list[dict]]:
 
     # json does not support multiline strings so convert queries from a list of strings into single strings
     for table_functions in sql_functions.values():
-        table_functions:list[dict]
+        table_functions:dict[str, dict]
 
-        for function in table_functions:
+        for function in table_functions.values():
             function:dict
             query:list[str]|str = function["query"]
 
@@ -53,235 +77,85 @@ def get_dmldql_sql_functions() -> dict[str, list[dict]]:
 
 
 
+def get_query(group:str, name:str) -> str:
+    """
+    Gets a dml/dql query for a sql function called `name` in the 
+    group (or table category) called `group`.
+
+    Parameters
+    ----------
+    group : `str`
+        The group or table category to get the function from.
+    name : `str`
+        The name of the function to get the query of.
+
+    Returns
+    -------
+    str
+        The query of the desired function.
+    """
+
+    sql_functions:dict[str, dict[str, dict]]
+
+    # Get the ddl functions from the json file
+    with open(STATEMENTS_FILE, "r") as file:
+        sql_functions = json.load(file)["dml/dql"]
+
+    return " ".join(sql_functions[group][name]["query"])
 
 
 
+def get_query_inputs(group:str, name:str) -> list[str]:
+    """
+    Gets the inputs for a dml/dql query for a sql function called `name` in the 
+    group (or table category) called `group`.
+
+    Parameters
+    ----------
+    group : `str`
+        The group or table category to get the function from.
+    name : `str`
+        The name of the function query to get inputs of.
+
+    Returns
+    -------
+    list[str]
+        The inputs for the query of the desired function.
+    """
+
+    sql_functions:dict[str, dict[str, dict]]
+
+    # Get the ddl functions from the json file
+    with open(STATEMENTS_FILE, "r") as file:
+        sql_functions = json.load(file)["dml/dql"]
+
+    return sql_functions[group][name]["inputs"]
 
 
 
+def get_query_outputs(group:str, name:str) -> list[str]:
+    """
+    Gets the outputs for a dml/dql query for a sql function called `name` in the 
+    group (or table category) called `group`.
 
+    Parameters
+    ----------
+    group : `str`
+        The group or table category to get the function from.
+    name : `str`
+        The name of the function to get the query of.
 
+    Returns
+    -------
+    list[str]
+        The outputs for the query of the desired function.
+    """
 
-# sql_tables = [
-#
-#     '''
-#     CREATE TABLE ItemType ( 
-#         name VARCHAR(255) NOT NULL, 
-#         unit VARCHAR(16), 
-#         PRIMARY KEY (name) 
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE Consumable ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name), 
-#         FOREIGN KEY (name) REFERENCES ItemType(name) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Durable ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name), 
-#         FOREIGN KEY (name) REFERENCES ItemType(name) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE NotFood ( 
-#         namel VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name), 
-#         FOREIGN KEY (name) REFERENCES Consumable(name) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Food ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name), 
-#         FOREIGN KEY (name) REFERENCES Consumable(name) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Template ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE OtherTemplate ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name), 
-#         FOREIGN KEY (name) REFERENCES Template(name)
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE Recipe ( 
-#         recipe_name VARCHAR(255) NOT NULL, 
-#         food_name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (recipe_name, food_name), 
-#         FOREIGN KEY (recipe_name) REFERENCES Template(name), 
-#         FOREIGN KEY (food_name) REFERENCES Food(name)
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE MealSchedule ( 
-#         recipe_name VARCHAR(255) NOT NULL, 
-#         timestamp DATETIME NOT NULL,
-#         location_name VARCHAR(255) NOT NULL,
-#         meal_type VARCHAR(31),
-#         PRIMARY KEY (recipe_name, timestamp, location_name),
-#         FOREIGN KEY recipe_name REFERENCES Recipe(recipe_name),
-#         FOREIGN KEY location_name REFERENCES Location(name)
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE User ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Dependent ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name),
-#         FOREIGN KEY (name) REFERENCES User(name)
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Parent ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name),
-#         FOREIGN KEY (name) REFERENCES User(name)
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Location ( 
-#         name VARCHAR(255) NOT NULL, 
-#         PRIMARY KEY (name) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Ingredients ( 
-#         food_name VARCHAR(255) NOT NULL, 
-#         recipe_name VARCHAR(255) NOT NULL, 
-#         quantity FLOAT NOT NULL, 
-#         PRIMARY KEY (food_name, recipe_name), 
-#         FOREIGN KEY (food_name) REFERENCES Food(name), 
-#         FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name), 
-#         CHECK (quantity > 0)
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Storage ( 
-#         storage_name VARCHAR(255) NOT NULL, 
-#         location_name VARCHAR(255) NOT NULL, 
-#         capacity FLOAT NOT NULL DEFAULT 0, 
-#         PRIMARY KEY (storage_name), 
-#         FOREIGN KEY (location_name) REFERENCES Location(name), 
-#         CHECK (capacity >= 0 AND capacity <= 2) 
-#     ); 
-#     ''',
-#
-#     '''
-#     CREATE TABLE Dry (
-#         name VARCHAR(255) NOT NULL,
-#         PRIMARY KEY (name),
-#         FOREIGN KEY (name) REFERENCES Storage(storage_name)
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE Appliance (
-#         name VARCHAR(255) NOT NULL,
-#         PRIMARY KEY (name),
-#         FOREIGN KEY (name) REFERENCES Storage(storage_name)
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE Fridge (
-#         name VARCHAR(255) NOT NULL,
-#         PRIMARY KEY (name),
-#         FOREIGN KEY (name) REFERENCES Appliance(name)
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE Freezer (
-#         name VARCHAR(255) NOT NULL,
-#         PRIMARY KEY (name),
-#         FOREIGN KEY (name) REFERENCES Appliance(name)
-#     );
-#     ''', 
-#
-#     '''
-#     CREATE TABLE Inventory (
-#         item_name VARCHAR(255) NOT NULL,
-#         storage_name VARCHAR(255) NOT NULL,  
-#         quantity FLOAT NOT NULL,
-#         timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-#         PRIMARY KEY (item_name, storage_name, timestamp),
-#         FOREIGN KEY (item_name) REFERENCES ItemType(name),
-#         FOREIGN KEY (storage_name) REFERENCES Storage(storage_name),
-#         CHECK (quantity >= 0)  
-#     );
-#     ''', #:)
-#
-#     '''
-#     CREATE TABLE Purchase (
-#         item_name VARCHAR(255) NOT NULL,
-#         timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-#         quantity FLOAT NOT NULL,
-#         price FLOAT NOT NULL,
-#         store VARCHAR(255) NOT NULL,
-#         parent_name VARCHAR(255) NOT NULL,
-#         PRIMARY KEY (item_name, timestamp),
-#         FOREIGN KEY (parent_name) REFERENCES Parent(name), 
-#         FOREIGN KEY (item_name) REFERENCES ItemType(name),
-#         CHECK (quantity > 0)
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE History (
-#         item_name VARCHAR(255) NOT NULL,
-#         date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-#         quantity FLOAT NOT NULL,
-#         PRIMARY KEY (item_name, date_used),
-#         FOREIGN KEY (item_name) REFERENCES ItemType(name),
-#         CHECK (quantity > 0) 
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE Wasted (
-#         item_name VARCHAR(255) NOT NULL,
-#         date_used DATETIME NOT NULL,
-#         PRIMARY KEY (item_name, date_used),
-#         FOREIGN KEY (item_name, date_used) REFERENCES History(item_name, date_used)
-#     );
-#     ''',
-#
-#     '''
-#     CREATE TABLE Used (
-#         item_name VARCHAR(255) NOT NULL,
-#         date_used DATETIME NOT NULL,
-#         user_name VARCHAR(255),
-#         PRIMARY KEY (item_name, date_used),
-#         FOREIGN KEY (item_name, date_used) REFERENCES History(item_name, date_used),
-#         FOREIGN KEY (user_name) REFERENCES User(name)
-#     );
-#     '''
-# ]
+    sql_functions:dict[str, dict[str, dict]]
+
+    # Get the ddl functions from the json file
+    with open(STATEMENTS_FILE, "r") as file:
+        sql_functions = json.load(file)["dml/dql"]
+
+    return sql_functions[group][name]["outputs"]
+
