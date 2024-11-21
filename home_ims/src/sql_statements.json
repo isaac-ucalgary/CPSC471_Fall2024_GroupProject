@@ -428,7 +428,8 @@
             },
             "Select item type": {
                 "inputs": [
-                    "name"
+                    "name",
+                    "unit"
                 ],
                 "outputs": [
                     "name",
@@ -482,7 +483,8 @@
             },
             "Select consumable type": {
                 "inputs": [
-                    "name"
+                    "name",
+                    "unit"
                 ],
                 "outputs": [
                     "name",
@@ -516,7 +518,8 @@
             },
             "Select durable type": {
                 "inputs": [
-                    "name"
+                    "name",
+                    "unit"
                 ],
                 "outputs": [
                     "name",
@@ -550,7 +553,8 @@
             },
             "Select food type": {
                 "inputs": [
-                    "name"
+                    "name",
+                    "unit"
                 ],
                 "outputs": [
                     "name",
@@ -584,7 +588,8 @@
             },
             "Select not food type": {
                 "inputs": [
-                    "name"
+                    "name",
+                    "unit"
                 ],
                 "outputs": [
                     "name",
