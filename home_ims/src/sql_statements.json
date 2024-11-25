@@ -362,7 +362,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)",
+                    "INSERT IGNORE INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)",
                     "VALUES (%s, %s, %s, %s);"
                 ],
                 "notes": [
@@ -419,7 +419,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.ItemType (name, unit)",
+                    "INSERT IGNORE INTO Home_IMS.ItemType (name, unit)",
                     "VALUES (%s, %s);"
                 ],
                 "notes": [
@@ -474,7 +474,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Consumable (name)",
+                    "INSERT IGNORE INTO Home_IMS.Consumable (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -509,7 +509,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Durable (name)",
+                    "INSERT IGNORE INTO Home_IMS.Durable (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -544,7 +544,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Food (name)",
+                    "INSERT IGNORE INTO Home_IMS.Food (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -579,7 +579,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.NotFood (name)",
+                    "INSERT IGNORE INTO Home_IMS.NotFood (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -614,7 +614,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Location (name)",
+                    "INSERT IGNORE INTO Home_IMS.Location (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -655,12 +655,13 @@
             "Add storage": {
                 "inputs": [
                     "storage_name",
+                    "capacity",
                     "location_name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Storage (storage_name, location_name)",
-                    "VALUES (%s, %s);"
+                    "INSERT IGNORE INTO Home_IMS.Storage (storage_name, location_name, capacity)",
+                    "VALUES (%s, %s, %s);"
                 ],
                 "notes": [
                     "Add storage"
@@ -682,17 +683,21 @@
             "Select storage": {
                 "inputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity_low",
+                    "capacity_high"
                 ],
                 "outputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity"
                 ],
                 "query": [
-                    "SELECT storage_name, location_name",
+                    "SELECT storage_name, location_name, capacity",
                     "FROM Home_IMS.Storage",
                     "WHERE storage_name LIKE %s",
-                    "AND location_name LIKE %s;"
+                    "AND location_name LIKE %s",
+                    "AND capacity BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "Select storage"
@@ -706,7 +711,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Dry (name)",
+                    "INSERT IGNORE INTO Home_IMS.Dry (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -729,18 +734,22 @@
             "Select dry storage": {
                 "inputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity_low",
+                    "capacity_high"
                 ],
                 "outputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name",
+                    "SELECT S.storage_name, S.location_name, S.capacity",
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Dry as D ON S.storage_name = D.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;"
+                    "AND S.location_name LIKE %s",
+                    "AND S.capacity BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "Select dry storage"
@@ -748,20 +757,20 @@
             }
         },
         "Appliance": {
-            "Add appliance": {
+            "Add appliance storage": {
                 "inputs": [
                     "name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Appliance (name)",
+                    "INSERT IGNORE INTO Home_IMS.Appliance (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
                     "Add appliance"
                 ]
             },
-            "Delete appliance": {
+            "Delete appliance storage": {
                 "inputs": [
                     "name"
                 ],
@@ -774,21 +783,25 @@
                     "Delete appliance"
                 ]
             },
-            "Select appliance": {
+            "Select appliance storage": {
                 "inputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity_low",
+                    "capacity_high"
                 ],
                 "outputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name",
+                    "SELECT S.storage_name, S.location_name, S.capacity",
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Appliance as A ON S.storage_name = A.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;"
+                    "AND S.location_name LIKE %s",
+                    "AND S.capacity BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "Select appliance"
@@ -796,20 +809,20 @@
             }
         },
         "Fridge": {
-            "Add fridge": {
+            "Add fridge storage": {
                 "inputs": [
                     "name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Fridge (name)",
+                    "INSERT IGNORE INTO Home_IMS.Fridge (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
                     "Add fridge"
                 ]
             },
-            "Delete fridge": {
+            "Delete fridge storage": {
                 "inputs": [
                     "name"
                 ],
@@ -822,21 +835,25 @@
                     "Delete fridge"
                 ]
             },
-            "Select fridge": {
+            "Select fridge storage": {
                 "inputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity_low",
+                    "capacity_high"
                 ],
                 "outputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name",
+                    "SELECT S.storage_name, S.location_name, S.capacity",
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Fridge as F ON S.storage_name = F.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;"
+                    "AND S.location_name LIKE %s",
+                    "AND S.capacity BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "Select fridge"
@@ -844,20 +861,20 @@
             }
         },
         "Freezer": {
-            "Add freezer": {
+            "Add freezer storage": {
                 "inputs": [
                     "name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Freezer (name)",
+                    "INSERT IGNORE INTO Home_IMS.Freezer (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
                     "Add freezer"
                 ]
             },
-            "Delete freezer": {
+            "Delete freezer storage": {
                 "inputs": [
                     "name"
                 ],
@@ -870,21 +887,25 @@
                     "Delete freezer"
                 ]
             },
-            "Select freezer": {
+            "Select freezer storage": {
                 "inputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity_low",
+                    "capacity_high
                 ],
                 "outputs": [
                     "storage_name",
-                    "location_name"
+                    "location_name",
+                    "capacity"
                 ],
                 "query": [
-                    "SELECT S.storage_name, S.location_name",
+                    "SELECT S.storage_name, S.location_name, S.capacity",
                     "FROM Home_IMS.Storage as S",
                     "JOIN Home_IMS.Freezer as F ON S.storage_name = F.name",
                     "WHERE S.storage_name LIKE %s",
-                    "AND S.location_name LIKE %s;"
+                    "AND S.location_name LIKE %s",
+                    "AND S.capacity BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "Select freezer"
@@ -898,7 +919,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.User (name)",
+                    "INSERT IGNORE INTO Home_IMS.User (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -946,7 +967,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Parent (name)",
+                    "INSERT IGNORE INTO Home_IMS.Parent (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -961,7 +982,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Dependent (name)",
+                    "INSERT IGNORE INTO Home_IMS.Dependent (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -977,7 +998,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.History (item_name, quantity)",
+                    "INSERT IGNORE INTO Home_IMS.History (item_name, quantity)",
                     "VALUES (%s, %s);"
                 ],
                 "notes": [
@@ -993,7 +1014,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Wasted (item_name, date_used)",
+                    "INSERT IGNORE INTO Home_IMS.Wasted (item_name, date_used)",
                     "VALUES (%s, %s);"
                 ],
                 "notes": [
@@ -1032,7 +1053,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Used (item_name, date_used, user_name)",
+                    "INSERT IGNORE INTO Home_IMS.Used (item_name, date_used, user_name)",
                     "VALUES (%s, %s, %s);"
                 ],
                 "notes": [
@@ -1076,7 +1097,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)",
+                    "INSERT IGNORE INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)",
                     "VALUES (%s, %s, %s, %s, %s);"
                 ],
                 "notes": [
@@ -1349,7 +1370,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Recipe (recipe_name, food_name)",
+                    "INSERT IGNORE INTO Home_IMS.Recipe (recipe_name, food_name)",
                     "VALUES (%s, %s);"
                 ],
                 "notes": [
@@ -1424,7 +1445,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)",
+                    "INSERT IGNORE INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)",
                     "VALUES (%s, %s, %s);"
                 ],
                 "notes": [
@@ -1489,7 +1510,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
+                    "INSERT IGNORE INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
                     "VALUES (%s, %s, %s);"
                 ],
                 "notes": [

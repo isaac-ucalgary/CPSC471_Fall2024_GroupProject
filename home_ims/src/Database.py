@@ -854,4 +854,168 @@ class Database:
             return cursor.fetchall()
 
 
+        
+        # ----- STORAGE -----
+
+        def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            """
+            Adds a storage record to the database.
+
+            Parameters
+            ----------
+            storage_name : str
+                The name of the storage to add.
+            location_name : str
+                The name of the location that the storage is in.
+            capacity : float
+                The percentage of the storage used.
+                Between 0 and 2.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to add does not already exist in the table.
+            """
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = get_query(group = "Storage", name = "Add storage")
+            data = (storage_name, location_name, capacity)
+
+            cursor.execute(statement, data)
+
+
+        def delete_storage(self, storage_name:str) -> None:
+            """
+            Removes a storage record from the database.
+            The location must not be used by anywhere else in the database.
+
+            Parameters
+            ----------
+            storage_name : str
+                The name of the storage to delete.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to remove is not used elsewhere in the database.
+            """
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = get_query(group = "Storage", name = "Delete storage")
+            data = (storage_name,)
+
+            cursor.execute(statement, data)
+
+
+        def select_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[tuple]:
+            """
+            Selects storage records from the database.
+            Used SQL style regex for searching.
+
+            Parameters
+            ----------
+            storage_name : str
+                The name of the storage to search for.
+            location_name : str
+                The name of the location that the storage is in to search for.
+            capacity_low : float
+                The lower threshold value of the capacity.
+            capacity_high : float
+                The higher threshold value of the capacity.
+                
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = get_query(group = "Storage", name = "Select storage")
+            data = (storage_name, location_name, capacity_low, capacity_high)
+
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+
+    
+        # ----- STORAGE SUBCLASSES -----
+
+
+        def add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            """
+            Adds a storage subclass record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            subclass_name : str
+                The name of the subclass.
+            storage_name : str
+                The name of the storage name to add.
+            location_name : str
+                The location of the new storage.
+            capacity : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+
+            # Get the cursor
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            # Create the item type if it doesn't exist
+            self.add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
+
+            # Create the subclass type
+            statement = get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
+            data = (storage_name,)
+
+            cursor.execute(statement, data)
+
+
+        def select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=0.0) -> list[tuple]:
+            """
+            Selects records of a storage subclass from the database.
+
+            Parameters
+            ----------
+            storage_name : str
+                The name of the storage to search for.
+            location_name : str
+                The name of the location that the storage is in.
+            capacity_low : float
+                The lower bound of the current capacity of the storage.
+            capacity_high : float
+                The higher bound of the current capacity of the storage.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+
+            # Get the cursor
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = get_query(group=subclass_name, name = f"Select {subclass_name.lower()} storage")
+            data = (storage_name, location_name, capacity_low, capacity_high)  
+
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+    
+
+
+
 
