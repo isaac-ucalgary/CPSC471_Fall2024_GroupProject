@@ -73,9 +73,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="addItemButton">
+          <widget class="QPushButton" name="editStorageButton">
            <property name="text">
-            <string>Add Item</string>
+            <string>Edit Storage</string>
            </property>
           </widget>
          </item>
@@ -102,7 +102,7 @@
          <widget class="QLineEdit" name="inventorySearch">
           <property name="geometry">
            <rect>
-            <x>10</x>
+            <x>50</x>
             <y>10</y>
             <width>181</width>
             <height>31</height>
@@ -127,6 +127,165 @@ padding-right: 15px;</string>
            <string>Search</string>
           </property>
          </widget>
+         <widget class="QPushButton" name="pushButton">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>31</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>+</string>
+          </property>
+         </widget>
+         <widget class="QFrame" name="frame">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>60</y>
+            <width>461</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QFrame {
+    border: 1px solid #000000;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    padding: 10px;
+}
+</string>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <property name="lineWidth">
+           <number>4</number>
+          </property>
+          <widget class="QPushButton" name="pushButton_9">
+           <property name="geometry">
+            <rect>
+             <x>350</x>
+             <y>10</y>
+             <width>71</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>🗑️ Throw-Out</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButton_10">
+           <property name="geometry">
+            <rect>
+             <x>270</x>
+             <y>10</y>
+             <width>71</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>🍽️ Consume</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButton_11">
+           <property name="geometry">
+            <rect>
+             <x>430</x>
+             <y>10</y>
+             <width>20</width>
+             <height>20</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>❌</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>10</y>
+             <width>71</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_2">
+           <property name="geometry">
+            <rect>
+             <x>170</x>
+             <y>10</y>
+             <width>71</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_3">
+           <property name="geometry">
+            <rect>
+             <x>90</x>
+             <y>10</y>
+             <width>71</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+          </widget>
+         </widget>
+         <widget class="QScrollArea" name="scrollArea">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>501</width>
+            <height>191</height>
+           </rect>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>499</width>
+             <height>189</height>
+            </rect>
+           </property>
+           <widget class="QScrollBar" name="verticalScrollBar">
+            <property name="geometry">
+             <rect>
+              <x>480</x>
+              <y>10</y>
+              <width>16</width>
+              <height>171</height>
+             </rect>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </widget>
+         </widget>
+         <zorder>scrollArea</zorder>
+         <zorder>inventorySearch</zorder>
+         <zorder>pushButton</zorder>
+         <zorder>frame</zorder>
         </widget>
         <widget class="QWidget" name="recipesTab">
          <property name="styleSheet">
@@ -140,7 +299,7 @@ padding-right: 15px;</string>
          <widget class="QLineEdit" name="recipeSearch">
           <property name="geometry">
            <rect>
-            <x>10</x>
+            <x>50</x>
             <y>10</y>
             <width>181</width>
             <height>31</height>
@@ -163,6 +322,19 @@ padding-right: 15px;</string>
           </property>
           <property name="placeholderText">
            <string>Search</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>31</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>+</string>
           </property>
          </widget>
         </widget>
@@ -178,7 +350,7 @@ padding-right: 15px;</string>
          <widget class="QLineEdit" name="mealSearch">
           <property name="geometry">
            <rect>
-            <x>10</x>
+            <x>50</x>
             <y>10</y>
             <width>181</width>
             <height>31</height>
@@ -201,6 +373,19 @@ padding-right: 15px;</string>
           </property>
           <property name="placeholderText">
            <string>Search</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_3">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>31</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>+</string>
           </property>
          </widget>
         </widget>
@@ -216,7 +401,7 @@ padding-right: 15px;</string>
          <widget class="QLineEdit" name="purchaseSearch">
           <property name="geometry">
            <rect>
-            <x>10</x>
+            <x>50</x>
             <y>10</y>
             <width>181</width>
             <height>31</height>
@@ -239,6 +424,29 @@ padding-right: 15px;</string>
           </property>
           <property name="placeholderText">
            <string>Search</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_4">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>10</y>
+            <width>31</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>+</string>
+          </property>
+         </widget>
+         <widget class="QTableView" name="tableView">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>50</y>
+            <width>491</width>
+            <height>451</height>
+           </rect>
           </property>
          </widget>
         </widget>
@@ -251,34 +459,6 @@ padding-right: 15px;</string>
          <attribute name="title">
           <string>History</string>
          </attribute>
-         <widget class="QLineEdit" name="historySearch">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>10</y>
-            <width>181</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="cursor">
-           <cursorShape>IBeamCursor</cursorShape>
-          </property>
-          <property name="tabletTracking">
-           <bool>false</bool>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">border: 1px solid;
-border-radius: 15px;
-padding-left: 15px;
-padding-right: 15px;</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="placeholderText">
-           <string>Search</string>
-          </property>
-         </widget>
         </widget>
         <widget class="QWidget" name="analyticsTab">
          <property name="styleSheet">
