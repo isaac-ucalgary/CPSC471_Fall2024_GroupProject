@@ -428,7 +428,7 @@ class Database:
             Parameters
             ----------
             name : str
-                The name of the item to add.
+                The name of the item to search for.
                 Example: "Milk"
                 Example: "M%"
             unit : str
@@ -440,7 +440,6 @@ class Database:
             -----------
             - The database connection is open.
             - The database connection cursor is open.
-            - The `name` of the item to add does not already exist in the table.
             """
 
             cursor:MySQLCursor = self.__parent._Database__cursor
@@ -496,7 +495,7 @@ class Database:
             Parameters
             ----------
             name : str
-                The name of the item to add.
+                The name of the item to search for.
                 Example: "Milk"
             unit : str
                 The unit that the item quantity is measured in.
@@ -506,7 +505,6 @@ class Database:
             -----------
             - The database connection is open.
             - The database connection cursor is open.
-            - The `name` of the item to add does not already exist in the table.
             """
 
             # Get the cursor
@@ -557,7 +555,7 @@ class Database:
             Parameters
             ----------
             name : str
-                The name of the item to add.
+                The name of the item to search for.
                 Example: "Milk"
             unit : str
                 The unit that the item quantity is measured in.
@@ -567,7 +565,6 @@ class Database:
             -----------
             - The database connection is open.
             - The database connection cursor is open.
-            - The `name` of the item to add does not already exist in the table.
             """
             return self.select_item_type_subclass(
                 subclass_name="Consumable",
@@ -646,7 +643,7 @@ class Database:
             Parameters
             ----------
             name : str
-                The name of the item to add.
+                The name of the item to search for.
                 Example: "Milk"
             unit : str
                 The unit that the item quantity is measured in.
@@ -656,7 +653,6 @@ class Database:
             -----------
             - The database connection is open.
             - The database connection cursor is open.
-            - The `name` of the item to add does not already exist in the table.
             """
             return self.select_item_type_subclass(
                 subclass_name="Durable",
@@ -703,7 +699,7 @@ class Database:
             Parameters
             ----------
             name : str
-                The name of the item to add.
+                The name of the item to search for.
                 Example: "Milk"
             unit : str
                 The unit that the item quantity is measured in.
@@ -713,7 +709,6 @@ class Database:
             -----------
             - The database connection is open.
             - The database connection cursor is open.
-            - The `name` of the item to add does not already exist in the table.
             """
             return self.select_item_type_subclass(
                 subclass_name="Food",
@@ -760,7 +755,7 @@ class Database:
             Parameters
             ----------
             name : str
-                The name of the item to add.
+                The name of the item to search for.
                 Example: "Milk"
             unit : str
                 The unit that the item quantity is measured in.
@@ -770,13 +765,93 @@ class Database:
             -----------
             - The database connection is open.
             - The database connection cursor is open.
-            - The `name` of the item to add does not already exist in the table.
             """
             return self.select_item_type_subclass(
                 subclass_name="NotFood",
                 name=name,
                 unit=unit
             )
+
+
+        
+        # ----- LOCATION -----
+
+        def add_location(self, name:str) -> None:
+            """
+            Adds a location record to the database.
+
+            Parameters
+            ----------
+            name : str
+                The name of the location to add.
+                Example: "Home"
+                Example: "Smith Family Home"
+                Example: "Winter Cabin"
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `name` of the location to add does not already exist in the table.
+            """
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = get_query(group = "Location", name = "Add location")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+
+        def delete_location(self, name:str) -> None:
+            """
+            Removes a location record to the database.
+            The location must not be used by anywhere else in the database.
+
+            Parameters
+            ----------
+            name : str
+                The name of the location to delete.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `name` of the location to remove is not used elsewhere in the database.
+            """
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = get_query(group = "Location", name = "Delete location")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+
+        def select_locations(self, name:str="%") -> list[tuple]:
+            """
+            Selects location records from the database.
+            Used SQL style regex for searching.
+
+            Parameters
+            ----------
+            name : str
+                The name of the locaton to search for.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = get_query(group = "Location", name = "Select locations")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
 
 
 
