@@ -362,7 +362,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)",
+                    "INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)",
                     "VALUES (%s, %s, %s, %s);"
                 ],
                 "notes": [
@@ -1060,7 +1060,7 @@
                     "Add item used record"
                 ]
             },
-            "Select waste records": {
+            "Select used records": {
                 "inputs": [
                     "item_name",
                     "date_used_from",
