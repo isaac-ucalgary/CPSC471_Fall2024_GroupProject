@@ -70,20 +70,9 @@ class SQL_Statements:
 
                     # Add line with correct indentation
                     formatted_query += (
-                        # f"{" " * INDENT_SPACES * (indent_level - closing_bracket_offset)}{" " * keyword_offset}{line} -- {INDENT_SPACES * (indent_level - closing_bracket_offset)} {keyword_offset}\n"
                         " " * INDENT_SPACES * (indent_level - start_closing_bracket) + # Creates an indent for bracket groups 
                         " " * total_keyword_offset + # Creates an indent for keywords
                         line +
-                        # "--" + 
-                        # str(INDENT_SPACES * (indent_level - start_closing_bracket)) +
-                        # " " +
-                        # str(keyword_offset) +
-                        # " " +
-                        # str(new_keyword_offset) +
-                        # " " +
-                        # str(total_keyword_offset) +
-                        # " " +
-                        # str(start_open_bracket) +
                         "\n"
                     )
 
@@ -187,24 +176,6 @@ class SQL_Statements:
             The list of ddl sql functions.
         """
 
-        # ddl_sql_functions:list[dict] = self._sql_functions["ddl"]
-        #
-        # # # Get the ddl functions from the json file
-        # # with open(STATEMENTS_FILE, "r") as file:
-        # #     ddl_sql_functions = json.load(file)["ddl"]
-        #
-        # # json does not support multiline strings so convert the list of strings into a single string
-        # # for function in ddl_sql_functions:
-        # #     function:dict
-        # #     query:list[str]|str = function["query"]
-        # #
-        # #     if type(query) is list:
-        # #         function["query"] = " ".join(query)
-        #
-        # # Sort the functions by the order they are intended to be ran in
-        # ddl_sql_functions.sort(key= lambda x: x["order"])
-        #
-        # return ddl_sql_functions
         ddl_functions:list[dict] = copy.deepcopy(self._sql_functions["ddl"])
 
         # Join multiline strings
@@ -217,8 +188,7 @@ class SQL_Statements:
 
         # Sort by execution order
         ddl_functions.sort(key= lambda x: x["order"])
-        # return [x for x in self._sql_functions["ddl"].sort(key= lambda x: x["order"])]
-        # return copy.deepcopy(self._sql_functions["ddl"].sort(key= lambda x: x["order"]))
+
         return ddl_functions
 
 
@@ -241,25 +211,6 @@ class SQL_Statements:
             that table.
             Said list is a list of dictionaries of functions.
         """
-
-        # sql_functions:dict[str, dict[str, dict]] = self._sql_functions["dml/dql"]
-
-        # # Get the ddl functions from the json file
-        # with open(STATEMENTS_FILE, "r") as file:
-        #     sql_functions = json.load(file)["dml/dql"]
-        #
-        # # json does not support multiline strings so convert queries from a list of strings into single strings
-        # for table_functions in sql_functions.values():
-        #     table_functions:dict[str, dict]
-        #
-        #     for function in table_functions.values():
-        #         function:dict
-        #         query:list[str]|str = function["query"]
-        #
-        #         if type(query) is list:
-        #             function["query"] = " ".join(query)
-        #
-        # return sql_functions
 
         sql_functions:dict[str, dict[str, dict]] = copy.deepcopy(self._sql_functions["dml/dql"])
 
@@ -295,16 +246,7 @@ class SQL_Statements:
         str
             The query of the desired function.
         """
-
-        # sql_functions:dict[str, dict[str, dict]]
-        #
-        # # Get the ddl functions from the json file
-        # with open(STATEMENTS_FILE, "r") as file:
-        #     sql_functions = json.load(file)["dml/dql"]
-        #
         return " ".join(self._sql_functions[group][name]["query"])
-
-        # return self._sql_functions["dml/dql"][group][name]["query"]
 
 
 
@@ -325,16 +267,6 @@ class SQL_Statements:
         list[str]
             The inputs for the query of the desired function.
         """
-
-        # sql_functions:dict[str, dict[str, dict]]
-        #
-        # # Get the ddl functions from the json file
-        # with open(STATEMENTS_FILE, "r") as file:
-        #     sql_functions = json.load(file)["dml/dql"]
-        #
-        # return sql_functions[group][name]["inputs"]
-
-        # return [x for x in self._sql_functions["dml/dql"][group][name]["inputs"]]
         return copy.deepcopy(self._sql_functions["dml/dql"][group][name]["inputs"])
 
 
@@ -356,15 +288,5 @@ class SQL_Statements:
         list[str]
             The outputs for the query of the desired function.
         """
-
-        # sql_functions:dict[str, dict[str, dict]]
-        #
-        # # Get the ddl functions from the json file
-        # with open(STATEMENTS_FILE, "r") as file:
-        #     sql_functions = json.load(file)["dml/dql"]
-        #
-        # return sql_functions[group][name]["outputs"]
-
-        # return [x for x in self._sql_functions["dml/dql"][group][name]["outputs"]]
         return copy.deepcopy(self._sql_functions["dml/dql"][group][name]["outputs"])
 
