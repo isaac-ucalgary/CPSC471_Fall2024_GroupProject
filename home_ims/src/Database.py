@@ -1,13 +1,14 @@
 # Build Database Script
 
 # -- Library Imports --
-from os import stat
-import re
-import mysql.connector
 from mysql.connector import Error, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
-import inspect
+from mysql.connector.types import RowType
+from os import stat
 from types import FunctionType, MethodType
+import inspect
+import mysql.connector
+import re
 
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
@@ -59,7 +60,8 @@ class Database:
                 password=self.db_password,
                 database=self.db_name,
                 collation="utf8mb4_unicode_ci",
-                autocommit=True
+                autocommit=True,
+                get_warnings=True
             )
 
         except Error as e:
@@ -71,7 +73,9 @@ class Database:
                     port=self.db_port,
                     user=self.db_user,
                     password=self.db_password,
-                    collation="utf8mb4_unicode_ci"
+                    collation="utf8mb4_unicode_ci",
+                    autocommit=True,
+                    get_warnings=True
                 )
 
             except Error as e:
@@ -276,7 +280,12 @@ class Database:
                     def new_func(*args, **kargs):
                         result = None
                         if pre_func():
-                            result = old_func(*args, **kargs)
+                            try:
+                                result = old_func(*args, **kargs)
+                            except Exception:
+                                # Failed to run old function
+                                # TODO Handle error
+                                pass
                         else:
                             print("Function aborted")
                         post_func()
@@ -305,7 +314,7 @@ class Database:
 
         # ----- DYNAMIC -----
 
-        def dynamic_query(self, group:str, function_name:str, **kargs) -> bool|list[tuple]:
+        def dynamic_query(self, group:str, function_name:str, **kargs) -> bool|list[RowType]:
             """
             Executes any dml or dql query from the json file.
 
@@ -335,9 +344,9 @@ class Database:
 
             Returns
             -------
-            bool | list[tuple]
+            bool | list[RowType]
                 If the statement is a `SELECT` query then the function returns a list 
-                of tuples (`list[tuple]`). 
+                of tuples or dictionaries (`list[RowType]`). 
                 Otherwise if the operation was successful returns `True`.
                 If the operation fails for any reason (i.e. not all the required inputs
                 that the function required were provided) then returns `False`.
@@ -378,16 +387,6 @@ class Database:
                 return cursor.fetchall()
             else:
                 return True
-
-
-
-
-
-
-            
-
-
-
 
 
 
@@ -443,7 +442,7 @@ class Database:
             self._add_item_type(name, unit)
 
 
-        def _select_item_type(self, name:str="%", unit:str="%") -> list[tuple]:
+        def _select_item_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects item type records from the database.
             Used SQL style regex for searching.
@@ -474,7 +473,8 @@ class Database:
 
             return cursor.fetchall()
 
-        def select_item_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def select_item_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects item type records from the database.
             Used SQL style regex for searching.
@@ -534,7 +534,7 @@ class Database:
             cursor.execute(statement, data)
 
 
-        def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> list[tuple]:
+        def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects records of an item type subclass from the database.
 
@@ -594,6 +594,7 @@ class Database:
                 unit=unit
             )
 
+
         def add_consumable_type(self, name:str, unit:str="") -> None:
             """
             Adds a consumable type record to the database.
@@ -617,7 +618,8 @@ class Database:
             """
             self._add_consumable_type(name, unit)
 
-        def _select_consumable_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def _select_consumable_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects consumable type records from the database.
 
@@ -640,6 +642,7 @@ class Database:
                 name=name,
                 unit=unit
             )
+
 
         def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="") -> None:
             """
@@ -705,7 +708,8 @@ class Database:
                 unit=unit
             )
 
-        def select_durable_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def select_durable_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects durable type records from the database.
 
@@ -761,7 +765,8 @@ class Database:
                 unit=unit
             )
 
-        def select_food_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def select_food_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects food type records from the database.
 
@@ -817,7 +822,8 @@ class Database:
                 unit=unit
             )
 
-        def select_notfood_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def select_notfood_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects not food type records from the database.
 
@@ -897,7 +903,7 @@ class Database:
             cursor.execute(statement, data)
 
 
-        def select_locations(self, name:str="%") -> list[tuple]:
+        def select_locations(self, name:str="%") -> list[RowType]:
             """
             Selects location records from the database.
             Used SQL style regex for searching.
@@ -954,6 +960,7 @@ class Database:
 
             cursor.execute(statement, data)
 
+
         def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
             """
             Adds a storage record to the database.
@@ -977,7 +984,7 @@ class Database:
             self._add_storage(storage_name, location_name, capacity)
 
 
-        def delete_storage(self, storage_name:str) -> None:
+        def delete_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
             """
             Removes a storage record from the database.
             The location must not be used by anywhere else in the database.
@@ -994,15 +1001,42 @@ class Database:
             - The `storage_name` of the storage to remove is not used elsewhere in the database.
             """
 
+            # Get the connection and cursor
+            connection:MySQLConnection = self.__parent._Database__connection
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Delete storage")
-            data = (storage_name,)
+            statement = self.__parent._Database__sql_statements.get_query(group="Storage", name = f"Delete storage")
+            data = (storage_name,)  
 
+            # Start the transaction
+            connection.start_transaction(readonly=False)
+
+            # Execute the delete
             cursor.execute(statement, data)
 
+            # Get any warnings
+            warnings = cursor.fetchwarnings()
 
-        def select_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[tuple]:
+            # Rollback if a warning occurs
+            if type(warnings) is list and len(warnings) > 0:
+                connection.rollback()
+            else:
+                connection.commit()
+            
+            # Return the list of warnings or the outcome of the operation
+            if return_warnings:
+                if type(warnings) is list:
+                    return warnings
+                else:
+                    return []
+            else:
+                if type(warnings) is list:
+                    return len(warnings) == 0
+                else:
+                    return True
+
+
+        def select_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
             """
             Selects storage records from the database.
             Used SQL style regex for searching.
@@ -1075,7 +1109,126 @@ class Database:
             cursor.execute(statement, data)
 
 
-        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=0.0) -> list[tuple]:
+        def add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_storage_subclass(
+                subclass_name="Dry",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+    
+
+        def _add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_storage_subclass(
+                subclass_name="Appliance",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+        def add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_appliance_storage(
+                    storage_name=storage_name,
+                    location_name=location_name,
+                    capacity=capacity
+            )
+
+        def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_appliance_storage(
+                    storage_name=storage_name,
+                    location_name=location_name,
+                    capacity=capacity
+            )
+            self._add_storage_subclass(
+                subclass_name=subclass_name,
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+        def add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_appliance_storage_subclass(
+                subclass_name="Fridge",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+            
+        def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_appliance_storage_subclass(
+                subclass_name="Freezer",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+        def _delete_storage_subclass(self, subclass_name:str, storage_name:str, return_warnings:bool=False) -> list|bool:
+
+            # Get the connection and cursor
+            connection:MySQLConnection = self.__parent._Database__connection
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Delete {subclass_name.lower()} storage")
+            data = (storage_name,)  
+
+            # Start the transaction
+            connection.start_transaction(readonly=False)
+
+            # Execute the delete
+            cursor.execute(statement, data)
+
+            # Get any warnings
+            warnings = cursor.fetchwarnings()
+
+            # Rollback if a warning occurs
+            if type(warnings) is list and len(warnings) > 0:
+                connection.rollback()
+            else:
+                connection.commit()
+            
+            # Return the list of warnings or the outcome of the operation
+            if return_warnings:
+                if type(warnings) is list:
+                    return warnings
+                else:
+                    return []
+            else:
+                if type(warnings) is list:
+                    return len(warnings) == 0
+                else:
+                    return True
+
+        def delete_dry_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Dry",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+        def delete_appliance_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Appliance",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+        def delete_fridge_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Fridge",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+        def delete_freezer_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Freezer",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+
+        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
             """
             Selects records of a storage subclass from the database.
 
@@ -1105,7 +1258,43 @@ class Database:
             cursor.execute(statement, data)
 
             return cursor.fetchall()
+
+        def select_dry_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Dry",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
+
+        def select_appliance_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Appliance",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
+        def select_fridge_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Fridge",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
+        def select_freezer_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Freezer",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
     
+
+
 
 
 
