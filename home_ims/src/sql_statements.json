@@ -314,42 +314,14 @@
                 "item_name VARCHAR(255) NOT NULL,",
                 "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
                 "quantity FLOAT NOT NULL,",
+                "wasted BOOLEAN NOT NULL,",
+                "user_name VARCHAR(255),",
                 "PRIMARY KEY (item_name, date_used),",
                 "FOREIGN KEY (item_name) REFERENCES ItemType(name),",
                 "CHECK (quantity > 0)",
                 ");"
             ],
             "order": 22
-        },
-        {
-            "function": "Create Table Wasted",
-            "inputs": [],
-            "outputs": [],
-            "query": [
-                "CREATE TABLE IF NOT EXISTS Home_IMS.Wasted (",
-                "item_name VARCHAR(255) NOT NULL,",
-                "date_used DATETIME NOT NULL,",
-                "PRIMARY KEY (item_name, date_used),",
-                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)",
-                ");"
-            ],
-            "order": 23
-        },
-        {
-            "function": "Create Table Used",
-            "inputs": [],
-            "outputs": [],
-            "query": [
-                "CREATE TABLE IF NOT EXISTS Home_IMS.Used (",
-                "item_name VARCHAR(255) NOT NULL,",
-                "date_used DATETIME NOT NULL,",
-                "user_name VARCHAR(255),",
-                "PRIMARY KEY (item_name, date_used),",
-                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),",
-                "FOREIGN KEY (user_name) REFERENCES User (name)",
-                ");"
-            ],
-            "order": 24
         }
     ],
     "dml/dql": {
@@ -420,7 +392,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.ItemType (name, unit)",
+                    "INSERT INTO Home_IMS.ItemType (name, unit)",
                     "VALUES (%s, %s);"
                 ],
                 "notes": [
@@ -475,7 +447,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Consumable (name)",
+                    "INSERT INTO Home_IMS.Consumable (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -510,7 +482,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Durable (name)",
+                    "INSERT INTO Home_IMS.Durable (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -545,7 +517,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Food (name)",
+                    "INSERT INTO Home_IMS.Food (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -580,7 +552,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.NotFood (name)",
+                    "INSERT INTO Home_IMS.NotFood (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -615,7 +587,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Location (name)",
+                    "INSERT INTO Home_IMS.Location (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -661,7 +633,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Storage (storage_name, location_name, capacity)",
+                    "INSERT INTO Home_IMS.Storage (storage_name, location_name, capacity)",
                     "VALUES (%s, %s, %s);"
                 ],
                 "notes": [
@@ -712,7 +684,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Dry (name)",
+                    "INSERT INTO Home_IMS.Dry (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -764,7 +736,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Appliance (name)",
+                    "INSERT INTO Home_IMS.Appliance (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -816,7 +788,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Fridge (name)",
+                    "INSERT INTO Home_IMS.Fridge (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -868,7 +840,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Freezer (name)",
+                    "INSERT INTO Home_IMS.Freezer (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -920,7 +892,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.User (name)",
+                    "INSERT INTO Home_IMS.User (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -938,7 +910,7 @@
                     " SELECT *",
                     " FROM Home_IMS.Parent AS P",
                     " WHERE P.name = U.name",
-                    ")",
+                    ") AS is_parent",
                     "FROM Home_IMS.User as U;"
                 ],
                 "notes": [
@@ -955,7 +927,7 @@
                 ],
                 "query": [
                     "SELECT item_name, date_used",
-                    "FROM Home_IMS.Used",
+                    "FROM Home_IMS.History",
                     "WHERE user_name = %s;"
                 ],
                 "notes": [
@@ -970,7 +942,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Parent (name)",
+                    "INSERT INTO Home_IMS.Parent (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -985,7 +957,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Dependent (name)",
+                    "INSERT INTO Home_IMS.Dependent (name)",
                     "VALUES (%s);"
                 ],
                 "notes": [
@@ -993,32 +965,16 @@
                 ]
             }
         },
-        "History": {
-            "Add history record": {
+        "Wasted": {
+            "Add item wasted record": {
                 "inputs": [
                     "item_name",
                     "quantity"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.History (item_name, quantity)",
-                    "VALUES (%s, %s);"
-                ],
-                "notes": [
-                    "Add history record"
-                ]
-            }
-        },
-        "Wasted": {
-            "Add item wasted record": {
-                "inputs": [
-                    "item_name",
-                    "date_used"
-                ],
-                "outputs": [],
-                "query": [
-                    "INSERT IGNORE INTO Home_IMS.Wasted (item_name, date_used)",
-                    "VALUES (%s, %s);"
+                    "INSERT INTO Home_IMS.History (item_name, quantity, wasted)",
+                    "VALUES (%s, %s, 1);"
                 ],
                 "notes": [
                     "Add item wasted record"
@@ -1037,9 +993,9 @@
                 "query": [
                     "SELECT H.item_name, H.date_used",
                     "FROM Home_IMS.History AS H",
-                    "JOIN Home_IMS.Wasted AS W",
                     "ON H.item_name = W.item_name AND H.date_used = W.date_used",
-                    "WHERE H.item_name LIKE %s",
+                    "WHERE H.wasted = 1",
+                    "AND H.item_name LIKE %s",
                     "AND H.date_used BETWEEN %s AND %s;"
                 ],
                 "notes": [
@@ -1051,13 +1007,13 @@
             "Add item used record": {
                 "inputs": [
                     "item_name",
-                    "date_used",
+                    "quantity",
                     "user_name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Used (item_name, date_used, user_name)",
-                    "VALUES (%s, %s, %s);"
+                    "INSERT INTO Home_IMS.History (item_name, quantity, wasted, user_name)",
+                    "VALUES (%s, %s, 0, %s);"
                 ],
                 "notes": [
                     "Add item used record"
@@ -1078,11 +1034,10 @@
                 "query": [
                     "SELECT H.item_name, H.date_used, U.user_name",
                     "FROM Home_IMS.History AS H",
-                    "JOIN Home_IMS.Used AS U",
-                    "ON H.item_name = U.item_name AND H.date_used = U.date_used",
-                    "WHERE H.item_name LIKE %s",
+                    "WHERE H.wasted = 0",
+                    "AND H.item_name LIKE %s",
                     "AND H.date_used BETWEEN %s AND %s",
-                    "AND U.user_name LIKE %s;"
+                    "AND H.user_name LIKE %s;"
                 ],
                 "notes": [
                     "Select waste records"
@@ -1100,7 +1055,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)",
+                    "INSERT INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)",
                     "VALUES (%s, %s, %s, %s, %s);"
                 ],
                 "notes": [
@@ -1373,7 +1328,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Recipe (recipe_name, food_name)",
+                    "INSERT INTO Home_IMS.Recipe (recipe_name, food_name)",
                     "VALUES (%s, %s);"
                 ],
                 "notes": [
@@ -1387,9 +1342,9 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "DELETE FROM Home_IMS.Recipe AS R",
-                    "WHERE R.recipe_name = %s",
-                    "AND R.food_name = %s;"
+                    "DELETE FROM Home_IMS.Recipe",
+                    "WHERE recipe_name = %s",
+                    "AND food_name = %s;"
                 ],
                 "notes": [
                     "Delete recipe"
@@ -1448,7 +1403,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)",
+                    "INSERT INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)",
                     "VALUES (%s, %s, %s);"
                 ],
                 "notes": [
@@ -1462,9 +1417,9 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "DELETE FROM Home_IMS.Ingredients AS I",
-                    "WHERE I.food_name = %s",
-                    "AND I.recipe_name = %s;"
+                    "DELETE FROM Home_IMS.Ingredients",
+                    "WHERE food_name = %s",
+                    "AND recipe_name = %s;"
                 ],
                 "notes": [
                     "Remove ingredient"
@@ -1513,7 +1468,7 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT IGNORE INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
+                    "INSERT INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
                     "VALUES (%s, %s, %s);"
                 ],
                 "notes": [
@@ -1528,10 +1483,10 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "DELETE FROM Home_IMS.Inventory AS I",
-                    "WHERE I.item_name = %s",
-                    "AND I.storage_name = %s",
-                    "AND I.timestamp = %s;"
+                    "DELETE FROM Home_IMS.Inventory",
+                    "WHERE item_name = %s",
+                    "AND storage_name = %s",
+                    "AND timestamp = %s;"
                 ],
                 "notes": [
                     "Remove item from inventory"
@@ -1583,7 +1538,8 @@
                     "storage_name",
                     "timestamp",
                     "expiration",
-                    "quantity"
+                    "quantity",
+                    "unit"
                 ],
                 "query": [
                     "SELECT I.item_name, I.storage_name, I.timestamp, I.expiration, I.quantity, T.unit",

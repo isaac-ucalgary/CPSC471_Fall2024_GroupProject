@@ -7,7 +7,7 @@ def show_window(dba):
     window = uic.loadUi(util.get_ui_path("main.ui"))
 
     for user in dba.dynamic_query("User", "Select users"):
-        window.userSelector.addItem(user[0], user[1])
+        window.userSelector.addItem(user['name'], user['is_parent'])
     
     def on_user_change(i):
         privileged = window.userSelector.itemData(i)

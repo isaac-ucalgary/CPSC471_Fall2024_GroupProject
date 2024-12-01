@@ -58,7 +58,8 @@ class Database:
                 user=self.db_user,
                 password=self.db_password,
                 database=self.db_name,
-                collation="utf8mb4_unicode_ci"
+                collation="utf8mb4_unicode_ci",
+                autocommit=True
             )
 
         except Error as e:
@@ -82,7 +83,7 @@ class Database:
                 print("Connected to MariaDB.")
 
                 # Make the cursor on the newly created connection.
-                self.__cursor = self.__connection.cursor()
+                self.__cursor = self.__connection.cursor(dictionary = True)
 
 
         # If no error is raised
@@ -93,7 +94,7 @@ class Database:
                 print("Connected to MariaDB.")
 
             # Make the cursor on the newly created connection.
-            self.__cursor = self.__connection.cursor()
+            self.__cursor = self.__connection.cursor(dictionary = True)
 
         # Returns the status of connecting to the database.
         return connection_success
@@ -250,8 +251,6 @@ class Database:
                 """
                 The function to run after all class methods.
                 """
-                self.__parent.commit()
-                # TODO: on commit error do rollback
                 pass
 
             def replace_func(name:str) -> None:

@@ -8,10 +8,10 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
     db = Database()
-    db.connect()
-    # db.build_database()
-    dba = Database.DB_Actions(db)
-
-    view.show_window(dba)
-
-    app.exec()
+    if db.connect():
+        # db.build_database() # TODO: This currently closes my connection. Should I not be using this in the application?
+        dba = Database.DB_Actions(db)
+        view.show_window(dba)
+        app.exec()
+    else:
+        print("Could not connect to database. Exiting.")
