@@ -2,7 +2,9 @@ import json
 import os
 import copy
 
+
 STATEMENTS_FILE = os.path.abspath(os.path.dirname(__file__) + "/sql_statements.json")
+INDENT_SPACES = 2
 
 class SQL_Statements:
     """
@@ -17,10 +19,135 @@ class SQL_Statements:
     """
 
     def __init__(self):
-
         self._sql_functions = {}
-
         self._load()
+
+
+    def __str__(self) -> str:
+
+        def make_title(title:str) -> str:
+            title = title.replace("\n", "")
+            title_middle = f"--- {title} ---" 
+            title_middle_length = len(title_middle)
+            full_title = ("-" * title_middle_length + "\n" +
+                          title_middle + "\n" +
+                          "-" * title_middle_length + "\n")
+            return full_title
+
+        def format_query(query:list[str]|str) -> str:
+            formatted_query = ""
+
+            if type(query) is list:
+                indent_level = 0
+                keyword = ""
+                keyword_offset:dict[int,int] = { 0: 0 }
+                new_keyword_offset:dict[int,int] = copy.deepcopy(keyword_offset)
+                valid_keywords = ["SELECT", "FROM", "JOIN", "GROUP", "WHERE", "SET"]
+
+
+                # Parse each line of the query
+                for line in query:
+                    # Check if this line starts by closing an indentation level
+                    start_closing_bracket = (len(line.strip()) > 0 and line.strip()[0] == ')')
+                    start_open_bracket = (len(line.strip()) > 0 and line.strip()[0] == '(')
+
+                    new_indent_level = indent_level + line.count('(') - line.count(')')
+
+                    # Get the keyword
+                    if len(line.strip()) > 0:
+                        keyword = line.strip(' \n\t()').split(" ")[0]
+
+                    # Check if the keyword demands recomputing the offset at this level
+                    if keyword in valid_keywords:
+                        keyword_offset[indent_level + start_open_bracket] = 0 # Reset keyword_offset for this indent level
+                        new_keyword_offset[indent_level + start_open_bracket] = len(keyword) + 1 # Set the new keyword_offset for future lines at this level
+
+                    # Calculate the offset for the keyword for this offset level including all offsets at the lower levels
+                    total_keyword_offset = 0
+                    for level, offset in keyword_offset.items():
+                        if level <= new_indent_level:
+                            total_keyword_offset += offset
+
+                    # Add line with correct indentation
+                    formatted_query += (
+                        # f"{" " * INDENT_SPACES * (indent_level - closing_bracket_offset)}{" " * keyword_offset}{line} -- {INDENT_SPACES * (indent_level - closing_bracket_offset)} {keyword_offset}\n"
+                        " " * INDENT_SPACES * (indent_level - start_closing_bracket) + # Creates an indent for bracket groups 
+                        " " * total_keyword_offset + # Creates an indent for keywords
+                        line +
+                        # "--" + 
+                        # str(INDENT_SPACES * (indent_level - start_closing_bracket)) +
+                        # " " +
+                        # str(keyword_offset) +
+                        # " " +
+                        # str(new_keyword_offset) +
+                        # " " +
+                        # str(total_keyword_offset) +
+                        # " " +
+                        # str(start_open_bracket) +
+                        "\n"
+                    )
+
+                    # Calculate the new indent
+                    indent_level = new_indent_level
+
+                    # Record the new keyword_offset for future offsets
+                    keyword_offset = copy.deepcopy(new_keyword_offset)
+
+            else:
+                formatted_query += str(query) + "\n"
+
+
+            return formatted_query
+
+
+        # Create string builder
+        output_string = ""
+        
+        # --- Database Setup // DDL ---
+        output_string += make_title(make_title("Database Setup // DDL"))
+
+        output_string += "\n" * 1
+
+        # ddl queries
+        for function in self._sql_functions["ddl"]:
+            function:dict
+            query:list[str]|str = function["query"]
+
+            output_string += format_query(query)
+            output_string += "\n"
+
+        output_string += "\n" * 3
+
+
+        # --- DML/DQL ---
+        output_string += make_title(make_title("Database Queries // DML/DQL"))
+
+        output_string += "\n" * 2
+
+        # dml/dql queries
+        for table_name, table_functions in self._sql_functions["dml/dql"].items():
+            table_name:str
+            table_functions:dict[str, dict]
+
+            # Generate the title for this group of functions
+            output_string += make_title(table_name)
+
+            # Generate each function
+            for name, function in table_functions.items():
+                name:str
+                function:dict
+                query:list[str]|str = function["query"]
+
+                output_string += f"-- {name} --\n"
+                output_string += format_query(query)
+
+                output_string += "\n"
+
+            output_string += "\n"
+
+
+        return output_string.strip()
+
 
 
     def _load(self) -> None:
@@ -31,27 +158,6 @@ class SQL_Statements:
         # Load all the sql statements from the json file
         with open(STATEMENTS_FILE, "r") as file:
             self._sql_functions = json.load(file)
-
-        # -- Convert multiline strings (lists of strings) into single strings --
-        # ddl functions
-        for function in self._sql_functions["ddl"]:
-            function:dict
-            query:list[str]|str = function["query"]
-
-            if type(query) is list:
-                function["query"] = " ".join(query)
-
-        # other dml/dql functions
-        for table_functions in self._sql_functions["dml/dql"].values():
-            table_functions:dict[str, dict]
-
-            for function in table_functions.values():
-                function:dict
-                query:list[str]|str = function["query"]
-
-                if type(query) is list:
-                    function["query"] = " ".join(query)
-
 
         # Sort ddl functions to be the in the order of intended execution
         self._sql_functions["ddl"].sort(key= lambda x: x["order"])
@@ -99,9 +205,21 @@ class SQL_Statements:
         # ddl_sql_functions.sort(key= lambda x: x["order"])
         #
         # return ddl_sql_functions
+        ddl_functions:list[dict] = copy.deepcopy(self._sql_functions["ddl"])
 
+        # Join multiline strings
+        for function in ddl_functions:
+            function:dict
+            query:list[str]|str = function["query"]
+
+            if type(query) is list:
+                function["query"] = " ".join(query)
+
+        # Sort by execution order
+        ddl_functions.sort(key= lambda x: x["order"])
         # return [x for x in self._sql_functions["ddl"].sort(key= lambda x: x["order"])]
-        return copy.deepcopy(self._sql_functions["ddl"].sort(key= lambda x: x["order"]))
+        # return copy.deepcopy(self._sql_functions["ddl"].sort(key= lambda x: x["order"]))
+        return ddl_functions
 
 
 
@@ -143,7 +261,20 @@ class SQL_Statements:
         #
         # return sql_functions
 
-        return copy.deepcopy(self._sql_functions["dml/dql"])
+        sql_functions:dict[str, dict[str, dict]] = copy.deepcopy(self._sql_functions["dml/dql"])
+
+        # Join multiline queries
+        for table_functions in sql_functions.values():
+            table_functions:dict[str, dict]
+
+            for function in table_functions.values():
+                function:dict
+                query:list[str]|str = function["query"]
+
+                if type(query) is list:
+                    function["query"] = " ".join(query)
+
+        return sql_functions
 
 
 
@@ -171,9 +302,9 @@ class SQL_Statements:
         # with open(STATEMENTS_FILE, "r") as file:
         #     sql_functions = json.load(file)["dml/dql"]
         #
-        # return " ".join(sql_functions[group][name]["query"])
+        return " ".join(self._sql_functions[group][name]["query"])
 
-        return self._sql_functions["dml/dql"][group][name]["query"]
+        # return self._sql_functions["dml/dql"][group][name]["query"]
 
 
 
