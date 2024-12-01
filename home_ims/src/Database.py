@@ -250,6 +250,8 @@ class Database:
                 """
                 The function to run after all class methods.
                 """
+                self.__parent.commit()
+                # TODO: on commit error do rollback
                 pass
 
             def replace_func(name:str) -> None:
@@ -293,7 +295,7 @@ class Database:
 
                 # Check that the member is a function and is non-dunder
                 if (type(value) == FunctionType 
-                        and not name.startswith("__")
+                        and not name.startswith("_")
                         and not name.endswith("__")
                         ):
                     replace_func(name) # Replace the function
@@ -347,9 +349,9 @@ class Database:
             required_inputs = None
             expected_outputs = None
             try:
-                query = self.__parent.__sql_statements.get_query(group = group, name = function_name)                       # Get query
-                required_inputs = self.__parent.__sql_statements.get_query_inputs(group = group, name = function_name)      # Get query inputs
-                expected_outputs = self.__parent.__sql_statements.get_query_outputs(group = group, name = function_name)    # Get query outputs
+                query = self.__parent._Database__sql_statements.get_query(group = group, name = function_name)                       # Get query
+                required_inputs = self.__parent._Database__sql_statements.get_query_inputs(group = group, name = function_name)      # Get query inputs
+                expected_outputs = self.__parent._Database__sql_statements.get_query_outputs(group = group, name = function_name)    # Get query outputs
             except KeyError:
                 print("Failed to get query information")
                 return False
@@ -393,7 +395,7 @@ class Database:
 
         # ----- ITEM TYPE -----
 
-        def add_item_type(self, name:str, unit:str) -> None:
+        def _add_item_type(self, name:str, unit:str) -> None:
             """
             Adds an item type record to the database.
 
@@ -415,13 +417,34 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "ItemType", name = "Add item type")
+            statement = self.__parent._Database__sql_statements.get_query(group = "ItemType", name = "Add item type")
             data = (name, unit)
 
             cursor.execute(statement, data)
 
+        def add_item_type(self, name:str, unit:str) -> None:
+            """
+            Adds an item type record to the database.
 
-        def select_item_type(self, name:str="%", unit:str="%") -> list[tuple]:
+            Parameters
+            ----------
+            name : str
+                The name of the item to add.
+                Example: "Milk"
+            unit : str
+                The unit that the item quantity is measured in.
+                Example: "L"
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `name` of the item to add does not already exist in the table.
+            """
+            self._add_item_type(name, unit)
+
+
+        def _select_item_type(self, name:str="%", unit:str="%") -> list[tuple]:
             """
             Selects item type records from the database.
             Used SQL style regex for searching.
@@ -445,15 +468,38 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "ItemType", name = "Select item type")
+            statement = self.__parent._Database__sql_statements.get_query(group = "ItemType", name = "Select item type")
             data = (name, unit)
 
             cursor.execute(statement, data)
 
             return cursor.fetchall()
+
+        def select_item_type(self, name:str="%", unit:str="%") -> list[tuple]:
+            """
+            Selects item type records from the database.
+            Used SQL style regex for searching.
+
+            Parameters
+            ----------
+            name : str
+                The name of the item to search for.
+                Example: "Milk"
+                Example: "M%"
+            unit : str
+                The unit that the item quantity is measured in.
+                Example: "L"
+                Example: "%"
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._select_item_type(name, unit)
             
 
-        def add_item_type_subclass(self, subclass_name:str, name:str, unit:str="") -> None:
+        def _add_item_type_subclass(self, subclass_name:str, name:str, unit:str="") -> None:
             """
             Adds an item type subclass record to the database.
             Also creates the respective item type record as well if
@@ -479,17 +525,17 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            if len(self.select_item_type(name)) == 0:
-                self.add_item_type(name=name, unit=unit)
+            if len(self._select_item_type(name)) == 0:
+                self._add_item_type(name=name, unit=unit)
 
             # Create the subclass type
-            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
+            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
             data = (name,)
 
             cursor.execute(statement, data)
 
 
-        def select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> list[tuple]:
+        def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> list[tuple]:
             """
             Selects records of an item type subclass from the database.
 
@@ -511,7 +557,7 @@ class Database:
             # Get the cursor
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} type")
+            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} type")
             data = (name, unit) # Yes, the comma is necessary
 
             cursor.execute(statement, data)
@@ -521,6 +567,33 @@ class Database:
 
 
         # ----- CONSUMABLE -----
+
+        def _add_consumable_type(self, name:str, unit:str="") -> None:
+            """
+            Adds a consumable type record to the database.
+            Also creates the respective item type record as well if
+            it doesn't already exist using the optional `unit` option. 
+
+            Parameters
+            ----------
+            name : str
+                The name of the item to add.
+                Example: "Milk"
+            unit : str
+                The unit that the item quantity is measured in.
+                Example: "L"
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `name` of the item to add does not already exist in the table.
+            """
+            self._add_item_type_subclass(
+                subclass_name="Consumable", 
+                name=name,
+                unit=unit
+            )
 
         def add_consumable_type(self, name:str, unit:str="") -> None:
             """
@@ -543,13 +616,9 @@ class Database:
             - The database connection cursor is open.
             - The `name` of the item to add does not already exist in the table.
             """
-            self.add_item_type_subclass(
-                subclass_name="Consumable", 
-                name=name,
-                unit=unit
-            )
+            self._add_consumable_type(name, unit)
 
-        def select_consumable_type(self, name:str="%", unit:str="%") -> list[tuple]:
+        def _select_consumable_type(self, name:str="%", unit:str="%") -> list[tuple]:
             """
             Selects consumable type records from the database.
 
@@ -567,13 +636,13 @@ class Database:
             - The database connection is open.
             - The database connection cursor is open.
             """
-            return self.select_item_type_subclass(
+            return self._select_item_type_subclass(
                 subclass_name="Consumable",
                 name=name,
                 unit=unit
             )
 
-        def add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="") -> None:
+        def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="") -> None:
             """
             Adds a consumable type subclass record to the database.
             Also creates respective consumable and item type records 
@@ -596,11 +665,11 @@ class Database:
             - The `name` of the item to add does not already exist in the table.
             """
             # Create the consumable type if it doesn't exist
-            if len(self.select_consumable_type(name)) == 0:
-                self.add_consumable_type(name=name, unit=unit)
+            if len(self._select_consumable_type(name)) == 0:
+                self._add_consumable_type(name=name, unit=unit)
 
             # Create the consumable subclass type
-            self.add_item_type_subclass(
+            self._add_item_type_subclass(
                 subclass_name=subclass_name,
                 name=name,
                 unit=unit
@@ -631,7 +700,7 @@ class Database:
             - The database connection cursor is open.
             - The `name` of the item to add does not already exist in the table.
             """
-            self.add_item_type_subclass(
+            self._add_item_type_subclass(
                 subclass_name="Durable", 
                 name=name,
                 unit=unit
@@ -655,7 +724,7 @@ class Database:
             - The database connection is open.
             - The database connection cursor is open.
             """
-            return self.select_item_type_subclass(
+            return self._select_item_type_subclass(
                 subclass_name="Durable",
                 name=name,
                 unit=unit
@@ -687,7 +756,7 @@ class Database:
             - The database connection cursor is open.
             - The `name` of the food item to add does not already exist in the table.
             """
-            self.add_consumable_type_subclass(
+            self._add_consumable_type_subclass(
                 subclass_name="Food", 
                 name=name,
                 unit=unit
@@ -711,7 +780,7 @@ class Database:
             - The database connection is open.
             - The database connection cursor is open.
             """
-            return self.select_item_type_subclass(
+            return self._select_item_type_subclass(
                 subclass_name="Food",
                 name=name,
                 unit=unit
@@ -743,7 +812,7 @@ class Database:
             - The database connection cursor is open.
             - The `name` of the not food item to add does not already exist in the table.
             """
-            self.add_consumable_type_subclass(
+            self._add_consumable_type_subclass(
                 subclass_name="NotFood", 
                 name=name,
                 unit=unit
@@ -767,7 +836,7 @@ class Database:
             - The database connection is open.
             - The database connection cursor is open.
             """
-            return self.select_item_type_subclass(
+            return self._select_item_type_subclass(
                 subclass_name="NotFood",
                 name=name,
                 unit=unit
@@ -798,7 +867,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "Location", name = "Add location")
+            statement = self.__parent._Database__sql_statements.get_query(group = "Location", name = "Add location")
             data = (name,)
 
             cursor.execute(statement, data)
@@ -823,7 +892,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "Location", name = "Delete location")
+            statement = self.__parent._Database__sql_statements.get_query(group = "Location", name = "Delete location")
             data = (name,)
 
             cursor.execute(statement, data)
@@ -847,7 +916,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "Location", name = "Select locations")
+            statement = self.__parent._Database__sql_statements.get_query(group = "Location", name = "Select locations")
             data = (name,)
 
             cursor.execute(statement, data)
@@ -858,7 +927,7 @@ class Database:
         
         # ----- STORAGE -----
 
-        def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+        def _add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
             """
             Adds a storage record to the database.
 
@@ -881,10 +950,32 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "Storage", name = "Add storage")
+            statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Add storage")
             data = (storage_name, location_name, capacity)
 
             cursor.execute(statement, data)
+
+        def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            """
+            Adds a storage record to the database.
+
+            Parameters
+            ----------
+            storage_name : str
+                The name of the storage to add.
+            location_name : str
+                The name of the location that the storage is in.
+            capacity : float
+                The percentage of the storage used.
+                Between 0 and 2.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to add does not already exist in the table.
+            """
+            self._add_storage(storage_name, location_name, capacity)
 
 
         def delete_storage(self, storage_name:str) -> None:
@@ -906,7 +997,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "Storage", name = "Delete storage")
+            statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Delete storage")
             data = (storage_name,)
 
             cursor.execute(statement, data)
@@ -937,7 +1028,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group = "Storage", name = "Select storage")
+            statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Select storage")
             data = (storage_name, location_name, capacity_low, capacity_high)
 
             cursor.execute(statement, data)
@@ -948,7 +1039,7 @@ class Database:
         # ----- STORAGE SUBCLASSES -----
 
 
-        def add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+        def _add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> None:
             """
             Adds a storage subclass record to the database.
             Also creates the respective storage record as well if
@@ -976,16 +1067,16 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            self.add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
+            self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
 
             # Create the subclass type
-            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
+            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
             data = (storage_name,)
 
             cursor.execute(statement, data)
 
 
-        def select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=0.0) -> list[tuple]:
+        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=0.0) -> list[tuple]:
             """
             Selects records of a storage subclass from the database.
 
@@ -1009,7 +1100,7 @@ class Database:
             # Get the cursor
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} storage")
+            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} storage")
             data = (storage_name, location_name, capacity_low, capacity_high)  
 
             cursor.execute(statement, data)

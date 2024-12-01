@@ -246,7 +246,7 @@ class SQL_Statements:
         str
             The query of the desired function.
         """
-        return " ".join(self._sql_functions[group][name]["query"])
+        return " ".join(self._sql_functions["dml/dql"][group][name]["query"])
 
 
 
