@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>692</width>
+    <width>835</width>
     <height>40</height>
    </rect>
   </property>
@@ -33,6 +33,9 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>40</width>
@@ -53,6 +56,9 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::MinimumExpanding</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>40</width>
@@ -62,16 +68,16 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="expiration">
      <property name="text">
-      <string>Exp</string>
+      <string>Expires Date</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="expiration">
+    <widget class="QToolButton" name="infoBtn">
      <property name="text">
-      <string>Date</string>
+      <string>i</string>
      </property>
     </widget>
    </item>
@@ -83,7 +89,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="discardBtn">
+    <widget class="QPushButton" name="throwOutBtn">
      <property name="text">
       <string>Throw out</string>
      </property>

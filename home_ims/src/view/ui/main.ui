@@ -106,7 +106,7 @@
              <bool>true</bool>
             </property>
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; font-weight:700;&quot;&gt;TODO: Do we want this?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:18pt; font-weight:700;&quot;&gt;My Home&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
           </item>
@@ -124,11 +124,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="pushButton">
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
+           <widget class="QComboBox" name="userSelector"/>
           </item>
          </layout>
         </item>
@@ -196,6 +192,10 @@
 	background-color: #dfdfdf;
 }
 
+QPushButton:disabled {
+	border-color: #9b9b9b;
+}
+
 QPushButton {
 	background-color: #ffffff;
 	border-color: #000000;
@@ -217,6 +217,9 @@ QPushButton {
                </property>
               </widget>
               <widget class="QLineEdit" name="inventorySearch">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
                <property name="geometry">
                 <rect>
                  <x>50</x>
@@ -232,7 +235,8 @@ QPushButton {
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">border: 1px solid;
+                <string notr="true">background-color: #ffffff;
+border: 1px solid;
 border-radius: 15px;
 padding-left: 15px;
 padding-right: 15px;</string>
@@ -266,12 +270,6 @@ padding-right: 15px;</string>
                </property>
                <item>
                 <widget class="QScrollArea" name="inventoryView">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
                  <property name="styleSheet">
                   <string notr="true">#inventoryView {
 	background-color: #00ffffff;
@@ -279,30 +277,10 @@ padding-right: 15px;</string>
 	border-color: #bbbbbb;
 }</string>
                  </property>
-                 <property name="verticalScrollBarPolicy">
-                  <enum>Qt::ScrollBarAsNeeded</enum>
-                 </property>
-                 <property name="horizontalScrollBarPolicy">
-                  <enum>Qt::ScrollBarAlwaysOff</enum>
-                 </property>
                  <property name="widgetResizable">
                   <bool>true</bool>
                  </property>
-                 <widget class="QWidget" name="inventoryEntries">
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <width>688</width>
-                    <height>623</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
+                 <widget class="QWidget" name="widget_7">
                   <property name="styleSheet">
                    <string notr="true">#inventoryEntries {
 	background-color: #00ffffff;
@@ -373,6 +351,10 @@ padding-right: 15px;</string>
 	background-color: #dfdfdf;
 }
 
+QPushButton:disabled {
+	border-color: #9b9b9b;
+}
+
 QPushButton {
 	background-color: #ffffff;
 	border-color: #000000;
@@ -409,7 +391,8 @@ QPushButton {
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">border: 1px solid;
+                <string notr="true">background-color: #ffffff;
+border: 1px solid;
 border-radius: 15px;
 padding-left: 15px;
 padding-right: 15px;</string>
@@ -481,6 +464,10 @@ padding-right: 15px;</string>
 	background-color: #dfdfdf;
 }
 
+QPushButton:disabled {
+	border-color: #9b9b9b;
+}
+
 QPushButton {
 	background-color: #ffffff;
 	border-color: #000000;
@@ -517,7 +504,8 @@ QPushButton {
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">border: 1px solid;
+                <string notr="true">background-color: #ffffff;
+border: 1px solid;
 border-radius: 15px;
 padding-left: 15px;
 padding-right: 15px;</string>
@@ -573,7 +561,8 @@ padding-right: 15px;</string>
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">border: 1px solid;
+                <string notr="true">background-color: #ffffff;
+border: 1px solid;
 border-radius: 15px;
 padding-left: 15px;
 padding-right: 15px;</string>

@@ -1,22 +1,17 @@
+from PyQt6 import QtWidgets
 import sys
 
-from PyQt6 import QtWidgets, uic
+from Database import *
+import view
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    window = uic.loadUi("ui/main.ui")
+    db = Database()
+    db.connect()
+    # db.build_database()
+    dba = Database.DB_Actions(db)
 
-    gen, base = uic.loadUiType("ui/inv_entry.ui")
+    view.show_window(dba)
 
-    for i in range(30):
-        widget = base()
-        form = gen()
-        form.setupUi(widget)
-        form.quantity.setText(f"{i} mL")
-        window.inventoryEntries.layout().addWidget(widget)
-
-    window.inventoryEntries.layout().addStretch()
-
-    window.show()
     app.exec()

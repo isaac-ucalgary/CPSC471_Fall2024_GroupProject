@@ -5,7 +5,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE DATABASE Home_IMS;"
+                "CREATE DATABASE IF NOT EXISTS Home_IMS;"
             ],
             "order": 0
         },
@@ -14,7 +14,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.ItemType (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.ItemType (",
                 "name VARCHAR(255) NOT NULL,",
                 "unit VARCHAR(16),",
                 "PRIMARY KEY (name)",
@@ -27,7 +27,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Consumable (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Consumable (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES ItemType(name)",
@@ -40,7 +40,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Durable (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Durable (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES ItemType(name)",
@@ -53,7 +53,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.NotFood (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.NotFood (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES Consumable(name)",
@@ -66,7 +66,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Food (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Food (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES Consumable(name)",
@@ -79,7 +79,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Template (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Template (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name)",
                 ");"
@@ -91,7 +91,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.OtherTemplate (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.OtherTemplate (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES Template(name)",
@@ -104,7 +104,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Location (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Location (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name)",
                 ");"
@@ -116,7 +116,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Recipe (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (",
                 "recipe_name VARCHAR(255) NOT NULL,",
                 "food_name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (recipe_name, food_name),",
@@ -131,7 +131,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.MealSchedule (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.MealSchedule (",
                 "recipe_name VARCHAR(255) NOT NULL,",
                 "timestamp DATETIME NOT NULL,",
                 "location_name VARCHAR(255) NOT NULL,",
@@ -148,7 +148,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.User (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.User (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name)",
                 ");"
@@ -160,7 +160,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Dependent (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Dependent (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES User(name)",
@@ -173,7 +173,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Parent (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Parent (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES User(name)",
@@ -186,7 +186,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Ingredients (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Ingredients (",
                 "food_name VARCHAR(255) NOT NULL,",
                 "recipe_name VARCHAR(255) NOT NULL,",
                 "quantity FLOAT NOT NULL,",
@@ -203,10 +203,10 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Storage (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Storage (",
                 "storage_name VARCHAR(255) NOT NULL,",
                 "location_name VARCHAR(255) NOT NULL,",
-                "capacity FLOAT NOT NULL,",
+                "capacity FLOAT NOT NULL DEFAULT 0,",
                 "PRIMARY KEY (storage_name),",
                 "FOREIGN KEY (location_name) REFERENCES Location(name),",
                 "CHECK (capacity >= 0 AND capacity <= 2)",
@@ -219,7 +219,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Dry (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Dry (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES Storage(storage_name)",
@@ -232,7 +232,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Appliance (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Appliance (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES Storage(storage_name)",
@@ -245,7 +245,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Fridge (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Fridge (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES Appliance (name)",
@@ -258,7 +258,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Freezer (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Freezer (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
                 "FOREIGN KEY (name) REFERENCES Appliance (name)",
@@ -271,10 +271,11 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Inventory (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Inventory (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "storage_name VARCHAR(255) NOT NULL,",
                 "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "expiration DATETIME,",
                 "quantity FLOAT NOT NULL,",
                 "PRIMARY KEY (item_name, storage_name, timestamp),",
                 "FOREIGN KEY (item_name) REFERENCES ItemType (name),",
@@ -289,7 +290,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Purchase (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Purchase (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
                 "quantity FLOAT NOT NULL,",
@@ -309,7 +310,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.History (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.History (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
                 "quantity FLOAT NOT NULL,",
@@ -325,7 +326,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Wasted (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Wasted (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "date_used DATETIME NOT NULL,",
                 "PRIMARY KEY (item_name, date_used),",
@@ -339,7 +340,7 @@
             "inputs": [],
             "outputs": [],
             "query": [
-                "CREATE TABLE Home_IMS.Used (",
+                "CREATE TABLE IF NOT EXISTS Home_IMS.Used (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "date_used DATETIME NOT NULL,",
                 "user_name VARCHAR(255),",
@@ -927,16 +928,18 @@
                 ]
             },
             "Select users": {
-                "inputs": [
-                    "name"
-                ],
+                "inputs": [],
                 "outputs": [
-                    "name"
+                    "name",
+                    "is_parent"
                 ],
                 "query": [
-                    "SELECT name",
-                    "FROM HomeIMS.User",
-                    "WHERE name LIKE %s;"
+                    "SELECT name, EXISTS (",
+                    " SELECT *",
+                    " FROM Home_IMS.Parent AS P",
+                    " WHERE P.name = U.name",
+                    ")",
+                    "FROM Home_IMS.User as U;"
                 ],
                 "notes": [
                     "Select users"
@@ -1568,7 +1571,7 @@
                     "Move item storage location"
                 ]
             },
-            "View all": {
+            "View items": {
                 "inputs": [
                     "item_name",
                     "storage_name",
@@ -1579,13 +1582,15 @@
                     "item_name",
                     "storage_name",
                     "timestamp",
+                    "expiration",
                     "quantity"
                 ],
                 "query": [
-                    "SELECT I.item_name, I.storage_name, I.timestamp, I.quantity",
+                    "SELECT I.item_name, I.storage_name, I.timestamp, I.expiration, I.quantity, T.unit",
                     "FROM Home_IMS.Inventory AS I",
-                    "WHERE I.item_name LIKE %s",
-                    "AND I.storage_name LIKE %s",
+                    "JOIN Home_IMS.ItemType AS T ON I.item_name = T.name",
+                    "WHERE I.item_name LIKE %s ESCAPE '!'",
+                    "AND I.storage_name LIKE %s ESCAPE '!'",
                     "AND I.timestamp BETWEEN %s AND %s;"
                 ],
                 "notes": [
