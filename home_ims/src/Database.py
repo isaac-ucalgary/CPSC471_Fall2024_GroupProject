@@ -3,7 +3,6 @@
 # -- Library Imports --
 from os import stat
 import re
-from threading import ExceptHookArgs
 import mysql.connector
 from mysql.connector import Error, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
@@ -13,7 +12,7 @@ from types import FunctionType, MethodType
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
 from secrets import MARIADB_PASSWORD # (ignore error, it's caused by .gitignore file and is expected.)
-from sql_statements import *
+from sql_statements import SQL_Statements
 
 
 
@@ -38,6 +37,8 @@ class Database:
         self.__cursor = None
 
         self.db_actions = self.DB_Actions(self)
+
+        self.__sql_statements = SQL_Statements()
 
 
 
@@ -161,7 +162,7 @@ class Database:
         operation_successful:bool = True
 
         # Get the ddl sql statements to build the database
-        ddl = [x for x in get_ddl_sql_functions()]
+        ddl = self.__sql_statements.get_ddl_sql_functions()
 
         # Connect to the database
         operation_successful = self.connect() and operation_successful
@@ -346,9 +347,9 @@ class Database:
             required_inputs = None
             expected_outputs = None
             try:
-                query = get_query(group = group, name = function_name)
-                required_inputs = get_query_inputs(group = group, name = function_name)
-                expected_outputs = get_query_outputs(group = group, name = function_name)
+                query = self.__parent.__sql_statements.get_query(group = group, name = function_name)                       # Get query
+                required_inputs = self.__parent.__sql_statements.get_query_inputs(group = group, name = function_name)      # Get query inputs
+                expected_outputs = self.__parent.__sql_statements.get_query_outputs(group = group, name = function_name)    # Get query outputs
             except KeyError:
                 print("Failed to get query information")
                 return False
@@ -414,7 +415,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "ItemType", name = "Add item type")
+            statement = self.__parent.__sql_statements.get_query(group = "ItemType", name = "Add item type")
             data = (name, unit)
 
             cursor.execute(statement, data)
@@ -444,7 +445,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "ItemType", name = "Select item type")
+            statement = self.__parent.__sql_statements.get_query(group = "ItemType", name = "Select item type")
             data = (name, unit)
 
             cursor.execute(statement, data)
@@ -482,7 +483,7 @@ class Database:
                 self.add_item_type(name=name, unit=unit)
 
             # Create the subclass type
-            statement = get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
+            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
             data = (name,)
 
             cursor.execute(statement, data)
@@ -510,7 +511,7 @@ class Database:
             # Get the cursor
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group=subclass_name, name = f"Select {subclass_name.lower()} type")
+            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} type")
             data = (name, unit) # Yes, the comma is necessary
 
             cursor.execute(statement, data)
@@ -797,7 +798,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "Location", name = "Add location")
+            statement = self.__parent.__sql_statements.get_query(group = "Location", name = "Add location")
             data = (name,)
 
             cursor.execute(statement, data)
@@ -822,7 +823,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "Location", name = "Delete location")
+            statement = self.__parent.__sql_statements.get_query(group = "Location", name = "Delete location")
             data = (name,)
 
             cursor.execute(statement, data)
@@ -846,7 +847,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "Location", name = "Select locations")
+            statement = self.__parent.__sql_statements.get_query(group = "Location", name = "Select locations")
             data = (name,)
 
             cursor.execute(statement, data)
@@ -880,7 +881,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "Storage", name = "Add storage")
+            statement = self.__parent.__sql_statements.get_query(group = "Storage", name = "Add storage")
             data = (storage_name, location_name, capacity)
 
             cursor.execute(statement, data)
@@ -905,7 +906,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "Storage", name = "Delete storage")
+            statement = self.__parent.__sql_statements.get_query(group = "Storage", name = "Delete storage")
             data = (storage_name,)
 
             cursor.execute(statement, data)
@@ -936,7 +937,7 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group = "Storage", name = "Select storage")
+            statement = self.__parent.__sql_statements.get_query(group = "Storage", name = "Select storage")
             data = (storage_name, location_name, capacity_low, capacity_high)
 
             cursor.execute(statement, data)
@@ -978,7 +979,7 @@ class Database:
             self.add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
 
             # Create the subclass type
-            statement = get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
+            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
             data = (storage_name,)
 
             cursor.execute(statement, data)
@@ -1008,7 +1009,7 @@ class Database:
             # Get the cursor
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = get_query(group=subclass_name, name = f"Select {subclass_name.lower()} storage")
+            statement = self.__parent.__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} storage")
             data = (storage_name, location_name, capacity_low, capacity_high)  
 
             cursor.execute(statement, data)
