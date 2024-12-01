@@ -892,7 +892,7 @@
                     "storage_name",
                     "location_name",
                     "capacity_low",
-                    "capacity_high
+                    "capacity_high"
                 ],
                 "outputs": [
                     "storage_name",
