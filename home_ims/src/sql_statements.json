@@ -412,7 +412,7 @@
                     "SELECT name, unit",
                     "FROM Home_IMS.ItemType",
                     "WHERE name LIKE %s",
-                    "AND I.unit LIKE %s;"
+                    "AND unit LIKE %s;"
                 ],
                 "notes": [
                     "Select item type"
@@ -628,8 +628,8 @@
             "Add storage": {
                 "inputs": [
                     "storage_name",
-                    "capacity",
-                    "location_name"
+                    "location_name",
+                    "capacity"
                 ],
                 "outputs": [],
                 "query": [
@@ -900,7 +900,9 @@
                 ]
             },
             "Select users": {
-                "inputs": [],
+                "inputs": [
+                    "name"
+                ],
                 "outputs": [
                     "name",
                     "is_parent"
@@ -911,7 +913,8 @@
                     " FROM Home_IMS.Parent AS P",
                     " WHERE P.name = U.name",
                     ") AS is_parent",
-                    "FROM Home_IMS.User as U;"
+                    "FROM Home_IMS.User as U",
+                    "WHERE U.name LIKE %s;"
                 ],
                 "notes": [
                     "Select users"
