@@ -1,14 +1,17 @@
 # Build Database Script
 
 # -- Library Imports --
+from math import e
+from time import time
 from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from mysql.connector.types import RowType
-from os import stat
+from os import stat, times
 from types import FunctionType, MethodType
 import inspect
 import mysql.connector
 import re
+import datetime
 
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
@@ -798,7 +801,7 @@ class Database:
 
         # ----- DURABLE -----
 
-        def add_durable_type(self, name:str, unit:str="") -> None:
+        def _add_durable_type(self, name:str, unit:str="") -> None:
             """
             Adds a durable type record to the database.
             Also creates the respective item type record as well if
@@ -824,6 +827,8 @@ class Database:
                 name=name,
                 unit=unit
             )
+        def add_durable_type(self, name:str, unit:str="") -> None:
+            self._add_durable_type(name=name, unit=unit)
 
 
         def select_durable_type(self, name:str="%", unit:str="%") -> list[RowType]:
@@ -854,7 +859,7 @@ class Database:
 
         # ----- FOOD -----
 
-        def add_food_type(self, name:str, unit:str="") -> None:
+        def _add_food_type(self, name:str, unit:str="") -> None:
             """
             Adds a food type record to the database.
             Also creates respective consumable and item type records 
@@ -881,6 +886,9 @@ class Database:
                 name=name,
                 unit=unit
             )
+
+        def add_food_type(self, name:str, unit:str="") -> None:
+            self._add_food_type(name=name, unit=unit)
 
 
         def select_food_type(self, name:str="%", unit:str="%") -> list[RowType]:
@@ -1477,8 +1485,203 @@ class Database:
             return cursor.fetchall()
 
 
-        # ----- Wasted -----
 
+
+
+        # ----- Inventory -----
+
+        def _change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:datetime.datetime) -> bool:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Change item quantity")
+            data = (new_quantity,
+                    item_name, 
+                    storage_name,
+                    timestamp.isoformat()
+                    )
+
+            try:
+                cursor.execute(statement, data)
+            except Exception:
+                return False
+            
+            return True
+
+
+        def change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:datetime.datetime) -> bool:
+            return self._change_item_quantity(new_quantity=new_quantity, item_name=item_name, storage_name=storage_name, timestamp=timestamp)
+
+
+        def _select_item_quantity_from_inventory(self, item_name:str, storage_name:str, timestamp:datetime.datetime, expiry:datetime.datetime) -> float:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            existing_quantity = 0.0
+            
+            try:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Select item quantity from inventory")
+                data = (item_name, 
+                        storage_name,
+                        timestamp.isoformat(),
+                        expiry.isoformat()
+                        )
+                cursor.execute(statement, data)
+                existing_inventory = cursor.fetchone()
+                if type(existing_inventory) is list and len(existing_inventory) > 0:
+                    existing_quantity = existing_inventory[0]["quantity"]
+            except:
+                pass
+
+            return existing_quantity
+
+
+
+
+        def _add_item_to_inventory(
+                self,
+                item_name:str,
+                storage_name:str,
+                timestamp:datetime.datetime=datetime.datetime.now(),
+                expiry:datetime.datetime=datetime.datetime.now() + datetime.timedelta(days=10),
+                quantity:float=1.0
+            ) -> tuple[bool, str]:
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            # Get existing inventory with these parameters
+            quantity += self._select_item_quantity_from_inventory(
+                item_name=item_name, 
+                storage_name=storage_name,
+                timestamp=timestamp,
+                expiry=expiry
+            )
+
+            # Check item type exists
+            if len(self._select_item_type(name=item_name)) == 0:
+                return (False, "ItemType does not exist")
+
+            
+            # Try to add the item to inventory
+            try:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Add item to inventory")
+                data = (item_name, storage_name, timestamp.isoformat(), expiry.isoformat(), quantity)
+                cursor.execute(statement, data)
+            except IntegrityError:
+                self._change_item_quantity(
+                    new_quantity=quantity,
+                    item_name=item_name,
+                    storage_name=storage_name,
+                    timestamp=timestamp
+                )
+                return (True, "Updated quantity")
+
+
+            return (True, "Added Item")
+
+        def add_item_to_inventory(
+                self,
+                item_name:str,
+                storage_name:str,
+                timestamp:datetime.datetime=datetime.datetime.now(),
+                expiry:datetime.datetime=datetime.datetime.now() + datetime.timedelta(days=10),
+                quantity:float=1.0
+            ) -> tuple[bool, str]:
+            return self._add_item_to_inventory(
+                item_name=item_name,
+                storage_name=storage_name,
+                timestamp=timestamp,
+                expiry=expiry,
+                quantity=quantity
+            )
+
+
+        def view_inventory_items(
+            self,
+            item_name:str="%",
+            storage_name:str="%",
+            timestamp_from:datetime.datetime=datetime.datetime.min,
+            timestamp_to:datetime.datetime=datetime.datetime.max
+        ) -> list[RowType]:
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "View inventory items")
+            data = (item_name, storage_name, timestamp_from.isoformat(), timestamp_to.isoformat())
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+
+        def move_item_storage_location(
+            self,
+            new_storage_name:str,
+            item_name:str,
+            old_storage_name:str,
+            timestamp:datetime.datetime
+        ) -> None:
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Move item storage location")
+            data = (new_storage_name, item_name, old_storage_name, timestamp.isoformat())
+            cursor.execute(statement, data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # ----- History -----
+
+        def _add_item_history_record(self, item_name:str, date_used:datetime.datetime=datetime.datetime.now(), quantity:float=1.0) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "History", name = "Add item history record")
+            data = (item_name, date_used.isoformat(), quantity)
+
+            cursor.execute(statement, data)
+
+
+        def _add_item_wasted_record(self, item_name:str, date_used:datetime.datetime=datetime.datetime.now(), quantity:float=1.0) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            try:
+                self._add_item_history_record(item_name=item_name, date_used=date_used, quantity=quantity)
+            except Exception:
+                print("Could not create item wasted record")
+            else:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Wasted", name = "Add item wasted record")
+                data = (item_name, date_used.isoformat())
+
+                cursor.execute(statement, data)
+
+
+        def _add_item_used_record(self, item_name:str, date_used:datetime.datetime=datetime.datetime.now(), quantity:float=1.0) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            try:
+                self._add_item_history_record(item_name=item_name, date_used=date_used, quantity=quantity)
+            except Exception:
+                print("Could not create item used record")
+            else:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Used", name = "Add item used record")
+                data = (item_name, date_used.isoformat())
+
+                cursor.execute(statement, data)
 
 
 
