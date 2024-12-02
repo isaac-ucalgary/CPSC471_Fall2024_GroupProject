@@ -9,7 +9,6 @@ class InventoryView:
         self.window = window
         self.dba = dba
         self.current_user = None
-        self.rebuild_ui()
     
     def rebuild_ui(self):
         inv = self.dba.dynamic_query(
@@ -33,7 +32,7 @@ class InventoryView:
             form.setupUi(widget)
 
             form.itemType.setText(entry["item_name"])
-            form.quantity.setText(f"{entry['quantity']:.1f} {entry['unit']}")
+            form.quantity.setText(util.format_quantity(entry["quantity"], entry["unit"]))
             form.consumeBtn.clicked.connect(self.gen_consume_slot(widget, entry))
             form.throwOutBtn.clicked.connect(self.gen_throw_out_slot(widget, entry))
             form.removeBtn.clicked.connect(self.gen_remove_slot(widget, entry))
@@ -41,13 +40,16 @@ class InventoryView:
             if entry["expiration"] is None:
                 form.expiration.hide()
             else:
-                form.expiration.setText(entry["expiration"].strftime("Expires %-d %b, %Y"))
+                form.expiration.setText("Expires " + util.format_date(entry["expiration"]))
 
             c_layout.addWidget(widget)
 
         c_layout.addStretch()
 
         self.window.inventoryView.setWidget(container)
+
+    def set_enabled(self, enabled):
+        self.window.inventoryTab.setEnabled(enabled)
 
     def configure_user(self, user, privileged):
         self.current_user = user
@@ -81,7 +83,7 @@ class InventoryView:
             self.rebuild_ui()
         return throw_out
 
-    def gen_remove_slot(dba, widget, entry):
+    def gen_remove_slot(self, widget, entry):
         def remove():
             widget.deleteLater()
             self.dba.dynamic_query(

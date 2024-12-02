@@ -1127,12 +1127,12 @@ class Database:
                     cursor.execute(stmt2, data2)
 
                 if user is None:
-                    stmt3 = self.__parent._Database__sql_statements.get_query(group="Used", name="Add item used record")
-                    data3 = (item_name, quantity_removed, user)
-                    cursor.execute(stmt3, data3)
-                else:
                     stmt3 = self.__parent._Database__sql_statements.get_query(group="Wasted", name="Add item wasted record")
                     data3 = (item_name, quantity_removed)
+                    cursor.execute(stmt3, data3)
+                else:
+                    stmt3 = self.__parent._Database__sql_statements.get_query(group="Used", name="Add item used record")
+                    data3 = (item_name, quantity_removed, user)
                     cursor.execute(stmt3, data3)
             except Error as e:
                 print(e)

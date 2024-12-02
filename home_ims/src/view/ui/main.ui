@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>847</width>
+    <width>873</width>
     <height>771</height>
    </rect>
   </property>
@@ -130,13 +130,19 @@
         </item>
         <item>
          <widget class="QTabWidget" name="tabs">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
           <property name="styleSheet">
            <string notr="true"/>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>5</number>
           </property>
           <widget class="QWidget" name="inventoryTab">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="styleSheet">
             <string notr="true">#inventoryTab {
 	background-color: #fff2cc
@@ -218,7 +224,7 @@ QPushButton {
               </widget>
               <widget class="QLineEdit" name="inventorySearch">
                <property name="enabled">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="geometry">
                 <rect>
@@ -296,6 +302,9 @@ padding-right: 15px;</string>
            </layout>
           </widget>
           <widget class="QWidget" name="recipesTab">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="styleSheet">
             <string notr="true">#recipesTab {
 	background-color: rgb(221, 232, 250);
@@ -409,6 +418,9 @@ padding-right: 15px;</string>
            </layout>
           </widget>
           <widget class="QWidget" name="mealsTab">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="styleSheet">
             <string notr="true">#mealsTab {
 	background-color: rgb(241, 208, 205);
@@ -576,6 +588,50 @@ padding-right: 15px;</string>
               </widget>
              </widget>
             </item>
+            <item>
+             <widget class="QTableWidget" name="historyView">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::NoSelection</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <attribute name="horizontalHeaderCascadingSectionResizes">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderStretchLastSection">
+               <bool>false</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>Item Type</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Quantity</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Timestamp</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Outcome</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>User</string>
+               </property>
+              </column>
+             </widget>
+            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="purchasesTab">
@@ -587,6 +643,51 @@ padding-right: 15px;</string>
            <attribute name="title">
             <string>Purchases</string>
            </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <item>
+             <widget class="QTableWidget" name="tableWidget_3">
+              <property name="editTriggers">
+               <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::NoSelection</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <column>
+               <property name="text">
+                <string>Item Type</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Quantity</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Date</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Price</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Store</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Buyer</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="analyticsTab">
            <property name="styleSheet">
@@ -602,6 +703,12 @@ padding-right: 15px;</string>
              <widget class="QTableWidget" name="tableWidget">
               <property name="editTriggers">
                <set>QAbstractItemView::NoEditTriggers</set>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::NoSelection</enum>
+              </property>
+              <property name="sortingEnabled">
+               <bool>true</bool>
               </property>
               <property name="rowCount">
                <number>0</number>

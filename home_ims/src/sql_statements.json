@@ -965,6 +965,24 @@
                 ]
             }
         },
+        "History": {
+            "Select history records": {
+                "inputs": [],
+                "outputs": [
+                    "item_name",
+                    "date_used",
+                    "quantity",
+                    "unit",
+                    "wasted",
+                    "user_name"
+                ],
+                "query": [
+                    "SELECT H.item_name, H.date_used, H.quantity, T.unit, H.wasted, H.user_name",
+                    "FROM Home_IMS.History AS H",
+                    "JOIN Home_IMS.ItemType AS T ON H.item_name = T.name;"
+                ]
+            }
+        },
         "Wasted": {
             "Add item wasted record": {
                 "inputs": [
@@ -991,12 +1009,11 @@
                     "date_used"
                 ],
                 "query": [
-                    "SELECT H.item_name, H.date_used",
-                    "FROM Home_IMS.History AS H",
-                    "ON H.item_name = W.item_name AND H.date_used = W.date_used",
-                    "WHERE H.wasted = true",
-                    "AND H.item_name LIKE %s",
-                    "AND H.date_used BETWEEN %s AND %s;"
+                    "SELECT item_name, date_used",
+                    "FROM Home_IMS.History",
+                    "WHERE wasted = true",
+                    "AND item_name LIKE %s",
+                    "AND date_used BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "Select waste records"
@@ -1032,12 +1049,12 @@
                     "user_name"
                 ],
                 "query": [
-                    "SELECT H.item_name, H.date_used, U.user_name",
-                    "FROM Home_IMS.History AS H",
-                    "WHERE H.wasted = false",
-                    "AND H.item_name LIKE %s",
-                    "AND H.date_used BETWEEN %s AND %s",
-                    "AND H.user_name LIKE %s;"
+                    "SELECT item_name, date_used, user_name",
+                    "FROM Home_IMS.History",
+                    "WHERE wasted = false",
+                    "AND item_name LIKE %s",
+                    "AND date_used BETWEEN %s AND %s",
+                    "AND user_name LIKE %s;"
                 ],
                 "notes": [
                     "Select waste records"
