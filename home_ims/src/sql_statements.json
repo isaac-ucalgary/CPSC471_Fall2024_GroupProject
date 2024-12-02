@@ -1060,8 +1060,10 @@
                     "quantity"
                 ],
                 "query": [
-                    "SELECT H.item_name, H.date_used, H.quantity FROM Home_IMS.History AS H",
-                    "JOIN Home_IMS.Wasted AS W ON H.item_name = W.item_name AND H.date_used = W.date_used",
+                    "SELECT H.item_name, H.date_used, H.quantity",
+                    "FROM Home_IMS.History AS H",
+                    "JOIN Home_IMS.Wasted AS W",
+                    "ON H.item_name = W.item_name AND H.date_used = W.date_used",
                     "WHERE H.item_name LIKE %s ESCAPE '!'",
                     "AND H.date_used BETWEEN %s AND %s;"
                 ],

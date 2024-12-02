@@ -51,9 +51,6 @@ class Database:
     # Creates a connection and a cursor
     def connect(self) -> bool:
 
-        # Used to record the status of the operation.
-        connection_success:bool = True
-
         # Try to connect to the database.
         try:
             self.__connection = mysql.connector.connect(
@@ -61,52 +58,22 @@ class Database:
                 port=self.db_port,
                 user=self.db_user,
                 password=self.db_password,
-                database=self.db_name,
                 collation="utf8mb4_unicode_ci",
                 autocommit=True,
                 get_warnings=True
             )
 
         except Error as e:
-            print("Could not connect to database by name, trying to connect without one...")
-
-            try:
-                self.__connection = mysql.connector.connect(
-                    host=self.db_host,
-                    port=self.db_port,
-                    user=self.db_user,
-                    password=self.db_password,
-                    collation="utf8mb4_unicode_ci",
-                    autocommit=True,
-                    get_warnings=True
-                )
-
-            except Error as e:
-                print("Failed to connect to database")
-                print(e)
-                self.__connection = None
-                connection_success = False
-            else:
-                print("Connected to MariaDB.")
-
-                # Make the cursor on the newly created connection.
-                self.__cursor = self.__connection.cursor(dictionary = True)
-
-
-        # If no error is raised
+            print("Failed to connect to database")
+            print(e)
+            self.__connection = None
+            return False
         else:
-            if self.db_name:
-                print(f"Connected to \"{self.db_name}\".")
-            else:
-                print("Connected to MariaDB.")
+            print("Connected to MariaDB.")
 
             # Make the cursor on the newly created connection.
             self.__cursor = self.__connection.cursor(dictionary = True)
-
-        # Returns the status of connecting to the database.
-        return connection_success
-
-
+            return True
         
 
     def close_connection(self) -> None:
@@ -127,6 +94,12 @@ class Database:
         """
         self.close_connection()
 
+    def start_transaction(self) -> None:
+        """
+        Begins a database transaction.
+        """
+        if self.__connection is not None:
+            self.__connection.start_transaction()
 
     def commit(self) -> None:
         """
@@ -134,6 +107,13 @@ class Database:
         """
         if self.__connection is not None:
             self.__connection.commit()
+
+    def rollback(self) -> None:
+        """
+        Rolls back any pending changes to the database.
+        """
+        if self.__connection is not None:
+            self.__connection.rollback()
 
 
     # Execute an SQL statement on the connected database
@@ -260,18 +240,10 @@ class Database:
             ]
 
             for item in foods:
-                # self.db_actions.add_item_type(**item)
-                # print("hello1")
-                # self.db_actions.add_consumable_type(**item)
-                # print("hello2")
                 self.db_actions.add_food_type(**item)
-                # print("hello3")
             for item in notfoods:
-                # self.db_actions.add_item_type(**item)
-                # self.db_actions.add_consumable_type(**item)
                 self.db_actions.add_notfood_type(**item)
             for item in durables:
-                # self.db_actions.add_item_type(**item)
                 self.db_actions.add_durable_type(**item)
 
             for loc in ["Home", "Cabin"]:
@@ -294,13 +266,10 @@ class Database:
             ]
 
             for storage in dry_storages:
-                # self.db_actions.add_storage(**storage)
                 self.db_actions.add_dry_storage(**storage)
             for storage in fridge_storages:
-                # self.db_actions.add_storage(**storage)
                 self.db_actions.add_fridge_storage(**storage)
             for storage in freezer_storages:
-                # self.db_actions.add_storage(**storage)
                 self.db_actions.add_freezer_storage(**storage)
 
             parents = [ "John", "Penny", "Jaquise" ]
@@ -342,28 +311,26 @@ class Database:
                     Whether the main function should still be run.
                 """
 
-                run_main_func:bool = True
-
                 con = getattr(self.__parent, "_Database__connection", None)
 
                 # Check if connection is None
                 if con is None:
                     print("Connection is None")
-                    run_main_func = run_main_func and False
+                    return False
 
                 # Check if connection is active
-                if con is not None and not con.is_connected():
+                if not con.is_connected():
                     print("Database is not connected")
-                    run_main_func = run_main_func and False
+                    return False
 
                 cur = getattr(self.__parent, "_Database__cursor", None)
 
                 # Check if cursor is indeed a cursor
                 if cur is None:
                     print("Database cursor is None")
-                    run_main_func = run_main_func and False
+                    return False
 
-                return run_main_func
+                return True
 
 
             def post_func():
@@ -641,7 +608,6 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            # if len(self._select_item_type(name)) == 0:
             try:
                 self._add_item_type(name=name, unit=unit)
             except IntegrityError: pass # This is fine, It means it already exists
@@ -676,7 +642,7 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} type")
-            data = (name, unit) # Yes, the comma is necessary
+            data = (name, unit)
 
             cursor.execute(statement, data)
 
@@ -1227,10 +1193,7 @@ class Database:
             # Create the item type if it doesn't exist
             try:
                 self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
-            except IntegrityError:
-                pass
-                # This is fine, It means it already exists
-
+            except IntegrityError: pass # This is fine, It means it already exists
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
@@ -1385,7 +1348,7 @@ class Database:
             # Get the cursor
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} storage")
+            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Select {subclass_name.lower()} storage")
             data = (storage_name, location_name, capacity_low, capacity_high)  
 
             cursor.execute(statement, data)
@@ -1688,5 +1651,55 @@ class Database:
 
 
 
+        # Miscellaneous actions (for now)
 
+        def consume_inventory(self, item_name:str, storage_name:str, timestamp:datetime.datetime, quantity:float, user:str) -> None:
+            self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, user)
 
+        def throw_out_inventory(self, item_name:str, storage_name:str, timestamp:datetime.datetime, quantity:float) -> None:
+            self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, None)
+
+        def _remove_and_log_inventory(
+            self,
+            item_name:str,
+            storage_name:str,
+            timestamp:datetime.datetime,
+            quantity_removed:float,
+            user:str|None
+        ) -> None:
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            try:
+                self.__parent.start_transaction()
+
+                stmt1 = self.__parent._Database__sql_statements.get_query(group="Inventory", name="Get item quantity")
+                data1 = (item_name, storage_name, timestamp)
+                cursor.execute(stmt1, data1)
+
+                old_quantity = cursor.fetchone()["quantity"] # TODO Handle null case
+                new_quantity = old_quantity - quantity_removed
+
+                if new_quantity > 0:
+                    stmt2 = self.__parent._Database__sql_statements.get_query(group="Inventory", name="Change item quantity")
+                    data2 = (new_quantity, item_name, storage_name, timestamp)
+                    cursor.execute(stmt2, data2)
+                else:
+                    stmt2 = self.__parent._Database__sql_statements.get_query(group="Inventory", name="Remove item from inventory")
+                    data2 = (item_name, storage_name, timestamp)
+                    cursor.execute(stmt2, data2)
+
+                if user is None:
+                    stmt3 = self.__parent._Database__sql_statements.get_query(group="Used", name="Add item used record")
+                    data3 = (item_name, quantity_removed, user)
+                    cursor.execute(stmt3, data3)
+                else:
+                    stmt3 = self.__parent._Database__sql_statements.get_query(group="Wasted", name="Add item wasted record")
+                    data3 = (item_name, quantity_removed)
+                    cursor.execute(stmt3, data3)
+            except Error as e:
+                print(e)
+                # TODO Report failure of call.
+                self.__parent.rollback()
+            else:
+                self.__parent.commit()
