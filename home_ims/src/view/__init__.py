@@ -3,6 +3,7 @@ from PyQt6 import uic
 import view.util as util
 from view.inventory import InventoryView
 from view.history import HistoryView
+from view.purchases import PurchasesView
 from view.analytics import AnalyticsView
 
 def show_window(dba):
@@ -14,6 +15,7 @@ def show_window(dba):
 
     inventory_tab = InventoryView(window, dba)
     history_tab = HistoryView(window, dba)
+    purchases_tab = PurchasesView(window, dba)
     analytics_tab = AnalyticsView(window, dba)
 
     def on_user_change(i):
@@ -40,7 +42,7 @@ def show_window(dba):
         elif tab == "historyTab":
             history_tab.rebuild_ui()
         elif tab == "purchasesTab":
-            pass
+            purchases_tab.rebuild_ui()
         elif tab == "analyticsTab":
             analytics_tab.rebuild_ui()
         else:

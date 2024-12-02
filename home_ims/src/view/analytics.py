@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QHeaderView
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QAbstractTableModel
 
 import view.util as util
 
@@ -9,25 +9,75 @@ class AnalyticsView:
         self.dba = dba
 
     def rebuild_ui(self):
-        usage = self.dba.dynamic_query(
-            "History",
-            "Select usage statistics"
-        )
+        records = self.dba.dynamic_query("History", "Select usage statistics")
+        proxy = util.Sorting(self.window.analyticsView)
+        proxy.setSourceModel(Model(records))
 
+        self.window.analyticsView.setModel(proxy)
         self.window.analyticsView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
         self.window.analyticsView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.window.analyticsView.setRowCount(len(usage))
-        for row, entry in enumerate(usage):
-            unit = entry["unit"]
-            used = entry["amt_used"]
-            wasted = entry["amt_wasted"]
-            spent = entry["money_spent"] or 0
 
-            self.window.analyticsView.setItem(row, 0, util.gen_basic_table_cell(entry["item_name"]))
-            self.window.analyticsView.setItem(row, 1, util.gen_basic_table_cell(f"{used} {unit}"))
-            self.window.analyticsView.setItem(row, 2, util.gen_basic_table_cell(f"{wasted} {unit}"))
+class Model(QAbstractTableModel):
+    def __init__(self, records):
+        super().__init__()
+        self.records = records
 
-            percent_wasted = 100 * wasted / (used + wasted)
-            self.window.analyticsView.setItem(row, 3, util.gen_basic_table_cell(f"{percent_wasted:.2f}%"))
-            self.window.analyticsView.setItem(row, 4, util.gen_basic_table_cell(f"${spent:.2f}"))
-            self.window.analyticsView.setItem(row, 5, util.gen_basic_table_cell(f"${spent * percent_wasted:.2f}"))
+    def data(self, index, role):
+        entry = self.records[index.row()]
+
+        unit = entry["unit"]
+        used = entry["amt_used"]
+        wasted = entry["amt_wasted"]
+        spent = entry["money_spent"] or 0
+        fraction_wasted = wasted / (used + wasted)
+
+        match index.column(), role:
+            case 0, Qt.ItemDataRole.DisplayRole | Qt.ItemDataRole.UserRole:
+                return entry["item_name"]
+
+            case 1, Qt.ItemDataRole.DisplayRole:
+                return util.format_quantity(used, unit)
+            case 1, Qt.ItemDataRole.UserRole:
+                return (used, unit)
+
+            case 2, Qt.ItemDataRole.DisplayRole:
+                return util.format_quantity(wasted, unit)
+            case 2, Qt.ItemDataRole.UserRole:
+                return (wasted, unit)
+
+            case 3, Qt.ItemDataRole.DisplayRole:
+                return f"{100 * fraction_wasted:.2f}%"
+            case 3, Qt.ItemDataRole.UserRole:
+                return fraction_wasted
+
+            case 4, Qt.ItemDataRole.DisplayRole:
+                return f"${spent:.2f}"
+            case 4, Qt.ItemDataRole.UserRole:
+                return spent
+
+            case 5, Qt.ItemDataRole.DisplayRole:
+                return f"${spent * fraction_wasted:.2f}"
+            case 5, Qt.ItemDataRole.UserRole:
+                return spent * fraction_wasted
+
+    def rowCount(self, index):
+        return len(self.records)
+
+    def columnCount(self, index):
+        return 6
+    
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            match section:
+                case 0:
+                    return "Item Type"
+                case 1:
+                    return "Amount Used"
+                case 2:
+                    return "Amount Wasted"
+                case 3:
+                    return "% Wasted"
+                case 4:
+                    return "Money Spent"
+                case 5:
+                    return "Money Wasted"

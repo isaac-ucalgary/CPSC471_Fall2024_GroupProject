@@ -274,7 +274,7 @@
                 "CREATE TABLE IF NOT EXISTS Home_IMS.Inventory (",
                 "item_name VARCHAR(255) NOT NULL,",
                 "storage_name VARCHAR(255) NOT NULL,",
-                "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "timestamp DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),",
                 "expiry DATETIME,",
                 "quantity FLOAT NOT NULL,",
                 "PRIMARY KEY (item_name, storage_name, timestamp),",
@@ -292,7 +292,7 @@
             "query": [
                 "CREATE TABLE IF NOT EXISTS Home_IMS.Purchase (",
                 "item_name VARCHAR(255) NOT NULL,",
-                "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "timestamp DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),",
                 "quantity FLOAT NOT NULL,",
                 "price FLOAT NOT NULL,",
                 "store VARCHAR(255) NOT NULL,",
@@ -312,11 +312,11 @@
             "query": [
                 "CREATE TABLE IF NOT EXISTS Home_IMS.History (",
                 "item_name VARCHAR(255) NOT NULL,",
-                "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "timestamp DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),",
                 "quantity FLOAT NOT NULL,",
                 "wasted BOOLEAN NOT NULL,",
                 "user_name VARCHAR(255),",
-                "PRIMARY KEY (item_name, date_used),",
+                "PRIMARY KEY (item_name, timestamp),",
                 "FOREIGN KEY (item_name) REFERENCES ItemType(name),",
                 "CHECK (quantity > 0)",
                 ");"
@@ -927,10 +927,10 @@
                 ],
                 "outputs": [
                     "item_name",
-                    "date_used"
+                    "timestamp"
                 ],
                 "query": [
-                    "SELECT item_name, date_used",
+                    "SELECT item_name, timestamp",
                     "FROM Home_IMS.History",
                     "WHERE user_name = %s;"
                 ],
@@ -974,14 +974,14 @@
                 "inputs": [],
                 "outputs": [
                     "item_name",
-                    "date_used",
+                    "timestamp",
                     "quantity",
                     "unit",
                     "wasted",
                     "user_name"
                 ],
                 "query": [
-                    "SELECT H.item_name, H.date_used, H.quantity, T.unit, H.wasted, H.user_name",
+                    "SELECT H.item_name, H.timestamp, H.quantity, T.unit, H.wasted, H.user_name",
                     "FROM Home_IMS.History AS H",
                     "JOIN Home_IMS.ItemType AS T ON H.item_name = T.name;"
                 ]
@@ -1029,20 +1029,20 @@
             "Select waste records": {
                 "inputs": [
                     "item_name",
-                    "date_used_from",
-                    "date_used_to"
+                    "timestamp_from",
+                    "timestamp_to"
                 ],
                 "outputs": [
                     "item_name",
-                    "date_used",
+                    "timestamp",
                     "quantity"
                 ],
                 "query": [
-                    "SELECT item_name, date_used, quantity",
+                    "SELECT item_name, timestamp, quantity",
                     "FROM Home_IMS.History",
                     "WHERE wasted = true",
                     "AND item_name LIKE %s ESCAPE '!'",
-                    "AND date_used BETWEEN %s AND %s;"
+                    "AND timestamp BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "Select waste records"
@@ -1068,22 +1068,22 @@
             "Select used records": {
                 "inputs": [
                     "item_name",
-                    "date_used_from",
-                    "date_used_to",
+                    "timestamp_from",
+                    "timestamp_to",
                     "user_name"
                 ],
                 "outputs": [
                     "item_name",
-                    "date_used",
+                    "timestamp",
                     "quantity",
                     "user_name"
                 ],
                 "query": [
-                    "SELECT item_name, date_used, quantity, user_name",
+                    "SELECT item_name, timestamp, quantity, user_name",
                     "FROM Home_IMS.History",
                     "WHERE wasted = false",
                     "AND item_name LIKE %s ESCAPE '!'",
-                    "AND date_used BETWEEN %s AND %s",
+                    "AND timestamp BETWEEN %s AND %s",
                     "AND user_name LIKE %s ESCAPE '!';"
                 ],
                 "notes": [
@@ -1110,37 +1110,24 @@
                 ]
             },
             "Select purchases": {
-                "inputs": [
-                    "item_name",
-                    "timestamp_from",
-                    "timestamp_to",
-                    "quantity_min",
-                    "quantity_max",
-                    "item_price_min",
-                    "item_price_max",
-                    "store",
-                    "parent_name"
-                ],
+                "inputs": [],
                 "outputs": [
                     "item_name",
                     "timestamp",
                     "quantity",
+                    "unit",
                     "price",
                     "store",
                     "parent_name"
                 ],
                 "query": [
-                    "SELECT item_name, timestamp, quantity, price, store, parent_name",
-                    "FROM Home_IMS.Purchase",
-                    "WHERE item_name LIKE %s",
-                    "AND timestamp BETWEEN %s AND %s",
-                    "AND quantity BETWEEN %s AND %s",
-                    "AND item_price BETWEEN %s AND %s",
-                    "AND store LIKE %s",
-                    "AND parent_name LIKE %s;"
+                    "SELECT P.item_name, P.timestamp, P.quantity, T.unit, P.price, P.store, P.parent_name",
+                    "FROM Home_IMS.Purchase AS P",
+                    "JOIN Home_IMS.ItemType AS T ON P.item_name = T.name;"
                 ],
                 "notes": [
-                    "Select purchases"
+                    "Select purchases",
+                    "TODO: We don't need these filters yet."
                 ]
             },
             "Get most expensive purchase": {
