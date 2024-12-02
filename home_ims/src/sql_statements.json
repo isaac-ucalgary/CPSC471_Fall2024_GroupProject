@@ -275,7 +275,7 @@
                 "item_name VARCHAR(255) NOT NULL,",
                 "storage_name VARCHAR(255) NOT NULL,",
                 "timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
-                "expiration DATETIME,",
+                "expiry DATETIME,",
                 "quantity FLOAT NOT NULL,",
                 "PRIMARY KEY (item_name, storage_name, timestamp),",
                 "FOREIGN KEY (item_name) REFERENCES ItemType (name),",
@@ -314,15 +314,44 @@
                 "item_name VARCHAR(255) NOT NULL,",
                 "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
                 "quantity FLOAT NOT NULL,",
-                "wasted BOOLEAN NOT NULL,",
-                "user_name VARCHAR(255),",
                 "PRIMARY KEY (item_name, date_used),",
                 "FOREIGN KEY (item_name) REFERENCES ItemType(name),",
                 "CHECK (quantity > 0)",
                 ");"
             ],
             "order": 22
+        },
+        {
+            "function": "Create Table Wasted",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Home_IMS.Wasted (",
+                "item_name VARCHAR(255) NOT NULL,",
+                "date_used DATETIME NOT NULL,",
+                "PRIMARY KEY (item_name, date_used),",
+                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)",
+                ");"
+            ],
+            "order": 23
+        },
+        {
+            "function": "Create Table Wasted",
+            "inputs": [],
+            "outputs": [],
+            "query": [
+                "CREATE TABLE Home_IMS.Used (",
+                "item_name VARCHAR(255) NOT NULL,",
+                "date_used DATETIME NOT NULL,",
+                "user_name VARCHAR(255),",
+                "PRIMARY KEY (item_name, date_used),",
+                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),",
+                "FOREIGN KEY (user_name) REFERENCES User (name)",
+                ");"
+            ],
+            "order": 24
         }
+
     ],
     "dml/dql": {
         "MealSchedule": {
@@ -412,7 +441,7 @@
                     "SELECT name, unit",
                     "FROM Home_IMS.ItemType",
                     "WHERE name LIKE %s",
-                    "AND I.unit LIKE %s;"
+                    "AND unit LIKE %s;"
                 ],
                 "notes": [
                     "Select item type"
@@ -628,8 +657,8 @@
             "Add storage": {
                 "inputs": [
                     "storage_name",
-                    "capacity",
-                    "location_name"
+                    "location_name",
+                    "capacity"
                 ],
                 "outputs": [],
                 "query": [
@@ -900,7 +929,9 @@
                 ]
             },
             "Select users": {
-                "inputs": [],
+                "inputs": [
+                    "name"
+                ],
                 "outputs": [
                     "name",
                     "is_parent"
@@ -911,7 +942,8 @@
                     " FROM Home_IMS.Parent AS P",
                     " WHERE P.name = U.name",
                     ") AS is_parent",
-                    "FROM Home_IMS.User as U;"
+                    "FROM Home_IMS.User as U",
+                    "WHERE U.name LIKE %s;"
                 ],
                 "notes": [
                     "Select users"
@@ -987,12 +1019,12 @@
             "Add item wasted record": {
                 "inputs": [
                     "item_name",
-                    "quantity"
+                    "date_used"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.History (item_name, quantity, wasted)",
-                    "VALUES (%s, %s, true);"
+                    "INSERT INTO Home_IMS.Wasted (item_name, date_used)",
+                    "VALUES (%s, %s);"
                 ],
                 "notes": [
                     "Add item wasted record"
@@ -1006,13 +1038,14 @@
                 ],
                 "outputs": [
                     "item_name",
-                    "date_used"
+                    "date_used",
+                    "quantity"
                 ],
                 "query": [
-                    "SELECT item_name, date_used",
+                    "SELECT item_name, date_used, quantity",
                     "FROM Home_IMS.History",
                     "WHERE wasted = true",
-                    "AND item_name LIKE %s",
+                    "AND item_name LIKE %s ESCAPE '!'",
                     "AND date_used BETWEEN %s AND %s;"
                 ],
                 "notes": [
@@ -1024,13 +1057,13 @@
             "Add item used record": {
                 "inputs": [
                     "item_name",
-                    "quantity",
+                    "date_used",
                     "user_name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.History (item_name, quantity, wasted, user_name)",
-                    "VALUES (%s, %s, false, %s);"
+                    "INSERT INTO Home_IMS.Used (item_name, date_used, user_name)",
+                    "VALUES (%s, %s, %s);"
                 ],
                 "notes": [
                     "Add item used record"
@@ -1046,18 +1079,19 @@
                 "outputs": [
                     "item_name",
                     "date_used",
+                    "quantity",
                     "user_name"
                 ],
                 "query": [
-                    "SELECT item_name, date_used, user_name",
+                    "SELECT item_name, date_used, quantity, user_name",
                     "FROM Home_IMS.History",
                     "WHERE wasted = false",
-                    "AND item_name LIKE %s",
+                    "AND item_name LIKE %s ESCAPE '!'",
                     "AND date_used BETWEEN %s AND %s",
-                    "AND user_name LIKE %s;"
+                    "AND user_name LIKE %s ESCAPE '!';"
                 ],
                 "notes": [
-                    "Select waste records"
+                    "Select used records"
                 ]
             }
         },
@@ -1481,12 +1515,14 @@
                 "inputs": [
                     "item_name",
                     "storage_name",
+                    "timestamp",
+                    "expiry",
                     "quantity"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Inventory (item_name, storage_name, quantity)",
-                    "VALUES (%s, %s, %s);"
+                    "INSERT INTO Home_IMS.Inventory (item_name, storage_name, timestamp, expiry, quantity)",
+                    "VALUES (%s, %s, %s, %s, %s);"
                 ],
                 "notes": [
                     "Add item to inventory"
@@ -1537,13 +1573,17 @@
                 ],
                 "outputs": [],
                 "query": [
-                    "TODO Daniel"
+                    "UPDATE Home_IMS.Inventory AS I",
+                    "SET I.storage_name = %s",
+                    "WHERE I.item_name = %s",
+                    "AND I.storage_name = %s",
+                    "AND I.timestamp = %s;"
                 ],
                 "notes": [
                     "Move item storage location"
                 ]
             },
-            "View items": {
+            "View inventory items": {
                 "inputs": [
                     "item_name",
                     "storage_name",
@@ -1570,23 +1610,29 @@
                     "View all"
                 ]
             },
-            "Get item quantity": {
+            "Select item quantity from inventory": {
                 "inputs": [
                     "item_name",
                     "storage_name",
-                    "timestamp"
+                    "timestamp",
+                    "expiry"
                 ],
                 "outputs": [
                     "quantity"
                 ],
                 "query": [
-                    "SELECT quantity",
-                    "FROM Home_IMS.Inventory",
-                    "WHERE item_name = %s",
-                    "AND storage_name = %s",
-                    "AND timestamp = %s;"
+                    "SELECT I.quantity",
+                    "FROM Home_IMS.Inventory AS I",
+                    "WHERE I.item_name = %s",
+                    "AND I.storage_name = %s",
+                    "AND I.timestamp %s",
+                    "AND I.expiry = %s;"
+                ],
+                "notes": [
+                    "View all"
                 ]
             }
+
         }
     }
 }

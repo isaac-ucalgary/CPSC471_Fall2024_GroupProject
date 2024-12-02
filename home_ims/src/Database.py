@@ -1,14 +1,17 @@
 # Build Database Script
 
 # -- Library Imports --
-from os import stat
-import re
-import mysql.connector
-from mysql.connector import Error, MySQLConnection
+from math import e
+from time import time
+from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
-import inspect
+from mysql.connector.types import RowType
+from os import stat, times
 from types import FunctionType, MethodType
-from datetime import datetime
+import inspect
+import mysql.connector
+import re
+import datetime
 
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
@@ -56,7 +59,8 @@ class Database:
                 user=self.db_user,
                 password=self.db_password,
                 collation="utf8mb4_unicode_ci",
-                autocommit=True
+                autocommit=True,
+                get_warnings=True
             )
 
         except Error as e:
@@ -144,12 +148,15 @@ class Database:
 
         # Nothing has failed yet
         operation_successful:bool = True
+        connected_at_start = True
 
         # Get the ddl sql statements to build the database
         ddl = self.__sql_statements.get_ddl_sql_functions()
 
         # Connect to the database
-        operation_successful = self.connect() and operation_successful
+        if not self.__connection:
+            operation_successful = self.connect() and operation_successful
+            connected_at_start = False
 
         # Create the database and tables.
         if self.__connection:
@@ -174,10 +181,108 @@ class Database:
             print(f"Connection failed, database {self.db_name} not created.")
 
         # Close the connection to the database
-        self.close_connection()
+        if not connected_at_start:
+            self.close_connection()
 
         # Return the status of building the database
         return operation_successful
+
+
+    def build_demo_database(self) -> None:
+        print("This will DROP the whole database and create the database from new and populate it with demo data.")
+        print("\033[91mALL DATA WILL BE LOST\033[0m")
+        accept_message = "RESET TO DEMO"
+        user_input = input(f"To continue input \"{accept_message}\":")
+        if user_input != accept_message:
+            return None
+
+        if self.connect() and self.__cursor is not None:
+
+            # DROP DATABASE
+            self.__cursor.execute(f"DROP DATABASE IF EXISTS {self.db_name};")
+
+            # Build the new database
+            self.build_database()
+
+
+            foods = [
+                {"name":"Banana", "unit":""},
+                {"name":"Potato", "unit":""},
+                {"name":"Soup", "unit":"L"},
+                {"name":"Milk", "unit":"L"},
+                {"name":"Squash", "unit":""},
+                {"name":"Spaghetti", "unit":"g"},
+                {"name":"Pumpkin", "unit":"g"},
+                {"name":"Ground Beef", "unit":"g"},
+                {"name":"Goldfish", "unit":"g"},
+                {"name":"Watermellon", "unit":""},
+                {"name":"Cheddar", "unit":"g"},
+                {"name":"Salmon", "unit":"g"},
+                {"name":"Haggis", "unit":"kg"},
+                {"name":"Rice", "unit":"g"},
+                {"name":"Chocolate-Chip Cookie", "unit":""},
+                {"name":"Flour", "unit":"g"},
+                {"name":"Penne", "unit":"g"},
+                {"name":"Peanut", "unit":"g"},
+                {"name":"Carrot", "unit":"g"},
+            ]
+
+            notfoods = [
+                {"name":"Advil", "unit":"caps"},
+                {"name":"Wood glue", "unit":"L"},
+                {"name":"Toilet paper", "unit":""},
+                {"name":"TidePods", "unit":""},
+                {"name":"Handsoap", "unit":"L"},
+            ]
+
+            durables = [
+                {"name":"Hammer", "unit":""},
+            ]
+
+            for item in foods:
+                self.db_actions.add_food_type(**item)
+            for item in notfoods:
+                self.db_actions.add_notfood_type(**item)
+            for item in durables:
+                self.db_actions.add_durable_type(**item)
+
+            for loc in ["Home", "Cabin"]:
+                self.db_actions.add_location(name=loc)
+
+
+            dry_storages = [
+                {"storage_name":"Cupboard", "location_name":"Home", "capacity":0.1},
+                {"storage_name":"Cellar", "location_name":"Cabin", "capacity":0.8},
+                {"storage_name":"Pantry", "location_name":"Home", "capacity":0.5},
+                {"storage_name":"Basement Shelves", "location_name":"Home", "capacity":0.7}
+            ]
+            fridge_storages = [
+                {"storage_name":"Kitchen Fridge", "location_name":"Home", "capacity":0.65},
+                {"storage_name":"Wine Fridge", "location_name":"Home", "capacity":0.3}
+            ]
+            freezer_storages = [
+                {"storage_name":"Kitchen Freezer", "location_name":"Home", "capacity":0.65},
+                {"storage_name":"Deep Freezer", "location_name":"Home", "capacity":0.84}
+            ]
+
+            for storage in dry_storages:
+                self.db_actions.add_dry_storage(**storage)
+            for storage in fridge_storages:
+                self.db_actions.add_fridge_storage(**storage)
+            for storage in freezer_storages:
+                self.db_actions.add_freezer_storage(**storage)
+
+            parents = [ "John", "Penny", "Jaquise" ]
+            dependents = [ "Harry", "Han Solo", "Sarah" ]
+            for parent in parents:
+                self.db_actions.add_parent(name=parent)
+            for dep in dependents:
+                self.db_actions.add_dependent(name=dep)
+
+
+
+        
+
 
     
 
@@ -257,7 +362,14 @@ class Database:
                     def new_func(*args, **kargs):
                         result = None
                         if pre_func():
+                            # try:
                             result = old_func(*args, **kargs)
+                            # except Exception as e:
+                            #     # Failed to run old function
+                            #     # TODO Handle error
+                            #     print("SEVERE: AHHHHHH")
+                            #     print(e.print)
+                            #     print(old_func.__name__)
                         else:
                             print("Function aborted")
                         post_func()
@@ -286,7 +398,7 @@ class Database:
 
         # ----- DYNAMIC -----
 
-        def dynamic_query(self, group:str, function_name:str, **kargs) -> bool|list[tuple]:
+        def dynamic_query(self, group:str, function_name:str, **kargs) -> bool|list[RowType]:
             """
             Executes any dml or dql query from the json file.
 
@@ -316,9 +428,9 @@ class Database:
 
             Returns
             -------
-            bool | list[tuple]
+            bool | list[RowType]
                 If the statement is a `SELECT` query then the function returns a list 
-                of tuples (`list[tuple]`). 
+                of tuples or dictionaries (`list[RowType]`). 
                 Otherwise if the operation was successful returns `True`.
                 If the operation fails for any reason (i.e. not all the required inputs
                 that the function required were provided) then returns `False`.
@@ -359,16 +471,6 @@ class Database:
                 return cursor.fetchall()
             else:
                 return True
-
-
-
-
-
-
-            
-
-
-
 
 
 
@@ -424,7 +526,7 @@ class Database:
             self._add_item_type(name, unit)
 
 
-        def _select_item_type(self, name:str="%", unit:str="%") -> list[tuple]:
+        def _select_item_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects item type records from the database.
             Used SQL style regex for searching.
@@ -455,7 +557,8 @@ class Database:
 
             return cursor.fetchall()
 
-        def select_item_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def select_item_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects item type records from the database.
             Used SQL style regex for searching.
@@ -505,8 +608,9 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            if len(self._select_item_type(name)) == 0:
+            try:
                 self._add_item_type(name=name, unit=unit)
+            except IntegrityError: pass # This is fine, It means it already exists
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
@@ -515,7 +619,7 @@ class Database:
             cursor.execute(statement, data)
 
 
-        def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> list[tuple]:
+        def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects records of an item type subclass from the database.
 
@@ -538,7 +642,7 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} type")
-            data = (name, unit) # Yes, the comma is necessary
+            data = (name, unit)
 
             cursor.execute(statement, data)
 
@@ -575,6 +679,7 @@ class Database:
                 unit=unit
             )
 
+
         def add_consumable_type(self, name:str, unit:str="") -> None:
             """
             Adds a consumable type record to the database.
@@ -598,7 +703,8 @@ class Database:
             """
             self._add_consumable_type(name, unit)
 
-        def _select_consumable_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def _select_consumable_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects consumable type records from the database.
 
@@ -621,6 +727,7 @@ class Database:
                 name=name,
                 unit=unit
             )
+
 
         def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="") -> None:
             """
@@ -645,8 +752,9 @@ class Database:
             - The `name` of the item to add does not already exist in the table.
             """
             # Create the consumable type if it doesn't exist
-            if len(self._select_consumable_type(name)) == 0:
+            try:
                 self._add_consumable_type(name=name, unit=unit)
+            except IntegrityError: pass # This is fine, It means it already exists
 
             # Create the consumable subclass type
             self._add_item_type_subclass(
@@ -659,7 +767,7 @@ class Database:
 
         # ----- DURABLE -----
 
-        def add_durable_type(self, name:str, unit:str="") -> None:
+        def _add_durable_type(self, name:str, unit:str="") -> None:
             """
             Adds a durable type record to the database.
             Also creates the respective item type record as well if
@@ -685,8 +793,11 @@ class Database:
                 name=name,
                 unit=unit
             )
+        def add_durable_type(self, name:str, unit:str="") -> None:
+            self._add_durable_type(name=name, unit=unit)
 
-        def select_durable_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def select_durable_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects durable type records from the database.
 
@@ -714,7 +825,7 @@ class Database:
 
         # ----- FOOD -----
 
-        def add_food_type(self, name:str, unit:str="") -> None:
+        def _add_food_type(self, name:str, unit:str="") -> None:
             """
             Adds a food type record to the database.
             Also creates respective consumable and item type records 
@@ -742,7 +853,11 @@ class Database:
                 unit=unit
             )
 
-        def select_food_type(self, name:str="%", unit:str="%") -> list[tuple]:
+        def add_food_type(self, name:str, unit:str="") -> None:
+            self._add_food_type(name=name, unit=unit)
+
+
+        def select_food_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects food type records from the database.
 
@@ -798,7 +913,8 @@ class Database:
                 unit=unit
             )
 
-        def select_notfood_type(self, name:str="%", unit:str="%") -> list[tuple]:
+
+        def select_notfood_type(self, name:str="%", unit:str="%") -> list[RowType]:
             """
             Selects not food type records from the database.
 
@@ -878,7 +994,7 @@ class Database:
             cursor.execute(statement, data)
 
 
-        def select_locations(self, name:str="%") -> list[tuple]:
+        def select_locations(self, name:str="%") -> list[RowType]:
             """
             Selects location records from the database.
             Used SQL style regex for searching.
@@ -935,6 +1051,7 @@ class Database:
 
             cursor.execute(statement, data)
 
+
         def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
             """
             Adds a storage record to the database.
@@ -958,7 +1075,7 @@ class Database:
             self._add_storage(storage_name, location_name, capacity)
 
 
-        def delete_storage(self, storage_name:str) -> None:
+        def delete_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
             """
             Removes a storage record from the database.
             The location must not be used by anywhere else in the database.
@@ -975,15 +1092,42 @@ class Database:
             - The `storage_name` of the storage to remove is not used elsewhere in the database.
             """
 
+            # Get the connection and cursor
+            connection:MySQLConnection = self.__parent._Database__connection
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Delete storage")
-            data = (storage_name,)
+            statement = self.__parent._Database__sql_statements.get_query(group="Storage", name = f"Delete storage")
+            data = (storage_name,)  
 
+            # Start the transaction
+            connection.start_transaction(readonly=False)
+
+            # Execute the delete
             cursor.execute(statement, data)
 
+            # Get any warnings
+            warnings = cursor.fetchwarnings()
 
-        def select_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[tuple]:
+            # Rollback if a warning occurs
+            if type(warnings) is list and len(warnings) > 0:
+                connection.rollback()
+            else:
+                connection.commit()
+            
+            # Return the list of warnings or the outcome of the operation
+            if return_warnings:
+                if type(warnings) is list:
+                    return warnings
+                else:
+                    return []
+            else:
+                if type(warnings) is list:
+                    return len(warnings) == 0
+                else:
+                    return True
+
+
+        def select_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
             """
             Selects storage records from the database.
             Used SQL style regex for searching.
@@ -1046,8 +1190,10 @@ class Database:
             # Get the cursor
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            # Create the storage if it doesn't exist
-            self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
+            # Create the item type if it doesn't exist
+            try:
+                self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
+            except IntegrityError: pass # This is fine, It means it already exists
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
@@ -1056,7 +1202,129 @@ class Database:
             cursor.execute(statement, data)
 
 
-        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=0.0) -> list[tuple]:
+        def add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_storage_subclass(
+                subclass_name="Dry",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+    
+
+        def _add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_storage_subclass(
+                subclass_name="Appliance",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+        def add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_appliance_storage(
+                    storage_name=storage_name,
+                    location_name=location_name,
+                    capacity=capacity
+            )
+
+        def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            try:
+                self._add_appliance_storage(
+                        storage_name=storage_name,
+                        location_name=location_name,
+                        capacity=capacity
+                )
+            except IntegrityError: pass # This is fine, It means it already exists
+
+            self._add_storage_subclass(
+                subclass_name=subclass_name,
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+        def add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_appliance_storage_subclass(
+                subclass_name="Fridge",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+            
+        def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> None:
+            self._add_appliance_storage_subclass(
+                subclass_name="Freezer",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity
+            )
+
+        def _delete_storage_subclass(self, subclass_name:str, storage_name:str, return_warnings:bool=False) -> list|bool:
+
+            # Get the connection and cursor
+            connection:MySQLConnection = self.__parent._Database__connection
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Delete {subclass_name.lower()} storage")
+            data = (storage_name,)  
+
+            # Start the transaction
+            connection.start_transaction(readonly=False)
+
+            # Execute the delete
+            cursor.execute(statement, data)
+
+            # Get any warnings
+            warnings = cursor.fetchwarnings()
+
+            # Rollback if a warning occurs
+            if type(warnings) is list and len(warnings) > 0:
+                connection.rollback()
+            else:
+                connection.commit()
+            
+            # Return the list of warnings or the outcome of the operation
+            if return_warnings:
+                if type(warnings) is list:
+                    return warnings
+                else:
+                    return []
+            else:
+                if type(warnings) is list:
+                    return len(warnings) == 0
+                else:
+                    return True
+
+        def delete_dry_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Dry",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+        def delete_appliance_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Appliance",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+        def delete_fridge_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Fridge",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+        def delete_freezer_storage(self, storage_name:str, return_warnings:bool=False) -> list|bool:
+            return self._delete_storage_subclass(
+                subclass_name="Freezer",
+                storage_name=storage_name,
+                return_warnings=return_warnings
+            )
+
+
+        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
             """
             Selects records of a storage subclass from the database.
 
@@ -1087,20 +1355,315 @@ class Database:
 
             return cursor.fetchall()
 
+        def select_dry_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Dry",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
+
+        def select_appliance_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Appliance",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
+        def select_fridge_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Fridge",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
+        def select_freezer_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> list[RowType]:
+            return self._select_storage_subclass(
+                subclass_name="Freezer",
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity_low=capacity_low,
+                capacity_high=capacity_high
+            )
+    
+
+        # ----- User -----
+
+        def _add_user(self, name:str) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Add user")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+        def add_user(self, name:str) -> None:
+            self._add_user(name=name)
+
+        def add_parent(self, name:str) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+            
+            try:
+                self._add_user(name=name)
+            except IntegrityError: pass # This is fine, It means it already exists
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Parent", name = "Add parent")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+        def add_dependent(self, name:str) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            try:
+                self._add_user(name=name)
+            except IntegrityError: pass # This is fine, It means it already exists
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Dependent", name = "Add dependent")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+        def select_users(self, name:str="%") -> list[RowType]:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select users")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+
+        def select_items_used_by_user(self, user_name:str="%") -> list[RowType]:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select items used by user")
+            data = (user_name,)
+
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+
+
+
+
+
+        # ----- Inventory -----
+
+        def _change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:datetime.datetime) -> bool:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Change item quantity")
+            data = (new_quantity,
+                    item_name, 
+                    storage_name,
+                    timestamp.isoformat()
+                    )
+
+            try:
+                cursor.execute(statement, data)
+            except Exception:
+                return False
+            
+            return True
+
+
+        def change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:datetime.datetime) -> bool:
+            return self._change_item_quantity(new_quantity=new_quantity, item_name=item_name, storage_name=storage_name, timestamp=timestamp)
+
+
+        def _select_item_quantity_from_inventory(self, item_name:str, storage_name:str, timestamp:datetime.datetime, expiry:datetime.datetime) -> float:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            existing_quantity = 0.0
+            
+            try:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Select item quantity from inventory")
+                data = (item_name, 
+                        storage_name,
+                        timestamp.isoformat(),
+                        expiry.isoformat()
+                        )
+                cursor.execute(statement, data)
+                existing_inventory = cursor.fetchone()
+                if type(existing_inventory) is list and len(existing_inventory) > 0:
+                    existing_quantity = existing_inventory[0]["quantity"]
+            except:
+                pass
+
+            return existing_quantity
+
+
+
+
+        def _add_item_to_inventory(
+                self,
+                item_name:str,
+                storage_name:str,
+                timestamp:datetime.datetime=datetime.datetime.now(),
+                expiry:datetime.datetime=datetime.datetime.now() + datetime.timedelta(days=10),
+                quantity:float=1.0
+            ) -> tuple[bool, str]:
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            # Get existing inventory with these parameters
+            quantity += self._select_item_quantity_from_inventory(
+                item_name=item_name, 
+                storage_name=storage_name,
+                timestamp=timestamp,
+                expiry=expiry
+            )
+
+            # Check item type exists
+            if len(self._select_item_type(name=item_name)) == 0:
+                return (False, "ItemType does not exist")
+
+            
+            # Try to add the item to inventory
+            try:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Add item to inventory")
+                data = (item_name, storage_name, timestamp.isoformat(), expiry.isoformat(), quantity)
+                cursor.execute(statement, data)
+            except IntegrityError:
+                self._change_item_quantity(
+                    new_quantity=quantity,
+                    item_name=item_name,
+                    storage_name=storage_name,
+                    timestamp=timestamp
+                )
+                return (True, "Updated quantity")
+
+
+            return (True, "Added Item")
+
+        def add_item_to_inventory(
+                self,
+                item_name:str,
+                storage_name:str,
+                timestamp:datetime.datetime=datetime.datetime.now(),
+                expiry:datetime.datetime=datetime.datetime.now() + datetime.timedelta(days=10),
+                quantity:float=1.0
+            ) -> tuple[bool, str]:
+            return self._add_item_to_inventory(
+                item_name=item_name,
+                storage_name=storage_name,
+                timestamp=timestamp,
+                expiry=expiry,
+                quantity=quantity
+            )
+
+
+        def view_inventory_items(
+            self,
+            item_name:str="%",
+            storage_name:str="%",
+            timestamp_from:datetime.datetime=datetime.datetime.min,
+            timestamp_to:datetime.datetime=datetime.datetime.max
+        ) -> list[RowType]:
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "View inventory items")
+            data = (item_name, storage_name, timestamp_from.isoformat(), timestamp_to.isoformat())
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+
+        def move_item_storage_location(
+            self,
+            new_storage_name:str,
+            item_name:str,
+            old_storage_name:str,
+            timestamp:datetime.datetime
+        ) -> None:
+
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Move item storage location")
+            data = (new_storage_name, item_name, old_storage_name, timestamp.isoformat())
+            cursor.execute(statement, data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # ----- History -----
+
+        def _add_item_history_record(self, item_name:str, date_used:datetime.datetime=datetime.datetime.now(), quantity:float=1.0) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "History", name = "Add item history record")
+            data = (item_name, date_used.isoformat(), quantity)
+
+            cursor.execute(statement, data)
+
+
+        def _add_item_wasted_record(self, item_name:str, date_used:datetime.datetime=datetime.datetime.now(), quantity:float=1.0) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            try:
+                self._add_item_history_record(item_name=item_name, date_used=date_used, quantity=quantity)
+            except Exception:
+                print("Could not create item wasted record")
+            else:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Wasted", name = "Add item wasted record")
+                data = (item_name, date_used.isoformat())
+
+                cursor.execute(statement, data)
+
+
+        def _add_item_used_record(self, item_name:str, date_used:datetime.datetime=datetime.datetime.now(), quantity:float=1.0) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            try:
+                self._add_item_history_record(item_name=item_name, date_used=date_used, quantity=quantity)
+            except Exception:
+                print("Could not create item used record")
+            else:
+                statement = self.__parent._Database__sql_statements.get_query(group = "Used", name = "Add item used record")
+                data = (item_name, date_used.isoformat())
+
+                cursor.execute(statement, data)
+
+
+
+
+
 
         # Miscellaneous actions (for now)
 
-        def consume_inventory(self, item_name:str, storage_name:str, timestamp:datetime, quantity:float, user:str) -> None:
+        def consume_inventory(self, item_name:str, storage_name:str, timestamp:datetime.datetime, quantity:float, user:str) -> None:
             self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, user)
 
-        def throw_out_inventory(self, item_name:str, storage_name:str, timestamp:datetime, quantity:float) -> None:
+        def throw_out_inventory(self, item_name:str, storage_name:str, timestamp:datetime.datetime, quantity:float) -> None:
             self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, None)
 
         def _remove_and_log_inventory(
             self,
             item_name:str,
             storage_name:str,
-            timestamp:datetime,
+            timestamp:datetime.datetime,
             quantity_removed:float,
             user:str|None
         ) -> None:
@@ -1114,7 +1677,7 @@ class Database:
                 data1 = (item_name, storage_name, timestamp)
                 cursor.execute(stmt1, data1)
 
-                old_quantity = cursor.fetchone()["quantity"]
+                old_quantity = cursor.fetchone()["quantity"] # TODO Handle null case
                 new_quantity = old_quantity - quantity_removed
 
                 if new_quantity > 0:
