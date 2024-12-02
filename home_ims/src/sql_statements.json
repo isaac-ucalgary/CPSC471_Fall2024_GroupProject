@@ -974,7 +974,7 @@
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.History (item_name, quantity, wasted)",
-                    "VALUES (%s, %s, 1);"
+                    "VALUES (%s, %s, true);"
                 ],
                 "notes": [
                     "Add item wasted record"
@@ -994,7 +994,7 @@
                     "SELECT H.item_name, H.date_used",
                     "FROM Home_IMS.History AS H",
                     "ON H.item_name = W.item_name AND H.date_used = W.date_used",
-                    "WHERE H.wasted = 1",
+                    "WHERE H.wasted = true",
                     "AND H.item_name LIKE %s",
                     "AND H.date_used BETWEEN %s AND %s;"
                 ],
@@ -1013,7 +1013,7 @@
                 "outputs": [],
                 "query": [
                     "INSERT INTO Home_IMS.History (item_name, quantity, wasted, user_name)",
-                    "VALUES (%s, %s, 0, %s);"
+                    "VALUES (%s, %s, false, %s);"
                 ],
                 "notes": [
                     "Add item used record"
@@ -1034,7 +1034,7 @@
                 "query": [
                     "SELECT H.item_name, H.date_used, U.user_name",
                     "FROM Home_IMS.History AS H",
-                    "WHERE H.wasted = 0",
+                    "WHERE H.wasted = false",
                     "AND H.item_name LIKE %s",
                     "AND H.date_used BETWEEN %s AND %s",
                     "AND H.user_name LIKE %s;"
@@ -1551,6 +1551,23 @@
                 ],
                 "notes": [
                     "View all"
+                ]
+            },
+            "Get item quantity": {
+                "inputs": [
+                    "item_name",
+                    "storage_name",
+                    "timestamp"
+                ],
+                "outputs": [
+                    "quantity"
+                ],
+                "query": [
+                    "SELECT quantity",
+                    "FROM Home_IMS.Inventory",
+                    "WHERE item_name = %s",
+                    "AND storage_name = %s",
+                    "AND timestamp = %s;"
                 ]
             }
         }

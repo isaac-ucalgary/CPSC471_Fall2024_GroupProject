@@ -2,8 +2,8 @@ import json
 import os
 import copy
 
-
-STATEMENTS_FILE = os.path.abspath(os.path.dirname(__file__) + "/sql_statements.json")
+# Do we need abspath here? -Daniel
+STATEMENTS_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "sql_statements.json"))
 INDENT_SPACES = 2
 
 class SQL_Statements:
