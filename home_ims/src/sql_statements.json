@@ -314,42 +314,14 @@
                 "item_name VARCHAR(255) NOT NULL,",
                 "date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
                 "quantity FLOAT NOT NULL,",
+                "wasted BOOLEAN NOT NULL,",
+                "user_name VARCHAR(255),",
                 "PRIMARY KEY (item_name, date_used),",
                 "FOREIGN KEY (item_name) REFERENCES ItemType(name),",
                 "CHECK (quantity > 0)",
                 ");"
             ],
             "order": 22
-        },
-        {
-            "function": "Create Table Wasted",
-            "inputs": [],
-            "outputs": [],
-            "query": [
-                "CREATE TABLE Home_IMS.Wasted (",
-                "item_name VARCHAR(255) NOT NULL,",
-                "date_used DATETIME NOT NULL,",
-                "PRIMARY KEY (item_name, date_used),",
-                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)",
-                ");"
-            ],
-            "order": 23
-        },
-        {
-            "function": "Create Table Wasted",
-            "inputs": [],
-            "outputs": [],
-            "query": [
-                "CREATE TABLE Home_IMS.Used (",
-                "item_name VARCHAR(255) NOT NULL,",
-                "date_used DATETIME NOT NULL,",
-                "user_name VARCHAR(255),",
-                "PRIMARY KEY (item_name, date_used),",
-                "FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),",
-                "FOREIGN KEY (user_name) REFERENCES User (name)",
-                ");"
-            ],
-            "order": 24
         }
 
     ],
@@ -1013,18 +985,42 @@
                     "FROM Home_IMS.History AS H",
                     "JOIN Home_IMS.ItemType AS T ON H.item_name = T.name;"
                 ]
+            },
+            "Select usage statistics": {
+                "inputs": [],
+                "outputs": [
+                    "item_name",
+                    "unit",
+                    "amt_used",
+                    "amt_wasted",
+                    "money_spent"
+                ],
+                "query": [
+                    "SELECT H.item_name,",
+                    "T.unit,",
+                    "SUM(CASE WHEN H.wasted = false THEN H.quantity END) AS amt_used,",
+                    "SUM(CASE WHEN H.wasted = true THEN H.quantity END) AS amt_wasted,",
+                    "(",
+                    "  SELECT SUM(P.price)",
+                    "  FROM Home_IMS.Purchase AS P",
+                    "  WHERE P.item_name = H.item_name",
+                    ") AS money_spent",
+                    "FROM Home_IMS.History AS H",
+                    "JOIN Home_IMS.ItemType AS T ON H.item_name = T.name",
+                    "GROUP BY H.item_name;"
+                ]
             }
         },
         "Wasted": {
             "Add item wasted record": {
                 "inputs": [
                     "item_name",
-                    "date_used"
+                    "quantity"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Wasted (item_name, date_used)",
-                    "VALUES (%s, %s);"
+                    "INSERT INTO Home_IMS.History (item_name, quantity, wasted)",
+                    "VALUES (%s, %s, true);"
                 ],
                 "notes": [
                     "Add item wasted record"
@@ -1057,13 +1053,13 @@
             "Add item used record": {
                 "inputs": [
                     "item_name",
-                    "date_used",
+                    "quantity",
                     "user_name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Used (item_name, date_used, user_name)",
-                    "VALUES (%s, %s, %s);"
+                    "INSERT INTO Home_IMS.History (item_name, quantity, wasted, user_name)",
+                    "VALUES (%s, %s, false, %s);"
                 ],
                 "notes": [
                     "Add item used record"
@@ -1360,7 +1356,7 @@
                     "total_cost"
                 ],
                 "query": [
-                    "SELECT SUM(price * quantity)",
+                    "SELECT SUM(price)",
                     "FROM Home_IMS.Purchase",
                     "WHERE item_name LIKE %s",
                     "AND timestamp BETWEEN %s AND %s",
@@ -1515,14 +1511,13 @@
                 "inputs": [
                     "item_name",
                     "storage_name",
-                    "timestamp",
                     "expiry",
                     "quantity"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Inventory (item_name, storage_name, timestamp, expiry, quantity)",
-                    "VALUES (%s, %s, %s, %s, %s);"
+                    "INSERT INTO Home_IMS.Inventory (item_name, storage_name, expiry, quantity)",
+                    "VALUES (%s, %s, %s, %s);"
                 ],
                 "notes": [
                     "Add item to inventory"
@@ -1580,7 +1575,8 @@
                     "AND I.timestamp = %s;"
                 ],
                 "notes": [
-                    "Move item storage location"
+                    "Move item storage location",
+                    "TODO: This will fail if an entry with the same PK exists at the new location. -D"
                 ]
             },
             "View inventory items": {
@@ -1614,8 +1610,7 @@
                 "inputs": [
                     "item_name",
                     "storage_name",
-                    "timestamp",
-                    "expiry"
+                    "timestamp"
                 ],
                 "outputs": [
                     "quantity"
@@ -1625,14 +1620,12 @@
                     "FROM Home_IMS.Inventory AS I",
                     "WHERE I.item_name = %s",
                     "AND I.storage_name = %s",
-                    "AND I.timestamp %s",
-                    "AND I.expiry = %s;"
+                    "AND I.timestamp = %s;"
                 ],
                 "notes": [
                     "View all"
                 ]
             }
-
         }
     }
 }

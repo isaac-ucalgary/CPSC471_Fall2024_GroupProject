@@ -1,4 +1,5 @@
 import os
+from PyQt6.QtWidgets import QTableWidgetItem
 
 root = os.path.dirname(__file__)
 
@@ -13,3 +14,8 @@ def format_date(timestamp):
 
 def format_datetime(timestamp):
     return timestamp.strftime("%I:%M:%S %p, %-d %b, %Y")
+
+def gen_basic_table_cell(text):
+    cell = QTableWidgetItem()
+    cell.setText(text)
+    return cell

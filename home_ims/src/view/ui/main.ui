@@ -137,7 +137,7 @@
            <string notr="true"/>
           </property>
           <property name="currentIndex">
-           <number>5</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="inventoryTab">
            <property name="enabled">
@@ -241,11 +241,17 @@ QPushButton {
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: #ffffff;
-border: 1px solid;
-border-radius: 15px;
-padding-left: 15px;
-padding-right: 15px;</string>
+                <string notr="true">QLineEdit {
+	background-color: #ffffff;
+	border: 1px solid;
+	border-radius: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+QLineEdit:disabled {
+	border-color: #9b9b9b;
+}</string>
                </property>
                <property name="text">
                 <string/>
@@ -400,11 +406,17 @@ QPushButton {
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: #ffffff;
-border: 1px solid;
-border-radius: 15px;
-padding-left: 15px;
-padding-right: 15px;</string>
+                <string notr="true">QLineEdit {
+	background-color: #ffffff;
+	border: 1px solid;
+	border-radius: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+QLineEdit:disabled {
+	border-color: #9b9b9b;
+}</string>
                </property>
                <property name="text">
                 <string/>
@@ -516,11 +528,17 @@ QPushButton {
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: #ffffff;
-border: 1px solid;
-border-radius: 15px;
-padding-left: 15px;
-padding-right: 15px;</string>
+                <string notr="true">QLineEdit {
+	background-color: #ffffff;
+	border: 1px solid;
+	border-radius: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+QLineEdit:disabled {
+	border-color: #9b9b9b;
+}</string>
                </property>
                <property name="text">
                 <string/>
@@ -573,11 +591,17 @@ padding-right: 15px;</string>
                 <bool>false</bool>
                </property>
                <property name="styleSheet">
-                <string notr="true">background-color: #ffffff;
-border: 1px solid;
-border-radius: 15px;
-padding-left: 15px;
-padding-right: 15px;</string>
+                <string notr="true">QLineEdit {
+	background-color: #ffffff;
+	border: 1px solid;
+	border-radius: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+}
+
+QLineEdit:disabled {
+	border-color: #9b9b9b;
+}</string>
                </property>
                <property name="text">
                 <string/>
@@ -645,7 +669,7 @@ padding-right: 15px;</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_11">
             <item>
-             <widget class="QTableWidget" name="tableWidget_3">
+             <widget class="QTableWidget" name="purchasesView">
               <property name="editTriggers">
                <set>QAbstractItemView::NoEditTriggers</set>
               </property>
@@ -700,7 +724,7 @@ padding-right: 15px;</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_7">
             <item>
-             <widget class="QTableWidget" name="tableWidget">
+             <widget class="QTableWidget" name="analyticsView">
               <property name="editTriggers">
                <set>QAbstractItemView::NoEditTriggers</set>
               </property>

@@ -11,14 +11,7 @@ class InventoryView:
         self.current_user = None
     
     def rebuild_ui(self):
-        inv = self.dba.dynamic_query(
-            "Inventory",
-            "View items",
-            item_name = "%",
-            storage_name = "%",
-            timestamp_from = "1000-01-01",
-            timestamp_to = "9999-12-31"
-        )
+        inv = self.dba.view_inventory_items()
 
         container = QtWidgets.QWidget()
         c_layout = QtWidgets.QVBoxLayout()

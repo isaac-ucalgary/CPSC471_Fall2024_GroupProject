@@ -3,16 +3,18 @@ from PyQt6 import uic
 import view.util as util
 from view.inventory import InventoryView
 from view.history import HistoryView
+from view.analytics import AnalyticsView
 
 def show_window(dba):
     window = uic.loadUi(util.get_ui_path("main.ui"))
 
     window.userSelector.addItem("<None>", False)
-    for user in dba.dynamic_query("User", "Select users"):
+    for user in dba.select_users():
         window.userSelector.addItem(user['name'], user['is_parent'])
 
     inventory_tab = InventoryView(window, dba)
     history_tab = HistoryView(window, dba)
+    analytics_tab = AnalyticsView(window, dba)
 
     def on_user_change(i):
         enabled = i != 0
@@ -40,7 +42,7 @@ def show_window(dba):
         elif tab == "purchasesTab":
             pass
         elif tab == "analyticsTab":
-            pass
+            analytics_tab.rebuild_ui()
         else:
             inventory_tab.rebuild_ui()
 
