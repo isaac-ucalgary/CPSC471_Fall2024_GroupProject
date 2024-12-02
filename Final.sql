@@ -2,55 +2,55 @@
 --- -------------------------------- Database Setup // DDL -------------------------------- ---
 -----------------------------------------------------------------------------------------------
 
-CREATE DATABASE Home_IMS;
+CREATE DATABASE IF NOT EXISTS Home_IMS;
 
-CREATE TABLE Home_IMS.ItemType (
+CREATE TABLE IF NOT EXISTS Home_IMS.ItemType (
   name VARCHAR(255) NOT NULL,
   unit VARCHAR(16),
   PRIMARY KEY (name)
 );
 
-CREATE TABLE Home_IMS.Consumable (
+CREATE TABLE IF NOT EXISTS Home_IMS.Consumable (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES ItemType(name)
 );
 
-CREATE TABLE Home_IMS.Durable (
+CREATE TABLE IF NOT EXISTS Home_IMS.Durable (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES ItemType(name)
 );
 
-CREATE TABLE Home_IMS.NotFood (
+CREATE TABLE IF NOT EXISTS Home_IMS.NotFood (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES Consumable(name)
 );
 
-CREATE TABLE Home_IMS.Food (
+CREATE TABLE IF NOT EXISTS Home_IMS.Food (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES Consumable(name)
 );
 
-CREATE TABLE Home_IMS.Template (
+CREATE TABLE IF NOT EXISTS Home_IMS.Template (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name)
 );
 
-CREATE TABLE Home_IMS.OtherTemplate (
+CREATE TABLE IF NOT EXISTS Home_IMS.OtherTemplate (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES Template(name)
 );
 
-CREATE TABLE Home_IMS.Location (
+CREATE TABLE IF NOT EXISTS Home_IMS.Location (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name)
 );
 
-CREATE TABLE Home_IMS.Recipe (
+CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (
   recipe_name VARCHAR(255) NOT NULL,
   food_name VARCHAR(255) NOT NULL,
   PRIMARY KEY (recipe_name, food_name),
@@ -58,7 +58,7 @@ CREATE TABLE Home_IMS.Recipe (
   FOREIGN KEY (food_name) REFERENCES Food(name)
 );
 
-CREATE TABLE Home_IMS.MealSchedule (
+CREATE TABLE IF NOT EXISTS Home_IMS.MealSchedule (
   recipe_name VARCHAR(255) NOT NULL,
   timestamp DATETIME NOT NULL,
   location_name VARCHAR(255) NOT NULL,
@@ -68,24 +68,24 @@ CREATE TABLE Home_IMS.MealSchedule (
   FOREIGN KEY (location_name) REFERENCES Location(name)
 );
 
-CREATE TABLE Home_IMS.User (
+CREATE TABLE IF NOT EXISTS Home_IMS.User (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name)
 );
 
-CREATE TABLE Home_IMS.Dependent (
+CREATE TABLE IF NOT EXISTS Home_IMS.Dependent (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES User(name)
 );
 
-CREATE TABLE Home_IMS.Parent (
+CREATE TABLE IF NOT EXISTS Home_IMS.Parent (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES User(name)
 );
 
-CREATE TABLE Home_IMS.Ingredients (
+CREATE TABLE IF NOT EXISTS Home_IMS.Ingredients (
   food_name VARCHAR(255) NOT NULL,
   recipe_name VARCHAR(255) NOT NULL,
   quantity FLOAT NOT NULL,
@@ -95,43 +95,44 @@ CREATE TABLE Home_IMS.Ingredients (
   CHECK (quantity > 0)
 );
 
-CREATE TABLE Home_IMS.Storage (
+CREATE TABLE IF NOT EXISTS Home_IMS.Storage (
   storage_name VARCHAR(255) NOT NULL,
   location_name VARCHAR(255) NOT NULL,
-  capacity FLOAT NOT NULL,
+  capacity FLOAT NOT NULL DEFAULT 0,
   PRIMARY KEY (storage_name),
   FOREIGN KEY (location_name) REFERENCES Location(name),
   CHECK (capacity >= 0 AND capacity <= 2)
 );
 
-CREATE TABLE Home_IMS.Dry (
+CREATE TABLE IF NOT EXISTS Home_IMS.Dry (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES Storage(storage_name)
 );
 
-CREATE TABLE Home_IMS.Appliance (
+CREATE TABLE IF NOT EXISTS Home_IMS.Appliance (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES Storage(storage_name)
 );
 
-CREATE TABLE Home_IMS.Fridge (
+CREATE TABLE IF NOT EXISTS Home_IMS.Fridge (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES Appliance (name)
 );
 
-CREATE TABLE Home_IMS.Freezer (
+CREATE TABLE IF NOT EXISTS Home_IMS.Freezer (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
   FOREIGN KEY (name) REFERENCES Appliance (name)
 );
 
-CREATE TABLE Home_IMS.Inventory (
+CREATE TABLE IF NOT EXISTS Home_IMS.Inventory (
   item_name VARCHAR(255) NOT NULL,
   storage_name VARCHAR(255) NOT NULL,
   timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expiry DATETIME,
   quantity FLOAT NOT NULL,
   PRIMARY KEY (item_name, storage_name, timestamp),
   FOREIGN KEY (item_name) REFERENCES ItemType (name),
@@ -139,7 +140,7 @@ CREATE TABLE Home_IMS.Inventory (
   CHECK (quantity >= 0)
 );
 
-CREATE TABLE Home_IMS.Purchase (
+CREATE TABLE IF NOT EXISTS Home_IMS.Purchase (
   item_name VARCHAR(255) NOT NULL,
   timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   quantity FLOAT NOT NULL,
@@ -152,7 +153,7 @@ CREATE TABLE Home_IMS.Purchase (
   CHECK (quantity > 0)
 );
 
-CREATE TABLE Home_IMS.History (
+CREATE TABLE IF NOT EXISTS Home_IMS.History (
   item_name VARCHAR(255) NOT NULL,
   date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   quantity FLOAT NOT NULL,
@@ -210,14 +211,14 @@ WHERE recipe_name LIKE %s
 --- ItemType ---
 ----------------
 -- Add item type --
-INSERT IGNORE INTO Home_IMS.ItemType (name, unit)
+INSERT INTO Home_IMS.ItemType (name, unit)
 VALUES (%s, %s);
 
 -- Select item type --
 SELECT name, unit
 FROM Home_IMS.ItemType
 WHERE name LIKE %s
-      AND I.unit LIKE %s;
+      AND unit LIKE %s;
 
 -- TODO: Daniel I have no idea what this does --
 SELECT R.recipe_name, R.food_name, M.timestamp, M.location_name, M.meal_type
@@ -230,7 +231,7 @@ WHERE R.food_name = %s;
 --- Consumable ---
 ------------------
 -- Add consumable type --
-INSERT IGNORE INTO Home_IMS.Consumable (name)
+INSERT INTO Home_IMS.Consumable (name)
 VALUES (%s);
 
 -- Select consumable type --
@@ -245,7 +246,7 @@ WHERE I.name LIKE %s
 --- Durable ---
 ---------------
 -- Add durable type --
-INSERT IGNORE INTO Home_IMS.Durable (name)
+INSERT INTO Home_IMS.Durable (name)
 VALUES (%s);
 
 -- Select durable type --
@@ -260,7 +261,7 @@ WHERE I.name LIKE %s
 --- Food ---
 ------------
 -- Add food type --
-INSERT IGNORE INTO Home_IMS.Food (name)
+INSERT INTO Home_IMS.Food (name)
 VALUES (%s);
 
 -- Select food type --
@@ -275,7 +276,7 @@ WHERE I.name LIKE %s
 --- NotFood ---
 ---------------
 -- Add notfood type --
-INSERT IGNORE INTO Home_IMS.NotFood (name)
+INSERT INTO Home_IMS.NotFood (name)
 VALUES (%s);
 
 -- Select not food type --
@@ -290,7 +291,7 @@ WHERE I.name LIKE %s
 --- Location ---
 ----------------
 -- Add location --
-INSERT IGNORE INTO Home_IMS.Location (name)
+INSERT INTO Home_IMS.Location (name)
 VALUES (%s);
 
 -- Delete location --
@@ -307,7 +308,7 @@ WHERE name LIKE %s;
 --- Storage ---
 ---------------
 -- Add storage --
-INSERT IGNORE INTO Home_IMS.Storage (storage_name, location_name, capacity)
+INSERT INTO Home_IMS.Storage (storage_name, location_name, capacity)
 VALUES (%s, %s, %s);
 
 -- Delete storage --
@@ -326,7 +327,7 @@ WHERE storage_name LIKE %s
 --- Dry ---
 -----------
 -- Add dry storage --
-INSERT IGNORE INTO Home_IMS.Dry (name)
+INSERT INTO Home_IMS.Dry (name)
 VALUES (%s);
 
 -- Delete dry storage --
@@ -346,7 +347,7 @@ WHERE S.storage_name LIKE %s
 --- Appliance ---
 -----------------
 -- Add appliance storage --
-INSERT IGNORE INTO Home_IMS.Appliance (name)
+INSERT INTO Home_IMS.Appliance (name)
 VALUES (%s);
 
 -- Delete appliance storage --
@@ -366,7 +367,7 @@ WHERE S.storage_name LIKE %s
 --- Fridge ---
 --------------
 -- Add fridge storage --
-INSERT IGNORE INTO Home_IMS.Fridge (name)
+INSERT INTO Home_IMS.Fridge (name)
 VALUES (%s);
 
 -- Delete fridge storage --
@@ -386,7 +387,7 @@ WHERE S.storage_name LIKE %s
 --- Freezer ---
 ---------------
 -- Add freezer storage --
-INSERT IGNORE INTO Home_IMS.Freezer (name)
+INSERT INTO Home_IMS.Freezer (name)
 VALUES (%s);
 
 -- Delete freezer storage --
@@ -406,17 +407,21 @@ WHERE S.storage_name LIKE %s
 --- User ---
 ------------
 -- Add user --
-INSERT IGNORE INTO Home_IMS.User (name)
+INSERT INTO Home_IMS.User (name)
 VALUES (%s);
 
 -- Select users --
-SELECT name
-FROM HomeIMS.User
-WHERE name LIKE %s;
+SELECT name, EXISTS (
+          SELECT *
+          FROM Home_IMS.Parent AS P
+          WHERE P.name = U.name
+       ) AS is_parent
+FROM Home_IMS.User as U
+WHERE U.name LIKE %s;
 
 -- Select items used by user --
 SELECT item_name, date_used
-FROM Home_IMS.Used
+FROM Home_IMS.History
 WHERE user_name = %s;
 
 
@@ -424,7 +429,7 @@ WHERE user_name = %s;
 --- Parent ---
 --------------
 -- Add parent --
-INSERT IGNORE INTO Home_IMS.Parent (name)
+INSERT INTO Home_IMS.Parent (name)
 VALUES (%s);
 
 
@@ -432,31 +437,36 @@ VALUES (%s);
 --- Dependent ---
 -----------------
 -- Add dependent --
-INSERT IGNORE INTO Home_IMS.Dependent (name)
+INSERT INTO Home_IMS.Dependent (name)
 VALUES (%s);
 
 
 ---------------
 --- History ---
 ---------------
--- Add history record --
-INSERT IGNORE INTO Home_IMS.History (item_name, quantity)
-VALUES (%s, %s);
+-- Add item history record --
+INSERT INTO Home_IMS.History (item_name, date_used, quantity)
+VALUES (%s, %s, %s);
+
+-- Select history records --
+SELECT item_name, date_used, quantity FROM Home_IMS.History
+WHERE item_name LIKE %s ESCAPE '!'
+      AND date_used BETWEEN %s AND %s;
 
 
 --------------
 --- Wasted ---
 --------------
 -- Add item wasted record --
-INSERT IGNORE INTO Home_IMS.Wasted (item_name, date_used)
+INSERT INTO Home_IMS.Wasted (item_name, date_used)
 VALUES (%s, %s);
 
 -- Select waste records --
-SELECT H.item_name, H.date_used
+SELECT H.item_name, H.date_used, H.quantity
 FROM Home_IMS.History AS H
 JOIN Home_IMS.Wasted AS W
      ON H.item_name = W.item_name AND H.date_used = W.date_used
-WHERE H.item_name LIKE %s
+WHERE H.item_name LIKE %s ESCAPE '!'
       AND H.date_used BETWEEN %s AND %s;
 
 
@@ -464,24 +474,23 @@ WHERE H.item_name LIKE %s
 --- Used ---
 ------------
 -- Add item used record --
-INSERT IGNORE INTO Home_IMS.Used (item_name, date_used, user_name)
+INSERT INTO Home_IMS.Used (item_name, date_used, user_name)
 VALUES (%s, %s, %s);
 
 -- Select used records --
-SELECT H.item_name, H.date_used, U.user_name
+SELECT H.item_name, H.date_used, H.quantity, U.user_name
 FROM Home_IMS.History AS H
-JOIN Home_IMS.Used AS U
-     ON H.item_name = U.item_name AND H.date_used = U.date_used
-WHERE H.item_name LIKE %s
+JOIN Home_IMS.Used AS U ON H.item_name = U.item_name AND H.date_used = U.date_used
+WHERE H.item_name LIKE %s ESCAPE '!'
       AND H.date_used BETWEEN %s AND %s
-      AND U.user_name LIKE %s;
+      AND U.user_name LIKE %s ESCAPE '!';
 
 
 ----------------
 --- Purchase ---
 ----------------
 -- Add purchase record --
-INSERT IGNORE INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)
+INSERT INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)
 VALUES (%s, %s, %s, %s, %s);
 
 -- Select purchases --
@@ -578,13 +587,13 @@ WHERE item_name LIKE %s
 --- Recipe ---
 --------------
 -- Create recipe --
-INSERT IGNORE INTO Home_IMS.Recipe (recipe_name, food_name)
+INSERT INTO Home_IMS.Recipe (recipe_name, food_name)
 VALUES (%s, %s);
 
 -- Delete recipe --
-DELETE FROM Home_IMS.Recipe AS R
-WHERE R.recipe_name = %s
-      AND R.food_name = %s;
+DELETE FROM Home_IMS.Recipe
+WHERE recipe_name = %s
+      AND food_name = %s;
 
 -- View recipes --
 SELECT R.recipe_name, R.food_name
@@ -609,13 +618,13 @@ WHERE R.recipe_name = I.recipe_name
 --- Ingredients ---
 -------------------
 -- Add ingredient --
-INSERT IGNORE INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)
+INSERT INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)
 VALUES (%s, %s, %s);
 
 -- Remove ingredient --
-DELETE FROM Home_IMS.Ingredients AS I
-WHERE I.food_name = %s
-      AND I.recipe_name = %s;
+DELETE FROM Home_IMS.Ingredients
+WHERE food_name = %s
+      AND recipe_name = %s;
 
 -- Change ingredient quantity --
 UPDATE Home_IMS.Ingredients AS I
@@ -633,14 +642,14 @@ WHERE recipe_name LIKE %s;
 --- Inventory ---
 -----------------
 -- Add item to inventory --
-INSERT IGNORE INTO Home_IMS.Inventory (item_name, storage_name, quantity)
-VALUES (%s, %s, %s);
+INSERT INTO Home_IMS.Inventory (item_name, storage_name, timestamp, expiry, quantity)
+VALUES (%s, %s, %s, %s, %s);
 
 -- Remove item from inventory --
-DELETE FROM Home_IMS.Inventory AS I
-WHERE I.item_name = %s
-      AND I.storage_name = %s
-      AND I.timestamp = %s;
+DELETE FROM Home_IMS.Inventory
+WHERE item_name = %s
+      AND storage_name = %s
+      AND timestamp = %s;
 
 -- Change item quantity --
 UPDATE Home_IMS.Inventory AS I
@@ -650,11 +659,24 @@ WHERE I.item_name = %s
       AND I.timestamp = %s;
 
 -- Move item storage location --
-TODO Daniel
+UPDATE Home_IMS.Inventory AS I
+SET I.storage_name = %s
+WHERE I.item_name = %s
+      AND I.storage_name = %s
+      AND I.timestamp = %s;
 
--- View all --
-SELECT I.item_name, I.storage_name, I.timestamp, I.quantity
+-- View inventory items --
+SELECT I.item_name, I.storage_name, I.timestamp, I.expiration, I.quantity, T.unit
 FROM Home_IMS.Inventory AS I
-WHERE I.item_name LIKE %s
-      AND I.storage_name LIKE %s
+JOIN Home_IMS.ItemType AS T ON I.item_name = T.name
+WHERE I.item_name LIKE %s ESCAPE '!'
+      AND I.storage_name LIKE %s ESCAPE '!'
       AND I.timestamp BETWEEN %s AND %s;
+
+-- Select item quantity from inventory --
+SELECT I.quantity
+FROM Home_IMS.Inventory AS I
+WHERE I.item_name = %s
+      AND I.storage_name = %s
+      AND I.timestamp %s
+      AND I.expiry = %s;
