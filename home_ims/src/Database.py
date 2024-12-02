@@ -1,7 +1,7 @@
 # Build Database Script
 
 # -- Library Imports --
-from mysql.connector import Error, MySQLConnection
+from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from mysql.connector.types import RowType
 from os import stat
@@ -165,12 +165,15 @@ class Database:
 
         # Nothing has failed yet
         operation_successful:bool = True
+        connected_at_start = True
 
         # Get the ddl sql statements to build the database
         ddl = self.__sql_statements.get_ddl_sql_functions()
 
         # Connect to the database
-        operation_successful = self.connect() and operation_successful
+        if not self.__connection:
+            operation_successful = self.connect() and operation_successful
+            connected_at_start = False
 
         # Create the database and tables.
         if self.__connection:
@@ -195,10 +198,119 @@ class Database:
             print(f"Connection failed, database {self.db_name} not created.")
 
         # Close the connection to the database
-        self.close_connection()
+        if not connected_at_start:
+            self.close_connection()
 
         # Return the status of building the database
         return operation_successful
+
+
+    def build_demo_database(self) -> None:
+        print("This will DROP the whole database and create the database from new and populate it with demo data.")
+        print("\033[91mALL DATA WILL BE LOST\033[0m")
+        accept_message = "RESET TO DEMO"
+        user_input = input(f"To continue input \"{accept_message}\":")
+        if user_input != accept_message:
+            return None
+
+        if self.connect() and self.__cursor is not None:
+
+            # DROP DATABASE
+            self.__cursor.execute(f"DROP DATABASE IF EXISTS {self.db_name};")
+
+            # Build the new database
+            self.build_database()
+
+
+            foods = [
+                {"name":"Banana", "unit":""},
+                {"name":"Potato", "unit":""},
+                {"name":"Soup", "unit":"L"},
+                {"name":"Milk", "unit":"L"},
+                {"name":"Squash", "unit":""},
+                {"name":"Spaghetti", "unit":"g"},
+                {"name":"Pumpkin", "unit":"g"},
+                {"name":"Ground Beef", "unit":"g"},
+                {"name":"Goldfish", "unit":"g"},
+                {"name":"Watermellon", "unit":""},
+                {"name":"Cheddar", "unit":"g"},
+                {"name":"Salmon", "unit":"g"},
+                {"name":"Haggis", "unit":"kg"},
+                {"name":"Rice", "unit":"g"},
+                {"name":"Chocolate-Chip Cookie", "unit":""},
+                {"name":"Flour", "unit":"g"},
+                {"name":"Penne", "unit":"g"},
+                {"name":"Peanut", "unit":"g"},
+                {"name":"Carrot", "unit":"g"},
+            ]
+
+            notfoods = [
+                {"name":"Advil", "unit":"caps"},
+                {"name":"Wood glue", "unit":"L"},
+                {"name":"Toilet paper", "unit":""},
+                {"name":"TidePods", "unit":""},
+                {"name":"Handsoap", "unit":"L"},
+            ]
+
+            durables = [
+                {"name":"Hammer", "unit":""},
+            ]
+
+            for item in foods:
+                # self.db_actions.add_item_type(**item)
+                # print("hello1")
+                # self.db_actions.add_consumable_type(**item)
+                # print("hello2")
+                self.db_actions.add_food_type(**item)
+                # print("hello3")
+            for item in notfoods:
+                # self.db_actions.add_item_type(**item)
+                # self.db_actions.add_consumable_type(**item)
+                self.db_actions.add_notfood_type(**item)
+            for item in durables:
+                # self.db_actions.add_item_type(**item)
+                self.db_actions.add_durable_type(**item)
+
+            for loc in ["Home", "Cabin"]:
+                self.db_actions.add_location(name=loc)
+
+
+            dry_storages = [
+                {"storage_name":"Cupboard", "location_name":"Home", "capacity":0.1},
+                {"storage_name":"Cellar", "location_name":"Cabin", "capacity":0.8},
+                {"storage_name":"Pantry", "location_name":"Home", "capacity":0.5},
+                {"storage_name":"Basement Shelves", "location_name":"Home", "capacity":0.7}
+            ]
+            fridge_storages = [
+                {"storage_name":"Kitchen Fridge", "location_name":"Home", "capacity":0.65},
+                {"storage_name":"Wine Fridge", "location_name":"Home", "capacity":0.3}
+            ]
+            freezer_storages = [
+                {"storage_name":"Kitchen Freezer", "location_name":"Home", "capacity":0.65},
+                {"storage_name":"Deep Freezer", "location_name":"Home", "capacity":0.84}
+            ]
+
+            for storage in dry_storages:
+                # self.db_actions.add_storage(**storage)
+                self.db_actions.add_dry_storage(**storage)
+            for storage in fridge_storages:
+                # self.db_actions.add_storage(**storage)
+                self.db_actions.add_fridge_storage(**storage)
+            for storage in freezer_storages:
+                # self.db_actions.add_storage(**storage)
+                self.db_actions.add_freezer_storage(**storage)
+
+            parents = [ "John", "Penny", "Jaquise" ]
+            dependents = [ "Harry", "Han Solo", "Sarah" ]
+            for parent in parents:
+                self.db_actions.add_parent(name=parent)
+            for dep in dependents:
+                self.db_actions.add_dependent(name=dep)
+
+
+
+        
+
 
     
 
@@ -280,12 +392,14 @@ class Database:
                     def new_func(*args, **kargs):
                         result = None
                         if pre_func():
-                            try:
-                                result = old_func(*args, **kargs)
-                            except Exception:
-                                # Failed to run old function
-                                # TODO Handle error
-                                pass
+                            # try:
+                            result = old_func(*args, **kargs)
+                            # except Exception as e:
+                            #     # Failed to run old function
+                            #     # TODO Handle error
+                            #     print("SEVERE: AHHHHHH")
+                            #     print(e.print)
+                            #     print(old_func.__name__)
                         else:
                             print("Function aborted")
                         post_func()
@@ -524,8 +638,10 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            if len(self._select_item_type(name)) == 0:
+            # if len(self._select_item_type(name)) == 0:
+            try:
                 self._add_item_type(name=name, unit=unit)
+            except IntegrityError: pass # This is fine, It means it already exists
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
@@ -667,8 +783,9 @@ class Database:
             - The `name` of the item to add does not already exist in the table.
             """
             # Create the consumable type if it doesn't exist
-            if len(self._select_consumable_type(name)) == 0:
+            try:
                 self._add_consumable_type(name=name, unit=unit)
+            except IntegrityError: pass # This is fine, It means it already exists
 
             # Create the consumable subclass type
             self._add_item_type_subclass(
@@ -1100,7 +1217,12 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
+            try:
+                self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity)
+            except IntegrityError:
+                pass
+                # This is fine, It means it already exists
+
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
@@ -1135,11 +1257,14 @@ class Database:
             )
 
         def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> None:
-            self._add_appliance_storage(
-                    storage_name=storage_name,
-                    location_name=location_name,
-                    capacity=capacity
-            )
+            try:
+                self._add_appliance_storage(
+                        storage_name=storage_name,
+                        location_name=location_name,
+                        capacity=capacity
+                )
+            except IntegrityError: pass # This is fine, It means it already exists
+
             self._add_storage_subclass(
                 subclass_name=subclass_name,
                 storage_name=storage_name,
@@ -1293,6 +1418,69 @@ class Database:
                 capacity_high=capacity_high
             )
     
+
+        # ----- User -----
+
+        def _add_user(self, name:str) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Add user")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+        def add_user(self, name:str) -> None:
+            self._add_user(name=name)
+
+        def add_parent(self, name:str) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+            
+            try:
+                self._add_user(name=name)
+            except IntegrityError: pass # This is fine, It means it already exists
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Parent", name = "Add parent")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+        def add_dependent(self, name:str) -> None:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            try:
+                self._add_user(name=name)
+            except IntegrityError: pass # This is fine, It means it already exists
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "Dependent", name = "Add dependent")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+        def select_users(self, name:str="%") -> list[RowType]:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select users")
+            data = (name,)
+
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+
+        def select_items_used_by_user(self, user_name:str="%") -> list[RowType]:
+            cursor:MySQLCursor = self.__parent._Database__cursor
+
+            statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select items used by user")
+            data = (user_name,)
+
+            cursor.execute(statement, data)
+
+            return cursor.fetchall()
+
+
+        # ----- Wasted -----
+
+
+
 
 
 
