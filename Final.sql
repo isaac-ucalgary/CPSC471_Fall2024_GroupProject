@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Freezer (
 CREATE TABLE IF NOT EXISTS Home_IMS.Inventory (
   item_name VARCHAR(255) NOT NULL,
   storage_name VARCHAR(255) NOT NULL,
-  timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  timestamp DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   expiry DATETIME,
   quantity FLOAT NOT NULL,
   PRIMARY KEY (item_name, storage_name, timestamp),
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Inventory (
 
 CREATE TABLE IF NOT EXISTS Home_IMS.Purchase (
   item_name VARCHAR(255) NOT NULL,
-  timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  timestamp DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   quantity FLOAT NOT NULL,
   price FLOAT NOT NULL,
   store VARCHAR(255) NOT NULL,
@@ -155,27 +155,13 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Purchase (
 
 CREATE TABLE IF NOT EXISTS Home_IMS.History (
   item_name VARCHAR(255) NOT NULL,
-  date_used DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  timestamp DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   quantity FLOAT NOT NULL,
-  PRIMARY KEY (item_name, date_used),
+  wasted BOOLEAN NOT NULL,
+  user_name VARCHAR(255),
+  PRIMARY KEY (item_name, timestamp),
   FOREIGN KEY (item_name) REFERENCES ItemType(name),
   CHECK (quantity > 0)
-);
-
-CREATE TABLE Home_IMS.Wasted (
-  item_name VARCHAR(255) NOT NULL,
-  date_used DATETIME NOT NULL,
-  PRIMARY KEY (item_name, date_used),
-  FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used)
-);
-
-CREATE TABLE Home_IMS.Used (
-  item_name VARCHAR(255) NOT NULL,
-  date_used DATETIME NOT NULL,
-  user_name VARCHAR(255),
-  PRIMARY KEY (item_name, date_used),
-  FOREIGN KEY (item_name, date_used) REFERENCES History (item_name, date_used),
-  FOREIGN KEY (user_name) REFERENCES User (name)
 );
 
 
@@ -420,7 +406,7 @@ FROM Home_IMS.User as U
 WHERE U.name LIKE %s;
 
 -- Select items used by user --
-SELECT item_name, date_used
+SELECT item_name, timestamp
 FROM Home_IMS.History
 WHERE user_name = %s;
 
@@ -444,46 +430,55 @@ VALUES (%s);
 ---------------
 --- History ---
 ---------------
--- Add item history record --
-INSERT INTO Home_IMS.History (item_name, date_used, quantity)
-VALUES (%s, %s, %s);
-
 -- Select history records --
-SELECT item_name, date_used, quantity FROM Home_IMS.History
-WHERE item_name LIKE %s ESCAPE '!'
-      AND date_used BETWEEN %s AND %s;
+SELECT H.item_name, H.timestamp, H.quantity, T.unit, H.wasted, H.user_name
+FROM Home_IMS.History AS H
+JOIN Home_IMS.ItemType AS T ON H.item_name = T.name;
+
+-- Select usage statistics --
+SELECT H.item_name,
+       T.unit,
+       SUM(CASE WHEN H.wasted = false THEN H.quantity END) AS amt_used,
+       SUM(CASE WHEN H.wasted = true THEN H.quantity END) AS amt_wasted,
+       (
+           SELECT SUM(P.price)
+           FROM Home_IMS.Purchase AS P
+           WHERE P.item_name = H.item_name
+       ) AS money_spent
+FROM Home_IMS.History AS H
+JOIN Home_IMS.ItemType AS T ON H.item_name = T.name
+GROUP BY H.item_name;
 
 
 --------------
 --- Wasted ---
 --------------
 -- Add item wasted record --
-INSERT INTO Home_IMS.Wasted (item_name, date_used)
-VALUES (%s, %s);
+INSERT INTO Home_IMS.History (item_name, quantity, wasted)
+VALUES (%s, %s, true);
 
 -- Select waste records --
-SELECT H.item_name, H.date_used, H.quantity
-FROM Home_IMS.History AS H
-JOIN Home_IMS.Wasted AS W
-     ON H.item_name = W.item_name AND H.date_used = W.date_used
-WHERE H.item_name LIKE %s ESCAPE '!'
-      AND H.date_used BETWEEN %s AND %s;
+SELECT item_name, timestamp, quantity
+FROM Home_IMS.History
+WHERE wasted = true
+      AND item_name LIKE %s ESCAPE '!'
+      AND timestamp BETWEEN %s AND %s;
 
 
 ------------
 --- Used ---
 ------------
 -- Add item used record --
-INSERT INTO Home_IMS.Used (item_name, date_used, user_name)
-VALUES (%s, %s, %s);
+INSERT INTO Home_IMS.History (item_name, quantity, wasted, user_name)
+VALUES (%s, %s, false, %s);
 
 -- Select used records --
-SELECT H.item_name, H.date_used, H.quantity, U.user_name
-FROM Home_IMS.History AS H
-JOIN Home_IMS.Used AS U ON H.item_name = U.item_name AND H.date_used = U.date_used
-WHERE H.item_name LIKE %s ESCAPE '!'
-      AND H.date_used BETWEEN %s AND %s
-      AND U.user_name LIKE %s ESCAPE '!';
+SELECT item_name, timestamp, quantity, user_name
+FROM Home_IMS.History
+WHERE wasted = false
+      AND item_name LIKE %s ESCAPE '!'
+      AND timestamp BETWEEN %s AND %s
+      AND user_name LIKE %s ESCAPE '!';
 
 
 ----------------
@@ -494,14 +489,9 @@ INSERT INTO Home_IMS.Purchase (item_name, quantity, price, store, parent_name)
 VALUES (%s, %s, %s, %s, %s);
 
 -- Select purchases --
-SELECT item_name, timestamp, quantity, price, store, parent_name
-FROM Home_IMS.Purchase
-WHERE item_name LIKE %s
-      AND timestamp BETWEEN %s AND %s
-      AND quantity BETWEEN %s AND %s
-      AND item_price BETWEEN %s AND %s
-      AND store LIKE %s
-      AND parent_name LIKE %s;
+SELECT P.item_name, P.timestamp, P.quantity, T.unit, P.price, P.store, P.parent_name
+FROM Home_IMS.Purchase AS P
+JOIN Home_IMS.ItemType AS T ON P.item_name = T.name;
 
 -- Get most expensive purchase --
 SELECT MAX(price) AS price
@@ -576,7 +566,7 @@ WHERE item_name LIKE %s
       AND parent_name LIKE %s;
 
 -- Get total cost --
-SELECT SUM(price * quantity)
+SELECT SUM(price)
 FROM Home_IMS.Purchase
 WHERE item_name LIKE %s
       AND timestamp BETWEEN %s AND %s
@@ -642,8 +632,8 @@ WHERE recipe_name LIKE %s;
 --- Inventory ---
 -----------------
 -- Add item to inventory --
-INSERT INTO Home_IMS.Inventory (item_name, storage_name, timestamp, expiry, quantity)
-VALUES (%s, %s, %s, %s, %s);
+INSERT INTO Home_IMS.Inventory (item_name, storage_name, expiry, quantity)
+VALUES (%s, %s, %s, %s);
 
 -- Remove item from inventory --
 DELETE FROM Home_IMS.Inventory
@@ -666,7 +656,7 @@ WHERE I.item_name = %s
       AND I.timestamp = %s;
 
 -- View inventory items --
-SELECT I.item_name, I.storage_name, I.timestamp, I.expiration, I.quantity, T.unit
+SELECT I.item_name, I.storage_name, I.timestamp, I.expiry, I.quantity, T.unit
 FROM Home_IMS.Inventory AS I
 JOIN Home_IMS.ItemType AS T ON I.item_name = T.name
 WHERE I.item_name LIKE %s ESCAPE '!'
@@ -678,5 +668,4 @@ SELECT I.quantity
 FROM Home_IMS.Inventory AS I
 WHERE I.item_name = %s
       AND I.storage_name = %s
-      AND I.timestamp %s
-      AND I.expiry = %s;
+      AND I.timestamp = %s;
