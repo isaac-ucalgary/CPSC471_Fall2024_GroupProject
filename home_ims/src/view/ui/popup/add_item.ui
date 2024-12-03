@@ -6,209 +6,155 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>432</width>
-    <height>317</height>
+    <width>185</width>
+    <height>227</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Add Item</string>
   </property>
-  <widget class="QLabel" name="label_title">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>10</y>
-     <width>62</width>
-     <height>19</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Add Item</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="cancelBtn">
-   <property name="geometry">
-    <rect>
-     <x>7</x>
-     <y>290</y>
-     <width>80</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>Cancel</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="addBtn">
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>290</y>
-     <width>80</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string>background-color: #CCFFFF; color: black;</string>
-   </property>
-   <property name="text">
-    <string>Add</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="widget" native="true">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>110</y>
-     <width>171</width>
-     <height>34</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QLabel" name="label_existingName">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_title">
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Add Item</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label_existingName">
+        <property name="text">
+         <string>Name:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="nameCombo">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_5" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QLabel" name="label_existingName_5">
+        <property name="text">
+         <string>Quantity:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="quantityText">
+        <property name="placeholderText">
+         <string>Quantity</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_2" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_existingName_2">
+        <property name="text">
+         <string>Storage:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="storageCombo">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_4" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QLabel" name="label_existingName_4">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Expiration Date:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDateEdit" name="dateEdit"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_6" native="true">
+     <widget class="QPushButton" name="cancelBtn">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>80</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
       <property name="text">
-       <string>Name:</string>
+       <string>Cancel</string>
       </property>
      </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="nameCombo">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+     <widget class="QPushButton" name="addBtn">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>10</y>
+        <width>80</width>
+        <height>18</height>
+       </rect>
       </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="widget_2" native="true">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>140</y>
-     <width>171</width>
-     <height>34</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
-    <item>
-     <widget class="QLabel" name="label_existingName_2">
+      <property name="styleSheet">
+       <string>background-color: #CCFFFF; color: black;</string>
+      </property>
       <property name="text">
-       <string>Storage:</string>
+       <string>Add</string>
       </property>
      </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="nameCombo_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="widget_3" native="true">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>250</y>
-     <width>171</width>
-     <height>34</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_3">
-    <item>
-     <widget class="QLabel" name="label_existingName_3">
-      <property name="text">
-       <string>Name:</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="nameCombo_3">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="widget_4" native="true">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>220</y>
-     <width>171</width>
-     <height>34</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_4">
-    <item>
-     <widget class="QLabel" name="label_existingName_4">
-      <property name="text">
-       <string>Name:</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="nameCombo_4">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="widget_5" native="true">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>220</y>
-     <width>171</width>
-     <height>34</height>
-    </rect>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_5">
-    <item>
-     <widget class="QLabel" name="label_existingName_5">
-      <property name="text">
-       <string>Quantity:</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLineEdit" name="quantityText_2">
-      <property name="placeholderText">
-       <string>Quantity</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
