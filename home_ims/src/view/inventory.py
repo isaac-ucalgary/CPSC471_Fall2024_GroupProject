@@ -1,4 +1,5 @@
-from PyQt6 import QtWidgets, uic
+from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6 import uic
 
 import view.util as util
 
@@ -13,8 +14,8 @@ class InventoryView:
     def rebuild_ui(self):
         inv = self.dba.view_inventory_items()
 
-        container = QtWidgets.QWidget()
-        c_layout = QtWidgets.QVBoxLayout()
+        container = QWidget()
+        c_layout = QVBoxLayout()
         container.setObjectName("inventoryEntries")
         container.setStyleSheet("#inventoryEntries{background-color:#00ffffff;}")
         container.setLayout(c_layout)
@@ -30,10 +31,10 @@ class InventoryView:
             form.throwOutBtn.clicked.connect(self.gen_throw_out_slot(widget, entry))
             form.removeBtn.clicked.connect(self.gen_remove_slot(widget, entry))
 
-            if entry["expiration"] is None:
-                form.expiration.hide()
+            if entry["expiry"] is None:
+                form.expiry.hide()
             else:
-                form.expiration.setText("Expires " + util.format_date(entry["expiration"]))
+                form.expiry.setText("Expires " + util.format_date(entry["expiry"]))
 
             c_layout.addWidget(widget)
 
@@ -50,7 +51,7 @@ class InventoryView:
         self.window.addItemBtn.setEnabled(privileged)
         for widget in self.window.inventoryView.widget().children():
             if widget.objectName() == "InventoryEntry":
-                widget.findChild(QtWidgets.QWidget, "removeBtn").setEnabled(privileged)
+                widget.findChild(QWidget, "removeBtn").setEnabled(privileged)
 
     # TODO Update once dialog window is completed.
     def gen_consume_slot(self, widget, entry):
