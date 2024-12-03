@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>185</width>
-    <height>227</height>
+    <height>275</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -90,6 +90,26 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_3" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Price:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="priceText">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
