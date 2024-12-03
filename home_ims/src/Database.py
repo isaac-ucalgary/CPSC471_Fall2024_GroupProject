@@ -280,6 +280,33 @@ class Database:
                 self.db_actions.add_dependent(name=dep)
 
 
+            inventory_items = [
+                {"item_name":"Carrot", "storage_name":"Kitchen Fridge", "quantity":800, "expiry":dt.datetime.now() + dt.timedelta(days=30)},
+                {"item_name":"Milk", "storage_name":"Kitchen Fridge", "quantity":3.5, "expiry":dt.datetime.now() + dt.timedelta(days=14, hours=19)},
+                {"item_name":"Goldfish", "storage_name":"Pantry", "quantity":9000, "expiry":dt.datetime.now() + dt.timedelta(days=2000)},
+                {"item_name":"Rice", "storage_name":"Basement Shelves", "quantity":2300, "expiry":None},
+                {"item_name":"Pumpkin", "storage_name":"Kitchen Fridge", "quantity":150, "expiry":dt.datetime.now() + dt.timedelta(days=4)},
+                {"item_name":"Hammer", "storage_name":"Basement Shelves", "quantity":1},
+                {"item_name":"Toilet paper", "storage_name":"Basement Shelves", "quantity":33},
+                {"item_name":"TidePods", "storage_name":"Basement Shelves", "quantity":90},
+                {"item_name":"Ground Beef", "storage_name":"Deep Freezer", "quantity":500, "expiry":dt.datetime.now() + dt.timedelta(days=8)},
+                {"item_name":"Chocolate-Chip Cookie", "storage_name":"Pantry", "quantity":13, "expiry":dt.datetime.now() + dt.timedelta(days=21)},
+                {"item_name":"Potato", "storage_name":"Wine Fridge", "quantity":1},
+                {"item_name":"Salmon", "storage_name":"Deep Freezer", "quantity":650, "expiry":dt.datetime.now() + dt.timedelta(days=11)},
+                {"item_name":"Soup", "storage_name":"Deep Freezer", "quantity":1.6667, "expiry":dt.datetime.now() + dt.timedelta(days=45)},
+                {"item_name":"Watermellon", "storage_name":"Kitchen Fridge", "quantity":1, "expiry":dt.datetime.now() + dt.timedelta(days=22)},
+                {"item_name":"Spaghetti", "storage_name":"Cupboard", "quantity":800},
+                {"item_name":"Haggis", "storage_name":"Kitchen Freezer", "quantity":4, "expiry":dt.datetime.now() + dt.timedelta(days=29)},
+                {"item_name":"Potato", "storage_name":"Cellar", "quantity":46467},
+                {"item_name":"Cheddar", "storage_name":"Kitchen Fridge", "quantity":500, "expiry":dt.datetime.now() + dt.timedelta(days=30)},
+                {"item_name":"Advil", "storage_name":"Cupboard", "quantity":120},
+                {"item_name":"Squash", "storage_name":"Kitchen Fridge", "quantity":1, "expiry":dt.datetime.now() + dt.timedelta(days=13)},
+            ]
+
+            for item in inventory_items:
+                self.db_actions.add_item_to_inventory(**item)
+
+
 
         
 
@@ -1502,38 +1529,26 @@ class Database:
                 self,
                 item_name:str,
                 storage_name:str,
-                timestamp:dt.datetime=dt.datetime.now(),
-                expiry:dt.datetime=dt.datetime.now() + dt.timedelta(days=10),
+                expiry:dt.datetime|None=None,
                 quantity:float=1.0
             ) -> tuple[bool, str]:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-            # Get existing inventory with these parameters
-            quantity += self._select_item_quantity_from_inventory(
-                item_name=item_name, 
-                storage_name=storage_name,
-                timestamp=timestamp
-            )
-
             # Check item type exists
             if len(self._select_item_type(name=item_name)) == 0:
                 return (False, "ItemType does not exist")
 
-            
             # Try to add the item to inventory
             try:
                 statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Add item to inventory")
-                data = (item_name, storage_name, timestamp, expiry, quantity)
+                data = (item_name, storage_name, expiry, quantity)
                 cursor.execute(statement, data)
-            except IntegrityError:
-                self._change_item_quantity(
-                    new_quantity=quantity,
-                    item_name=item_name,
-                    storage_name=storage_name,
-                    timestamp=timestamp
-                )
-                return (True, "Updated quantity")
+            except IntegrityError as e:
+                if "FOREIGN" in str(e) and "storage_name" in str(e):
+                    return (False, "Storage location does not exist")
+                else:
+                    return (False, "Item already exists in inventory")
 
 
             return (True, "Added Item")
@@ -1542,14 +1557,12 @@ class Database:
                 self,
                 item_name:str,
                 storage_name:str,
-                timestamp:dt.datetime=dt.datetime.now(),
-                expiry:dt.datetime=dt.datetime.now() + dt.timedelta(days=10),
+                expiry:dt.datetime|None=None,
                 quantity:float=1.0
             ) -> tuple[bool, str]:
             return self._add_item_to_inventory(
                 item_name=item_name,
                 storage_name=storage_name,
-                timestamp=timestamp,
                 expiry=expiry,
                 quantity=quantity
             )
@@ -1608,6 +1621,7 @@ class Database:
 
         # ----- History -----
 
+        @DeprecationWarning
         def _add_item_history_record(self, item_name:str, date_used:dt.datetime=dt.datetime.now(), quantity:float=1.0) -> None:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
@@ -1617,6 +1631,7 @@ class Database:
             cursor.execute(statement, data)
 
 
+        @DeprecationWarning
         def _add_item_wasted_record(self, item_name:str, date_used:dt.datetime=dt.datetime.now(), quantity:float=1.0) -> None:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
@@ -1631,6 +1646,7 @@ class Database:
                 cursor.execute(statement, data)
 
 
+        @DeprecationWarning
         def _add_item_used_record(self, item_name:str, date_used:dt.datetime=dt.datetime.now(), quantity:float=1.0) -> None:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
