@@ -68,7 +68,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="expiration">
+    <widget class="QLabel" name="expiry">
      <property name="text">
       <string>Expires Date</string>
      </property>

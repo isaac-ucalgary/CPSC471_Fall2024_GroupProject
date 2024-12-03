@@ -11,6 +11,7 @@ class PurchasesView:
 
     def rebuild_ui(self):
         records = self.dba.dynamic_query("Purchase", "Select purchases")
+
         proxy = util.Sorting(self.window.analyticsView)
         proxy.setSourceModel(Model(records))
 

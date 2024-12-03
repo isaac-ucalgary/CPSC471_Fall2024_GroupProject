@@ -1577,12 +1577,12 @@
                     "item_name",
                     "storage_name",
                     "timestamp",
-                    "expiration",
+                    "expiry",
                     "quantity",
                     "unit"
                 ],
                 "query": [
-                    "SELECT I.item_name, I.storage_name, I.timestamp, I.expiration, I.quantity, T.unit",
+                    "SELECT I.item_name, I.storage_name, I.timestamp, I.expiry, I.quantity, T.unit",
                     "FROM Home_IMS.Inventory AS I",
                     "JOIN Home_IMS.ItemType AS T ON I.item_name = T.name",
                     "WHERE I.item_name LIKE %s ESCAPE '!'",

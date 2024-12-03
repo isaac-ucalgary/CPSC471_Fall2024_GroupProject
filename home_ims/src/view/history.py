@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QTableWidgetItem, QHeaderView
+from PyQt6.QtWidgets import QHeaderView
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6.QtGui import QBrush, QColor
 
@@ -20,6 +20,7 @@ class HistoryView:
     
     def rebuild_ui(self):
         records = self.dba.dynamic_query("History", "Select history records")
+
         proxy = util.Sorting(self.window.analyticsView)
         proxy.setSourceModel(Model(records))
 

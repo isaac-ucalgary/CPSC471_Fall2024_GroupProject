@@ -10,6 +10,7 @@ class AnalyticsView:
 
     def rebuild_ui(self):
         records = self.dba.dynamic_query("History", "Select usage statistics")
+
         proxy = util.Sorting(self.window.analyticsView)
         proxy.setSourceModel(Model(records))
 
