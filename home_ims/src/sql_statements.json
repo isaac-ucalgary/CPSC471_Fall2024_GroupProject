@@ -998,10 +998,10 @@
                 "query": [
                     "SELECT H.item_name,",
                     "T.unit,",
-                    "SUM(CASE WHEN H.wasted = false THEN H.quantity END) AS amt_used,",
-                    "SUM(CASE WHEN H.wasted = true THEN H.quantity END) AS amt_wasted,",
+                    "SUM(CASE WHEN H.wasted = false THEN H.quantity ELSE 0 END) AS amt_used,",
+                    "SUM(CASE WHEN H.wasted = true THEN H.quantity ELSE 0 END) AS amt_wasted,",
                     "(",
-                    "  SELECT SUM(P.price)",
+                    "  SELECT COALESCE(SUM(P.price), 0)",
                     "  FROM Home_IMS.Purchase AS P",
                     "  WHERE P.item_name = H.item_name",
                     ") AS money_spent",
