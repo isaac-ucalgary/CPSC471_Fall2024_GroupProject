@@ -1,17 +1,13 @@
 # Build Database Script
 
 # -- Library Imports --
-from math import e
-from time import time
 from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from mysql.connector.types import RowType
-from os import stat, times
 from types import FunctionType, MethodType
+import datetime as dt
 import inspect
 import mysql.connector
-import re
-import datetime as dt
 
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
@@ -1570,13 +1566,24 @@ class Database:
 
         def view_inventory_items(
             self,
-            item_name:str="%",
-            storage_name:str="%",
+            item_name:str="",
+            storage_name:str="",
             timestamp_from:dt.datetime=dt.datetime.min,
             timestamp_to:dt.datetime=dt.datetime.max
         ) -> list[RowType]:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
+
+
+            # TODO: change timestamp to expiry
+            # TODO: replace sql special chars with escaped forms
+            # TODO: change json to match expiry search change
+
+            item_name.replace("%", "!%")
+
+            item_name = f"%{item_name}%"
+            storage_name = f"%{storage_name}%"
+
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "View inventory items")
             data = (item_name, storage_name, timestamp_from, timestamp_to)
