@@ -1,6 +1,7 @@
 # Build Database Script
 
 # -- Library Imports --
+from _typeshed import ExcInfo
 from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from types import FunctionType, MethodType
@@ -398,10 +399,23 @@ class Database:
                     def new_func(*args, **kargs):
                         result = None
                         if pre_func():
-                            result = old_func(*args, **kargs)
+                            try:
+                                result = old_func(*args, **kargs)
+                            except Exception as e:
+                                result = Return_Formatted(error_message="An Unknown error occurred", exception=e)
                         else:
-                            print("Function aborted")
+                            result = Return_Formatted(error_message="Function pre-conditions were not met. Function aborted")
                         post_func()
+
+                        # # Insure the resulting value is a Return_Formatted object
+                        # if result is None:
+                        #     result = Return_Formatted()
+                        # elif type(result) is str or type(result) is list:
+                        #     result = Return_Formatted(data=result)
+                        # else:
+                        #     result = Return_Formatted(error_message="Function did not return the correct type", 
+                        #                               exception=TypeError(f"Data value was of incorrect type {type(result)}"))
+
                         return result
 
                     # Set the new wrapped function in place of the unwrapped function
