@@ -1,7 +1,8 @@
 from PyQt6 import uic
 
-import view.util as util
+from view import util
 from view.inventory import InventoryView
+from view.recipes import RecipesView
 from view.history import HistoryView
 from view.purchases import PurchasesView
 from view.analytics import AnalyticsView
@@ -14,22 +15,25 @@ def show_window(dba):
         window.userSelector.addItem(user['name'], user['is_parent'])
 
     inventory_tab = InventoryView(window, dba)
+    recipes_tab = RecipesView(window, dba)
     history_tab = HistoryView(window, dba)
     purchases_tab = PurchasesView(window, dba)
     analytics_tab = AnalyticsView(window, dba)
 
     def on_user_change(i):
         enabled = i != 0
-        inventory_tab.set_enabled(enabled)
+        window.tabs.setEnabled(enabled)
+        window.shoppingListBtn.setEnabled(enabled)
 
         user = window.userSelector.itemText(i)
         privileged = window.userSelector.itemData(i)
 
-        window.editStorageBtn.setEnabled(privileged)
-        window.editLocationsBtn.setEnabled(privileged)
-        window.editUsersBtn.setEnabled(privileged)
+        window.addStorageBtn.setEnabled(privileged)
+        window.addLocationBtn.setEnabled(privileged)
+        window.addUserBtn.setEnabled(privileged)
 
         inventory_tab.configure_user(user, privileged)
+        recipes_tab.configure_user(user, privileged)
 
     window.userSelector.currentIndexChanged.connect(on_user_change)
 

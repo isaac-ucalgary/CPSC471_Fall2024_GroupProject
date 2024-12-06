@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QHeaderView
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6.QtGui import QBrush, QColor
 
-import view.util as util
+from view import util
 
 WASTED_BRUSH = QBrush(Qt.BrushStyle.SolidPattern)
 WASTED_BRUSH.setColor(QColor(241, 208, 205))
@@ -25,7 +25,7 @@ class HistoryView:
         proxy.setSourceModel(Model(records))
 
         self.window.historyView.setModel(proxy)
-        self.window.historyView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self.window.historyView.sortByColumn(2, Qt.SortOrder.DescendingOrder)
         self.window.historyView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
 class Model(QAbstractTableModel):

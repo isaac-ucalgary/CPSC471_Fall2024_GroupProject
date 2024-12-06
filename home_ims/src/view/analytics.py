@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QHeaderView
 from PyQt6.QtCore import Qt, QAbstractTableModel
 
-import view.util as util
+from view import util
 
 class AnalyticsView:
     def __init__(self, window, dba):
@@ -15,7 +15,7 @@ class AnalyticsView:
         proxy.setSourceModel(Model(records))
 
         self.window.analyticsView.setModel(proxy)
-        self.window.analyticsView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self.window.analyticsView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         self.window.analyticsView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
 class Model(QAbstractTableModel):
@@ -29,7 +29,7 @@ class Model(QAbstractTableModel):
         unit = entry["unit"]
         used = entry["amt_used"]
         wasted = entry["amt_wasted"]
-        spent = entry["money_spent"] or 0
+        spent = entry["money_spent"]
         fraction_wasted = wasted / (used + wasted)
 
         match index.column(), role:

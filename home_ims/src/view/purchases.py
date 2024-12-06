@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QHeaderView
 from PyQt6.QtCore import Qt, QAbstractTableModel
 from datetime import datetime
 
-import view.util as util
+from view import util
 
 class PurchasesView:
     def __init__(self, window, dba):
@@ -16,7 +16,7 @@ class PurchasesView:
         proxy.setSourceModel(Model(records))
 
         self.window.purchasesView.setModel(proxy)
-        self.window.purchasesView.sortByColumn(-1, Qt.SortOrder.AscendingOrder)
+        self.window.purchasesView.sortByColumn(2, Qt.SortOrder.DescendingOrder)
         self.window.purchasesView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
 class Model(QAbstractTableModel):

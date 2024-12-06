@@ -33,7 +33,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="appLabel">
+          <widget class="QLabel" name="label">
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:24pt; font-weight:700;&quot;&gt;Home&lt;/span&gt;&lt;br/&gt;&lt;span style=&quot; font-size:24pt; font-weight:700;&quot;&gt;IMS&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -47,32 +47,32 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="editStorageBtn">
+          <widget class="QPushButton" name="addStorageBtn">
            <property name="enabled">
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>Edit Storage</string>
+            <string>Add Storage</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="editLocationsBtn">
+          <widget class="QPushButton" name="addLocationBtn">
            <property name="enabled">
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>Edit Locations</string>
+            <string>Add Location</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="editUsersBtn">
+          <widget class="QPushButton" name="addUserBtn">
            <property name="enabled">
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>Edit Users</string>
+            <string>Add User</string>
            </property>
           </widget>
          </item>
@@ -153,7 +153,7 @@
           </property>
           <widget class="QWidget" name="inventoryTab">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="styleSheet">
             <string notr="true">#inventoryTab {
@@ -302,6 +302,14 @@ QLineEdit:disabled {
                   <bool>true</bool>
                  </property>
                  <widget class="QWidget" name="widget_7">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>714</width>
+                    <height>613</height>
+                   </rect>
+                  </property>
                   <property name="styleSheet">
                    <string notr="true">#inventoryEntries {
 	background-color: #00ffffff;
@@ -318,7 +326,7 @@ QLineEdit:disabled {
           </widget>
           <widget class="QWidget" name="recipesTab">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="styleSheet">
             <string notr="true">#recipesTab {
@@ -440,7 +448,7 @@ QLineEdit:disabled {
           </widget>
           <widget class="QWidget" name="mealsTab">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="styleSheet">
             <string notr="true">#mealsTab {
