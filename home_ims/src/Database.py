@@ -1626,48 +1626,6 @@ class Database:
 
 
 
-        # ----- History -----
-
-        @DeprecationWarning
-        def _add_item_history_record(self, item_name:str, date_used:dt.datetime=dt.datetime.now(), quantity:float=1.0) -> None:
-            cursor:MySQLCursor = self.__parent._Database__cursor
-
-            statement = self.__parent._Database__sql_statements.get_query(group = "History", name = "Add item history record")
-            data = (item_name, date_used, quantity)
-
-            cursor.execute(statement, data)
-
-
-        @DeprecationWarning
-        def _add_item_wasted_record(self, item_name:str, date_used:dt.datetime=dt.datetime.now(), quantity:float=1.0) -> None:
-            cursor:MySQLCursor = self.__parent._Database__cursor
-
-            try:
-                self._add_item_history_record(item_name=item_name, date_used=date_used, quantity=quantity)
-            except Exception:
-                print("Could not create item wasted record")
-            else:
-                statement = self.__parent._Database__sql_statements.get_query(group = "Wasted", name = "Add item wasted record")
-                data = (item_name, date_used)
-
-                cursor.execute(statement, data)
-
-
-        @DeprecationWarning
-        def _add_item_used_record(self, item_name:str, date_used:dt.datetime=dt.datetime.now(), quantity:float=1.0) -> None:
-            cursor:MySQLCursor = self.__parent._Database__cursor
-
-            try:
-                self._add_item_history_record(item_name=item_name, date_used=date_used, quantity=quantity)
-            except Exception:
-                print("Could not create item used record")
-            else:
-                statement = self.__parent._Database__sql_statements.get_query(group = "Used", name = "Add item used record")
-                data = (item_name, date_used)
-
-                cursor.execute(statement, data)
-
-
 
 
 
