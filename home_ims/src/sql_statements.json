@@ -910,7 +910,7 @@
                 ],
                 "query": [
                     "SELECT name, EXISTS (",
-                    " SELECT *",
+                    " SELECT P.name",
                     " FROM Home_IMS.Parent AS P",
                     " WHERE P.name = U.name",
                     ") AS is_parent",
@@ -951,6 +951,22 @@
                 ],
                 "notes": [
                     "Add parent"
+                ]
+            },
+            "Select parents": {
+                "inputs": [
+                    "name"
+                ],
+                "outputs": [
+                    "name"
+                ],
+                "query": [
+                    "SELECT name",
+                    "FROM Home_IMS.Parent",
+                    "WHERE name LIKE %s;"
+                ],
+                "notes": [
+                    "Select parents"
                 ]
             }
         },
@@ -1096,7 +1112,7 @@
                 "inputs": [
                     "item_name",
                     "quantity",
-                    "item_price",
+                    "price",
                     "store",
                     "parent_name"
                 ],
