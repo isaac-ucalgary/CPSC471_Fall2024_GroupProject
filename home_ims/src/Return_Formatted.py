@@ -14,6 +14,8 @@ class Return_Formatted:
         # If the data is either an empty string or only consists of blank characters then there is no data
         if type(data) is str and not data.strip():
             data = None
+        elif type(data) is list and len(data) == 0:
+            data = None
 
 
         self.data:list[RowType]|str|None = data
