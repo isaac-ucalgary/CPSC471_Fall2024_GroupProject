@@ -3,6 +3,8 @@ from PyQt6.QtCore import Qt, QAbstractTableModel
 from PyQt6.QtGui import QBrush, QColor
 
 from view import util
+from Database import Database
+DB_Actions = Database.DB_Actions
 
 WASTED_BRUSH = QBrush(Qt.BrushStyle.SolidPattern)
 WASTED_BRUSH.setColor(QColor(241, 208, 205))
@@ -14,12 +16,12 @@ NO_USER_BRUSH = QBrush(Qt.BrushStyle.BDiagPattern)
 NO_USER_BRUSH.setColor(Qt.GlobalColor.black)
 
 class HistoryView:
-    def __init__(self, window, dba):
+    def __init__(self, window, dba:DB_Actions):
         self.window = window
-        self.dba = dba
+        self.dba:DB_Actions = dba
     
     def rebuild_ui(self):
-        records = self.dba.dynamic_query("History", "Select history records")
+        records = self.dba.dynamic_query("History", "Select history records").get_data_list()
 
         proxy = util.Sorting(self.window.analyticsView)
         proxy.setSourceModel(Model(records))

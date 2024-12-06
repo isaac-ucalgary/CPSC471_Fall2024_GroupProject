@@ -3,14 +3,16 @@ from PyQt6.QtCore import Qt, QAbstractTableModel
 from datetime import datetime
 
 from view import util
+from Database import Database
+DB_Actions = Database.DB_Actions
 
 class PurchasesView:
-    def __init__(self, window, dba):
+    def __init__(self, window, dba:DB_Actions):
         self.window = window
-        self.dba = dba
+        self.dba:DB_Actions = dba
 
     def rebuild_ui(self):
-        records = self.dba.dynamic_query("Purchase", "Select purchases")
+        records = self.dba.dynamic_query("Purchase", "Select purchases").get_data_list()
 
         proxy = util.Sorting(self.window.analyticsView)
         proxy.setSourceModel(Model(records))

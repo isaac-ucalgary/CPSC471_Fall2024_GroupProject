@@ -910,7 +910,7 @@
                 ],
                 "query": [
                     "SELECT name, EXISTS (",
-                    " SELECT *",
+                    " SELECT P.name",
                     " FROM Home_IMS.Parent AS P",
                     " WHERE P.name = U.name",
                     ") AS is_parent",
@@ -951,6 +951,22 @@
                 ],
                 "notes": [
                     "Add parent"
+                ]
+            },
+            "Select parents": {
+                "inputs": [
+                    "name"
+                ],
+                "outputs": [
+                    "name"
+                ],
+                "query": [
+                    "SELECT name",
+                    "FROM Home_IMS.Parent",
+                    "WHERE name LIKE %s;"
+                ],
+                "notes": [
+                    "Select parents"
                 ]
             }
         },
@@ -1096,7 +1112,7 @@
                 "inputs": [
                     "item_name",
                     "quantity",
-                    "item_price",
+                    "price",
                     "store",
                     "parent_name"
                 ],
@@ -1570,8 +1586,8 @@
                 "inputs": [
                     "item_name",
                     "storage_name",
-                    "timestamp_from",
-                    "timestamp_to"
+                    "expiry_from",
+                    "expiry_to"
                 ],
                 "outputs": [
                     "item_name",
@@ -1587,7 +1603,7 @@
                     "JOIN Home_IMS.ItemType AS T ON I.item_name = T.name",
                     "WHERE I.item_name LIKE %s ESCAPE '!'",
                     "AND I.storage_name LIKE %s ESCAPE '!'",
-                    "AND I.timestamp BETWEEN %s AND %s;"
+                    "AND I.expiry BETWEEN %s AND %s;"
                 ],
                 "notes": [
                     "View all"

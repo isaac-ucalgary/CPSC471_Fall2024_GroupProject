@@ -2,17 +2,19 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from PyQt6 import uic
 
 from view import util
+from Database import Database
+DB_Actions = Database.DB_Actions
 
 entry_form_tpl, entry_base_tpl = uic.loadUiType(util.get_ui_path("inv_entry.ui"))
 
 class InventoryView:
-    def __init__(self, window, dba):
+    def __init__(self, window, dba:DB_Actions):
         self.window = window
-        self.dba = dba
+        self.dba:DB_Actions = dba
         self.current_user = None
     
     def rebuild_ui(self):
-        inv = self.dba.view_inventory_items()
+        inv:list[dict] = self.dba.view_inventory_items().get_data_list()
 
         container = QWidget()
         c_layout = QVBoxLayout()
