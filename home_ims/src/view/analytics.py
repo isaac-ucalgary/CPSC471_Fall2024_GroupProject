@@ -1,15 +1,18 @@
 from PyQt6.QtWidgets import QHeaderView
 from PyQt6.QtCore import Qt, QAbstractTableModel
 
+from Database import Database
+DB_Actions = Database.DB_Actions
+
 import view.util as util
 
 class AnalyticsView:
-    def __init__(self, window, dba):
+    def __init__(self, window, dba:DB_Actions):
         self.window = window
-        self.dba = dba
+        self.dba:DB_Actions = dba
 
     def rebuild_ui(self):
-        records = self.dba.dynamic_query("History", "Select usage statistics")
+        records = self.dba.dynamic_query("History", "Select usage statistics").get_data_list()
 
         proxy = util.Sorting(self.window.analyticsView)
         proxy.setSourceModel(Model(records))

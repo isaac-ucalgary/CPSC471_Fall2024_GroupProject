@@ -3,11 +3,11 @@
 # -- Library Imports --
 from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
-from mysql.connector.types import RowType
 from types import FunctionType, MethodType
 import datetime as dt
 import inspect
 import mysql.connector
+import warnings
 
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
@@ -69,7 +69,8 @@ class Database:
             print("Connected to MariaDB.")
 
             # Make the cursor on the newly created connection.
-            self.__cursor = self.__connection.cursor(dictionary = True)
+            self.__cursor:MySQLCursor = self.__connection.cursor(dictionary = True)
+            self.__cursor.rowtype = dict
             return True
         
 
@@ -124,7 +125,7 @@ class Database:
         if self.__cursor is not None:
             try:
                 self.__cursor.execute(sql_statement)
-            except Error as e:
+            except Exception as e:
                 print(e)
                 operation_successful = False # Record failure
 
@@ -136,12 +137,16 @@ class Database:
                 print("Could not execute SQL statement. Connection not established.")
 
 
+
         # Return success status
         return operation_successful
 
 
 
     def build_database(self) -> bool:
+
+        # Catch warnings as errors
+        warnings.filterwarnings("error")
 
         # Nothing has failed yet
         operation_successful:bool = True
@@ -156,22 +161,26 @@ class Database:
             connected_at_start = False
 
         # Create the database and tables.
-        if self.__connection:
+        if self.__connection and self.__cursor is not None:
 
             # Loop through the SQL statements for creating tables
             for function in ddl:
                 function_name = function["function"]
                 statement = function["query"]
 
-                # Execute the statement
-                operation_successful = self.__exec_sql(statement) and operation_successful
+                if type(statement) is str and type(function_name) is str:
+                    # Execute the statement
+                    try:
+                        self.__cursor.execute(statement)
+                    except Warning as w:
+                        if "exists" not in str(w):
+                            print(f"An error occurred whilst creating {function_name}. Not executing further statements.")
+                            print(str(w))
+                            operation_successful = False
+                            break
+                    else:
+                        print(f"Success: {function_name}") # TODO Implement proper logging using the logging library
 
-                # Print statements for debugging
-                if operation_successful:
-                    print(f"Success: {function_name}") # TODO Implement proper logging using the logging library
-                else:
-                    print(f"An error occurred whilst creating {function_name}. Not executing further statements.")
-                    break
 
         else:
             operation_successful = False
@@ -180,6 +189,9 @@ class Database:
         # Close the connection to the database
         if not connected_at_start:
             self.close_connection()
+
+        # Reset the warning state
+        warnings.resetwarnings()
 
         # Return the status of building the database
         return operation_successful
@@ -386,14 +398,7 @@ class Database:
                     def new_func(*args, **kargs):
                         result = None
                         if pre_func():
-                            # try:
                             result = old_func(*args, **kargs)
-                            # except Exception as e:
-                            #     # Failed to run old function
-                            #     # TODO Handle error
-                            #     print("SEVERE: AHHHHHH")
-                            #     print(e.print)
-                            #     print(old_func.__name__)
                         else:
                             print("Function aborted")
                         post_func()
@@ -1509,6 +1514,9 @@ class Database:
 
 
         def select_users(self, name:str="%") -> Return_Formatted:
+            """
+            Gets a list of all the users.
+            """
             return self._select_users(name=name)
 
 
@@ -1707,7 +1715,21 @@ class Database:
             self.__parent.start_transaction()
 
             # Calculate the new quantity of the item
-            new_quantity = self._select_item_quantity_from_inventory(item_name=item_name, storage_name=storage_name, timestamp=timestamp) - quantity_removed
+            new_quantity:float
+            try:
+                stmt1 = self.__parent._Database__sql_statements.get_query(group="Inventory", name="Select item quantity from inventory")
+                data1 = (item_name, storage_name, timestamp)
+                cursor.execute(stmt1, data1)
+                value = cursor.fetchone()
+                if type(value) is dict:
+                    old_quantity = value["quantity"] 
+                    new_quantity = old_quantity - quantity_removed
+                else:
+                    raise ValueError("The quantity of the item could not be collected because the item does not exist in inventory");
+            except Exception as e:
+                self.__parent.rollback()
+                return Return_Formatted(error_message="Failed to get inventory quantity", exception=e)
+
 
             # Reduce the quantity of the item by the desired amount or remove the item if its quantity has been exhausted.
             result:Return_Formatted
