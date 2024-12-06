@@ -1574,12 +1574,11 @@ class Database:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
-
-            # TODO: change timestamp to expiry
-            # TODO: replace sql special chars with escaped forms
-            # TODO: change json to match expiry search change
-
+            # Escape characters
             item_name.replace("%", "!%")
+            item_name.replace("!", "!!")
+            storage_name.replace("%", "!%")
+            storage_name.replace("!", "!!")
 
             item_name = f"%{item_name}%"
             storage_name = f"%{storage_name}%"
