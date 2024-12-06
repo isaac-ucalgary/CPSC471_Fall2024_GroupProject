@@ -6,142 +6,128 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>280</width>
-    <height>189</height>
+    <width>180</width>
+    <height>212</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Add Recipe</string>
   </property>
-  <widget class="QLabel" name="label_title">
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>10</y>
-     <width>75</width>
-     <height>19</height>
-    </rect>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>6</number>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>14</pointsize>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Add Recipe</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="nameText">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>60</y>
-     <width>131</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="placeholderText">
-    <string>Name</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_name">
-   <property name="geometry">
-    <rect>
-     <x>7</x>
-     <y>60</y>
-     <width>26</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Name:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_ingredient">
-   <property name="geometry">
-    <rect>
-     <x>7</x>
-     <y>90</y>
-     <width>43</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Ingredient:</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="addIngredientBtn">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>120</y>
-     <width>71</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Add Ingredient</string>
-   </property>
-  </widget>
-  <widget class="QComboBox" name="ingredientCombo">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>90</y>
-     <width>131</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="quantityText">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>90</y>
-     <width>74</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="placeholderText">
-    <string>Quantity</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="addBtn">
-   <property name="geometry">
-    <rect>
-     <x>170</x>
-     <y>160</y>
-     <width>80</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string>background-color: #CCFFFF; color: black;</string>
-   </property>
-   <property name="text">
-    <string>Add</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="cancelBtn">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>160</y>
-     <width>80</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string>Cancel</string>
-   </property>
-  </widget>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <pointsize>14</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Add Recipe</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_3" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_name">
+        <property name="text">
+         <string>Name:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="recipeNameInput">
+        <property name="placeholderText">
+         <string>Name</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QScrollArea" name="ingredients">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>154</width>
+        <height>72</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="addIngredientBtn">
+     <property name="text">
+      <string>Add Ingredient</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_2" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="cancelBtn">
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>Cancel</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="addBtn">
+        <property name="styleSheet">
+         <string>background-color: #CCFFFF; color: black;</string>
+        </property>
+        <property name="text">
+         <string>Add</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
