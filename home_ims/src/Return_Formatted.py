@@ -7,7 +7,7 @@ class Return_Formatted:
     A simple object to standardise what a database action will return.
     """
 
-    def __init__(self, success:bool=True, data:list[RowType]|str|None=None, error_message:str|None=None) -> None:
+    def __init__(self, success:bool=True, data:list[RowType]|str|None=None, error_message:str|None=None, exception:Exception|None=None) -> None:
         self.error_occurred:bool = error_message is None
         self.success:bool = success and not self.error_occurred
 
@@ -21,11 +21,13 @@ class Return_Formatted:
         self.data:list[RowType]|str|None = data
         self.error_message:str|None = error_message
 
+        self.exception:Exception|None = exception
+
 
     def get_data(self) -> list[RowType]|str|None:
         return self.data
 
-    def get_error(self) -> str|None:
+    def get_error_message(self) -> str|None:
         return self.error_message
 
     def is_success(self) -> bool:
@@ -33,6 +35,9 @@ class Return_Formatted:
 
     def did_error_occur(self) -> bool:
         return self.error_occurred
+
+    def get_exception(self) -> Exception|None:
+        return self.exception
 
 
 
