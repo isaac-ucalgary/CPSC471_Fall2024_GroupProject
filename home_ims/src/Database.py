@@ -224,7 +224,7 @@ class Database:
                 {"name":"Pumpkin", "unit":"g"},
                 {"name":"Ground Beef", "unit":"g"},
                 {"name":"Goldfish", "unit":"g"},
-                {"name":"Watermellon", "unit":""},
+                {"name":"Watermelon", "unit":""},
                 {"name":"Cheddar", "unit":"g"},
                 {"name":"Salmon", "unit":"g"},
                 {"name":"Haggis", "unit":"kg"},
