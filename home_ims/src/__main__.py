@@ -8,9 +8,12 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
     db = Database()
+
+    # Build the database if it doesn't exist
+    db.build_database()
+
     if db.connect():
-        # db.build_database() # TODO: This currently closes my connection. Should I not be using this in the application?
-        dba = Database.DB_Actions(db)
+        dba = db.db_actions
         view.show_window(dba)
         app.exec()
     else:
