@@ -250,10 +250,7 @@ class Database:
             ]
 
             for item in foods:
-                r = self.db_actions.add_food_type(**item)
-                if r.is_error():
-                    print(r.get_exception())
-
+                self.db_actions.add_food_type(**item)
             for item in notfoods:
                 self.db_actions.add_notfood_type(**item)
             for item in durables:
@@ -632,7 +629,7 @@ class Database:
             return self._select_item_type(name, unit)
             
 
-        def _add_item_type_subclass(self, subclass_name:str, name:str, unit:str="") -> ActionResult:
+        def _add_item_type_subclass(self, subclass_name:str, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
             Adds an item type subclass record to the database.
             Also creates the respective item type record as well if
@@ -658,14 +655,16 @@ class Database:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            add_item_type_exception = self._add_item_type(name=name, unit=unit).get_exception()
-            if add_item_type_exception not in [IntegrityError, None]:
-                return ActionResult(error_message=f"Failed to add item type", exception=add_item_type_exception)
+            if create_parents:
+                add_item_type_exception = self._add_item_type(name=name, unit=unit).get_exception()
+                if add_item_type_exception not in [IntegrityError, None]:
+                    return ActionResult(error_message=f"Failed to add item type", exception=add_item_type_exception)
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
             data = (name,)
 
+            # Execute the query and return the result
             try:
                 cursor.execute(statement, data)
             except Exception as e:
@@ -707,7 +706,7 @@ class Database:
 
         # ----- CONSUMABLE -----
 
-        def _add_consumable_type(self, name:str, unit:str="") -> ActionResult:
+        def _add_consumable_type(self, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
             Adds a consumable type record to the database.
             Also creates the respective item type record as well if
@@ -731,7 +730,8 @@ class Database:
             return self._add_item_type_subclass(
                 subclass_name="Consumable", 
                 name=name,
-                unit=unit
+                unit=unit,
+                create_parents=create_parents
             )
 
 
@@ -756,7 +756,7 @@ class Database:
             - The database connection cursor is open.
             - The `name` of the item to add does not already exist in the table.
             """
-            return self._add_consumable_type(name, unit)
+            return self._add_consumable_type(name, unit, True)
 
 
         def _select_consumable_type(self, name:str="%", unit:str="%") -> ActionResult:
@@ -784,7 +784,7 @@ class Database:
             )
 
 
-        def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="") -> ActionResult:
+        def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
             Adds a consumable type subclass record to the database.
             Also creates respective consumable and item type records 
@@ -807,22 +807,24 @@ class Database:
             - The `name` of the item to add does not already exist in the table.
             """
             # Create the consumable type if it doesn't exist
-            add_consumable_exception = self._add_consumable_type(name=name, unit=unit).get_exception()
-            if add_consumable_exception not in [IntegrityError, None]:
-                return ActionResult(error_message=f"Failed to add consumable type", exception=add_consumable_exception)
+            if create_parents:
+                add_consumable_exception = self._add_consumable_type(name=name, unit=unit, create_parents=True).get_exception()
+                if add_consumable_exception not in [IntegrityError, None]:
+                    return ActionResult(error_message=f"Failed to add consumable type", exception=add_consumable_exception)
 
             # Create the consumable subclass type
             return self._add_item_type_subclass(
                 subclass_name=subclass_name,
                 name=name,
-                unit=unit
+                unit=unit,
+                create_parents=False
             )
 
 
 
         # ----- DURABLE -----
 
-        def _add_durable_type(self, name:str, unit:str="") -> ActionResult:
+        def _add_durable_type(self, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
             Adds a durable type record to the database.
             Also creates the respective item type record as well if
@@ -846,10 +848,11 @@ class Database:
             return self._add_item_type_subclass(
                 subclass_name="Durable", 
                 name=name,
-                unit=unit
+                unit=unit,
+                create_parents=create_parents
             )
         def add_durable_type(self, name:str, unit:str="") -> ActionResult:
-            return self._add_durable_type(name=name, unit=unit)
+            return self._add_durable_type(name=name, unit=unit, create_parents=True)
 
 
         def _select_durable_type(self, name:str="%", unit:str="%") -> ActionResult:
@@ -882,7 +885,7 @@ class Database:
 
         # ----- FOOD -----
 
-        def _add_food_type(self, name:str, unit:str="") -> ActionResult:
+        def _add_food_type(self, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
             Adds a food type record to the database.
             Also creates respective consumable and item type records 
@@ -907,11 +910,12 @@ class Database:
             return self._add_consumable_type_subclass(
                 subclass_name="Food", 
                 name=name,
-                unit=unit
+                unit=unit,
+                create_parents=create_parents
             )
 
         def add_food_type(self, name:str, unit:str="") -> ActionResult:
-            return self._add_food_type(name=name, unit=unit)
+            return self._add_food_type(name=name, unit=unit, create_parents=True)
 
 
         def _select_food_type(self, name:str="%", unit:str="%") -> ActionResult:
@@ -944,7 +948,7 @@ class Database:
 
         # ----- NOT FOOD -----
 
-        def _add_notfood_type(self, name:str, unit:str="") -> ActionResult:
+        def _add_notfood_type(self, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
             Adds a not food type record to the database.
             Also creates respective consumable and item type records 
@@ -969,10 +973,11 @@ class Database:
             return self._add_consumable_type_subclass(
                 subclass_name="NotFood", 
                 name=name,
-                unit=unit
+                unit=unit,
+                create_parents=create_parents
             )
         def add_notfood_type(self, name:str, unit:str="") -> ActionResult:
-            return self._add_notfood_type(name=name, unit=unit)
+            return self._add_notfood_type(name=name, unit=unit, create_parents=True)
 
 
         def _select_notfood_type(self, name:str="%", unit:str="%") -> ActionResult:
