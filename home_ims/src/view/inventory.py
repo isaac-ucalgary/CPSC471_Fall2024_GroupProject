@@ -16,8 +16,8 @@ class InventoryView:
     def rebuild_ui(self):
         inv:list[dict] = self.dba.view_inventory_items().get_data_list()
 
-        container = QWidget()
         c_layout = QVBoxLayout()
+        container = QWidget()
         container.setObjectName("inventoryEntries")
         container.setStyleSheet("#inventoryEntries{background-color:#00ffffff;}")
         container.setLayout(c_layout)
@@ -48,9 +48,8 @@ class InventoryView:
         self.current_user = user
 
         self.window.addItemBtn.setEnabled(privileged)
-        for widget in self.window.inventoryView.widget().children():
-            if widget.objectName() == "InventoryEntry":
-                widget.findChild(QWidget, "removeBtn").setEnabled(privileged)
+        for widget in self.window.inventoryView.widget().findChildren(QWidget, "removeBtn"):
+            widget.setEnabled(privileged)
 
     # TODO Update once dialog window is completed.
     def gen_consume_slot(self, entry):

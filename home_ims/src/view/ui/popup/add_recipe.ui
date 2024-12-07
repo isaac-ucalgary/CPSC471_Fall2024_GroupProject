@@ -51,12 +51,44 @@
       <item>
        <widget class="QLabel" name="label_name">
         <property name="text">
-         <string>Name:</string>
+         <string>Recipe Name:</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLineEdit" name="recipeNameInput">
+        <property name="placeholderText">
+         <string>Name</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="widget_8" native="true">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_name_2">
+        <property name="text">
+         <string>Item Name:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="itemNameInput">
         <property name="placeholderText">
          <string>Name</string>
         </property>
@@ -76,7 +108,7 @@
         <x>0</x>
         <y>0</y>
         <width>259</width>
-        <height>299</height>
+        <height>271</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">

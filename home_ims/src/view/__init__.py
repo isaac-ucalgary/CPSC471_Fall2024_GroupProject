@@ -8,16 +8,12 @@ from view.recipes import RecipesView
 from view.history import HistoryView
 from view.purchases import PurchasesView
 from view.analytics import AnalyticsView
-from Return_Formatted import Return_Formatted
+from action_result import ActionResult
 from Database import Database
 DB_Actions = Database.DB_Actions
 
 def show_window(dba:DB_Actions):
     window = uic.loadUi(util.get_ui_path("main.ui"))
-
-    # Insure that window was created
-    if window is None:
-        return
 
     window.userSelector.addItem("<None>", False)
 

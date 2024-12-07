@@ -1,7 +1,6 @@
 # Build Database Script
 
 # -- Library Imports --
-from _typeshed import ExcInfo
 from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from types import FunctionType, MethodType
@@ -14,7 +13,7 @@ import warnings
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
 from secrets import MARIADB_PASSWORD # (ignore error, it's caused by .gitignore file and is expected.)
 from sql_statements import SQL_Statements
-from Return_Formatted import Return_Formatted
+from action_result import ActionResult
 
 
 
@@ -210,6 +209,7 @@ class Database:
 
             # DROP DATABASE
             self.__cursor.execute(f"DROP DATABASE IF EXISTS {self.db_name};")
+            print(self.db_name)
 
             # Build the new database
             self.build_database()
@@ -250,7 +250,10 @@ class Database:
             ]
 
             for item in foods:
-                self.db_actions.add_food_type(**item)
+                r = self.db_actions.add_food_type(**item)
+                if r.is_error():
+                    print(r.get_exception())
+
             for item in notfoods:
                 self.db_actions.add_notfood_type(**item)
             for item in durables:
@@ -402,18 +405,18 @@ class Database:
                             try:
                                 result = old_func(*args, **kargs)
                             except Exception as e:
-                                result = Return_Formatted(error_message="An Unknown error occurred", exception=e)
+                                result = ActionResult(error_message="An Unknown error occurred", exception=e)
                         else:
-                            result = Return_Formatted(error_message="Function pre-conditions were not met. Function aborted")
+                            result = ActionResult(error_message="Function pre-conditions were not met. Function aborted.")
                         post_func()
 
-                        # # Insure the resulting value is a Return_Formatted object
+                        # # Insure the resulting value is a ActionResult object
                         # if result is None:
-                        #     result = Return_Formatted()
+                        #     result = ActionResult()
                         # elif type(result) is str or type(result) is list:
-                        #     result = Return_Formatted(data=result)
+                        #     result = ActionResult(data=result)
                         # else:
-                        #     result = Return_Formatted(error_message="Function did not return the correct type", 
+                        #     result = ActionResult(error_message="Function did not return the correct type", 
                         #                               exception=TypeError(f"Data value was of incorrect type {type(result)}"))
 
                         return result
@@ -441,7 +444,7 @@ class Database:
 
         # ----- DYNAMIC -----
 
-        def dynamic_query(self, group:str, function_name:str, **kargs) -> Return_Formatted:
+        def dynamic_query(self, group:str, function_name:str, **kargs) -> ActionResult:
             """
             Executes any dml or dql query from the json file.
 
@@ -488,7 +491,7 @@ class Database:
                 required_inputs = self.__parent._Database__sql_statements.get_query_inputs(group = group, name = function_name)      # Get query inputs
                 expected_outputs = self.__parent._Database__sql_statements.get_query_outputs(group = group, name = function_name)    # Get query outputs
             except KeyError as e:
-                return Return_Formatted(error_message="Failed to get query information", exception=e)
+                return ActionResult(error_message="Failed to get query information", exception=e)
 
 
             # -- Gather inputs from **kargs --
@@ -496,7 +499,7 @@ class Database:
 
             for key in required_inputs:
                 if key not in kargs.keys():
-                    return Return_Formatted(error_message="Missing key required for this query")
+                    return ActionResult(error_message="Missing key required for this query")
                 else:
                     inputs.append(kargs[key])
 
@@ -510,16 +513,16 @@ class Database:
 
             # -- Get outputs --
             if len(expected_outputs) > 0:
-                return Return_Formatted(data=cursor.fetchall())
+                return ActionResult(data=cursor.fetchall())
             else:
-                return Return_Formatted(success=True)
+                return ActionResult(success=True)
 
 
 
 
         # ----- ITEM TYPE -----
 
-        def _add_item_type(self, name:str, unit:str) -> Return_Formatted:
+        def _add_item_type(self, name:str, unit:str) -> ActionResult:
             """
             Adds an item type record to the database.
 
@@ -547,11 +550,11 @@ class Database:
             try: 
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to add item type", exception=e)
+                return ActionResult(error_message="Failed to add item type", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
-        def add_item_type(self, name:str, unit:str) -> Return_Formatted:
+        def add_item_type(self, name:str, unit:str) -> ActionResult:
             """
             Adds an item type record to the database.
 
@@ -573,7 +576,7 @@ class Database:
             return self._add_item_type(name, unit)
 
 
-        def _select_item_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def _select_item_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects item type records from the database.
             Used SQL style regex for searching.
@@ -602,10 +605,10 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
-        def select_item_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def select_item_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects item type records from the database.
             Used SQL style regex for searching.
@@ -629,7 +632,7 @@ class Database:
             return self._select_item_type(name, unit)
             
 
-        def _add_item_type_subclass(self, subclass_name:str, name:str, unit:str="") -> Return_Formatted:
+        def _add_item_type_subclass(self, subclass_name:str, name:str, unit:str="") -> ActionResult:
             """
             Adds an item type subclass record to the database.
             Also creates the respective item type record as well if
@@ -657,7 +660,7 @@ class Database:
             # Create the item type if it doesn't exist
             add_item_type_exception = self._add_item_type(name=name, unit=unit).get_exception()
             if add_item_type_exception not in [IntegrityError, None]:
-                return Return_Formatted(error_message=f"Failed to add item type", exception=add_item_type_exception)
+                return ActionResult(error_message=f"Failed to add item type", exception=add_item_type_exception)
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} type")
@@ -666,12 +669,12 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message=f"Failed to add {subclass_name} type", exception=e)
+                return ActionResult(error_message=f"Failed to add {subclass_name} type", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> Return_Formatted:
+        def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects records of an item type subclass from the database.
 
@@ -698,13 +701,13 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
 
         # ----- CONSUMABLE -----
 
-        def _add_consumable_type(self, name:str, unit:str="") -> Return_Formatted:
+        def _add_consumable_type(self, name:str, unit:str="") -> ActionResult:
             """
             Adds a consumable type record to the database.
             Also creates the respective item type record as well if
@@ -732,7 +735,7 @@ class Database:
             )
 
 
-        def add_consumable_type(self, name:str, unit:str="") -> Return_Formatted:
+        def add_consumable_type(self, name:str, unit:str="") -> ActionResult:
             """
             Adds a consumable type record to the database.
             Also creates the respective item type record as well if
@@ -756,7 +759,7 @@ class Database:
             return self._add_consumable_type(name, unit)
 
 
-        def _select_consumable_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def _select_consumable_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects consumable type records from the database.
 
@@ -781,7 +784,7 @@ class Database:
             )
 
 
-        def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="") -> Return_Formatted:
+        def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="") -> ActionResult:
             """
             Adds a consumable type subclass record to the database.
             Also creates respective consumable and item type records 
@@ -806,7 +809,7 @@ class Database:
             # Create the consumable type if it doesn't exist
             add_consumable_exception = self._add_consumable_type(name=name, unit=unit).get_exception()
             if add_consumable_exception not in [IntegrityError, None]:
-                return Return_Formatted(error_message=f"Failed to add consumable type", exception=add_consumable_exception)
+                return ActionResult(error_message=f"Failed to add consumable type", exception=add_consumable_exception)
 
             # Create the consumable subclass type
             return self._add_item_type_subclass(
@@ -819,7 +822,7 @@ class Database:
 
         # ----- DURABLE -----
 
-        def _add_durable_type(self, name:str, unit:str="") -> Return_Formatted:
+        def _add_durable_type(self, name:str, unit:str="") -> ActionResult:
             """
             Adds a durable type record to the database.
             Also creates the respective item type record as well if
@@ -845,11 +848,11 @@ class Database:
                 name=name,
                 unit=unit
             )
-        def add_durable_type(self, name:str, unit:str="") -> Return_Formatted:
+        def add_durable_type(self, name:str, unit:str="") -> ActionResult:
             return self._add_durable_type(name=name, unit=unit)
 
 
-        def _select_durable_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def _select_durable_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects durable type records from the database.
 
@@ -872,14 +875,14 @@ class Database:
                 name=name,
                 unit=unit
             )
-        def select_durable_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def select_durable_type(self, name:str="%", unit:str="%") -> ActionResult:
             return self._select_durable_type(name=name, unit=unit)
 
 
 
         # ----- FOOD -----
 
-        def _add_food_type(self, name:str, unit:str="") -> Return_Formatted:
+        def _add_food_type(self, name:str, unit:str="") -> ActionResult:
             """
             Adds a food type record to the database.
             Also creates respective consumable and item type records 
@@ -907,11 +910,11 @@ class Database:
                 unit=unit
             )
 
-        def add_food_type(self, name:str, unit:str="") -> Return_Formatted:
+        def add_food_type(self, name:str, unit:str="") -> ActionResult:
             return self._add_food_type(name=name, unit=unit)
 
 
-        def _select_food_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def _select_food_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects food type records from the database.
 
@@ -934,14 +937,14 @@ class Database:
                 name=name,
                 unit=unit
             )
-        def select_food_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def select_food_type(self, name:str="%", unit:str="%") -> ActionResult:
             return self._select_food_type(name=name, unit=unit)
 
 
 
         # ----- NOT FOOD -----
 
-        def _add_notfood_type(self, name:str, unit:str="") -> Return_Formatted:
+        def _add_notfood_type(self, name:str, unit:str="") -> ActionResult:
             """
             Adds a not food type record to the database.
             Also creates respective consumable and item type records 
@@ -968,11 +971,11 @@ class Database:
                 name=name,
                 unit=unit
             )
-        def add_notfood_type(self, name:str, unit:str="") -> Return_Formatted:
+        def add_notfood_type(self, name:str, unit:str="") -> ActionResult:
             return self._add_notfood_type(name=name, unit=unit)
 
 
-        def _select_notfood_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def _select_notfood_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects not food type records from the database.
 
@@ -995,14 +998,14 @@ class Database:
                 name=name,
                 unit=unit
             )
-        def select_notfood_type(self, name:str="%", unit:str="%") -> Return_Formatted:
+        def select_notfood_type(self, name:str="%", unit:str="%") -> ActionResult:
             return self._select_notfood_type(name=name, unit=unit)
 
 
         
         # ----- LOCATION -----
 
-        def add_location(self, name:str) -> Return_Formatted:
+        def add_location(self, name:str) -> ActionResult:
             """
             Adds a location record to the database.
 
@@ -1029,12 +1032,12 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to create location", exception=e)
+                return ActionResult(error_message="Failed to create location", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def delete_location(self, name:str) -> Return_Formatted:
+        def delete_location(self, name:str) -> ActionResult:
             """
             Removes a location record to the database.
             The location must not be used by anywhere else in the database.
@@ -1059,12 +1062,12 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to delete location", exception=e)
+                return ActionResult(error_message="Failed to delete location", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def select_locations(self, name:str="%") -> Return_Formatted:
+        def select_locations(self, name:str="%") -> ActionResult:
             """
             Selects location records from the database.
             Used SQL style regex for searching.
@@ -1087,13 +1090,13 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
         
         # ----- STORAGE -----
 
-        def _add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def _add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             """
             Adds a storage record to the database.
 
@@ -1122,12 +1125,12 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to create storage", exception=e)
+                return ActionResult(error_message="Failed to create storage", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             """
             Adds a storage record to the database.
 
@@ -1150,7 +1153,7 @@ class Database:
             return self._add_storage(storage_name, location_name, capacity)
 
 
-        def delete_storage(self, storage_name:str, return_warnings:bool=False) -> Return_Formatted:
+        def delete_storage(self, storage_name:str, return_warnings:bool=False) -> ActionResult:
             """
             Removes a storage record from the database.
             The location must not be used by anywhere else in the database.
@@ -1186,15 +1189,15 @@ class Database:
             # Rollback if a warning occurs and return the outcome
             if type(warnings) is list and len(warnings) > 0:
                 connection.rollback()
-                return Return_Formatted(success=False, warnings=warnings)
+                return ActionResult(success=False, warnings=warnings)
             else:
                 connection.commit()
-                return Return_Formatted(success=True)
+                return ActionResult(success=True)
             
 
 
 
-        def select_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> Return_Formatted:
+        def select_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
             """
             Selects storage records from the database.
             Used SQL style regex for searching.
@@ -1224,13 +1227,13 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
     
         # ----- STORAGE SUBCLASSES -----
 
 
-        def _add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def _add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             """
             Adds a storage subclass record to the database.
             Also creates the respective storage record as well if
@@ -1260,7 +1263,7 @@ class Database:
             # Create the item type if it doesn't exist
             add_storage_exception = self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity).get_exception()
             if add_storage_exception not in [IntegrityError, None]:
-                return Return_Formatted(error_message="Failed to create storage", exception=add_storage_exception)
+                return ActionResult(error_message="Failed to create storage", exception=add_storage_exception)
             
 
             # Create the subclass type
@@ -1270,12 +1273,12 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message=f"Failed to create {subclass_name} storage", exception=e)
+                return ActionResult(error_message=f"Failed to create {subclass_name} storage", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             return self._add_storage_subclass(
                 subclass_name="Dry",
                 storage_name=storage_name,
@@ -1285,7 +1288,7 @@ class Database:
 
     
 
-        def _add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def _add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             return self._add_storage_subclass(
                 subclass_name="Appliance",
                 storage_name=storage_name,
@@ -1293,14 +1296,14 @@ class Database:
                 capacity=capacity
             )
 
-        def add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             return self._add_appliance_storage(
                     storage_name=storage_name,
                     location_name=location_name,
                     capacity=capacity
             )
 
-        def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             # Add the appliance if it doesn't already exist
             add_appliance_exception = self._add_appliance_storage(
                         storage_name=storage_name,
@@ -1308,7 +1311,7 @@ class Database:
                         capacity=capacity
                 ).get_exception()
             if add_appliance_exception not in [IntegrityError, None]:
-                return Return_Formatted(error_message="Failed to appliance storage", exception=add_appliance_exception)
+                return ActionResult(error_message="Failed to appliance storage", exception=add_appliance_exception)
 
             # Add the subclass
             return self._add_storage_subclass(
@@ -1318,7 +1321,7 @@ class Database:
                 capacity=capacity
             )
 
-        def add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             return self._add_appliance_storage_subclass(
                 subclass_name="Fridge",
                 storage_name=storage_name,
@@ -1326,7 +1329,7 @@ class Database:
                 capacity=capacity
             )
             
-        def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> Return_Formatted:
+        def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             return self._add_appliance_storage_subclass(
                 subclass_name="Freezer",
                 storage_name=storage_name,
@@ -1334,7 +1337,7 @@ class Database:
                 capacity=capacity
             )
 
-        def _delete_storage_subclass(self, subclass_name:str, storage_name:str) -> Return_Formatted:
+        def _delete_storage_subclass(self, subclass_name:str, storage_name:str) -> ActionResult:
 
             # Get the connection and cursor
             connection:MySQLConnection = self.__parent._Database__connection
@@ -1355,28 +1358,28 @@ class Database:
             # Rollback if a warning occurs
             if type(warnings) is list and len(warnings) > 0:
                 connection.rollback()
-                return Return_Formatted(success=False, warnings=warnings)
+                return ActionResult(success=False, warnings=warnings)
             else:
                 connection.commit()
-                return Return_Formatted(success=True)
+                return ActionResult(success=True)
             
 
 
 
-        def delete_dry_storage(self, storage_name:str) -> Return_Formatted:
+        def delete_dry_storage(self, storage_name:str) -> ActionResult:
             return self._delete_storage_subclass( subclass_name="Dry", storage_name=storage_name )
 
-        def delete_appliance_storage(self, storage_name:str) -> Return_Formatted:
+        def delete_appliance_storage(self, storage_name:str) -> ActionResult:
             return self._delete_storage_subclass( subclass_name="Appliance", storage_name=storage_name )
 
-        def delete_fridge_storage(self, storage_name:str) -> Return_Formatted:
+        def delete_fridge_storage(self, storage_name:str) -> ActionResult:
             return self._delete_storage_subclass( subclass_name="Fridge", storage_name=storage_name )
 
-        def delete_freezer_storage(self, storage_name:str) -> Return_Formatted:
+        def delete_freezer_storage(self, storage_name:str) -> ActionResult:
             return self._delete_storage_subclass( subclass_name="Freezer", storage_name=storage_name )
 
 
-        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> Return_Formatted:
+        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
             """
             Selects records of a storage subclass from the database.
 
@@ -1405,11 +1408,11 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
 
-        def select_dry_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> Return_Formatted:
+        def select_dry_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
             return self._select_storage_subclass(
                 subclass_name="Dry",
                 storage_name=storage_name,
@@ -1418,7 +1421,7 @@ class Database:
                 capacity_high=capacity_high
             )
 
-        def select_appliance_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> Return_Formatted:
+        def select_appliance_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
             return self._select_storage_subclass(
                 subclass_name="Appliance",
                 storage_name=storage_name,
@@ -1427,7 +1430,7 @@ class Database:
                 capacity_high=capacity_high
             )
 
-        def select_fridge_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> Return_Formatted:
+        def select_fridge_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
             return self._select_storage_subclass(
                 subclass_name="Fridge",
                 storage_name=storage_name,
@@ -1436,7 +1439,7 @@ class Database:
                 capacity_high=capacity_high
             )
 
-        def select_freezer_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> Return_Formatted:
+        def select_freezer_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
             return self._select_storage_subclass(
                 subclass_name="Freezer",
                 storage_name=storage_name,
@@ -1448,7 +1451,7 @@ class Database:
 
         # ----- User -----
 
-        def _add_user(self, name:str) -> Return_Formatted:
+        def _add_user(self, name:str) -> ActionResult:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Add user")
@@ -1457,18 +1460,18 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except IntegrityError as e:
-                return Return_Formatted(error_message="User already exists", exception=e)
+                return ActionResult(error_message="User already exists", exception=e)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to add user", exception=e)
+                return ActionResult(error_message="Failed to add user", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def add_user(self, name:str) -> Return_Formatted:
+        def add_user(self, name:str) -> ActionResult:
             return self._add_user(name=name)
 
 
-        def add_parent(self, name:str) -> Return_Formatted:
+        def add_parent(self, name:str) -> ActionResult:
             cursor:MySQLCursor = self.__parent._Database__cursor
             
             # Add user if it doesn't already exist
@@ -1483,14 +1486,14 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except IntegrityError as e:
-                return Return_Formatted(error_message="Parent already exists", exception=e)
+                return ActionResult(error_message="Parent already exists", exception=e)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to add parent", exception=e)
+                return ActionResult(error_message="Failed to add parent", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def add_dependent(self, name:str) -> Return_Formatted:
+        def add_dependent(self, name:str) -> ActionResult:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Add the user if it doesn't already exist
@@ -1505,14 +1508,14 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except IntegrityError as e:
-                return Return_Formatted(error_message="Dependent already exists", exception=e)
+                return ActionResult(error_message="Dependent already exists", exception=e)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to add dependent", exception=e)
+                return ActionResult(error_message="Failed to add dependent", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def _select_users(self, name:str="%") -> Return_Formatted:
+        def _select_users(self, name:str="%") -> ActionResult:
             """
             Gets a list of all the users.
 
@@ -1524,17 +1527,17 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
-        def select_users(self, name:str="%") -> Return_Formatted:
+        def select_users(self, name:str="%") -> ActionResult:
             """
             Gets a list of all the users.
             """
             return self._select_users(name=name)
 
 
-        def _select_parents(self, name:str="%") -> Return_Formatted:
+        def _select_parents(self, name:str="%") -> ActionResult:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Parent", name = "Select parents")
@@ -1542,15 +1545,15 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
-        def select_parents(self, name:str="%") -> Return_Formatted:
+        def select_parents(self, name:str="%") -> ActionResult:
             return self._select_parents(name=name)
 
 
 
-        def select_items_used_by_user(self, user_name:str="%") -> Return_Formatted:
+        def select_items_used_by_user(self, user_name:str="%") -> ActionResult:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select items used by user")
@@ -1558,7 +1561,7 @@ class Database:
 
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
 
@@ -1566,7 +1569,7 @@ class Database:
 
         # ----- Inventory -----
 
-        def _change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:dt.datetime) -> Return_Formatted:
+        def _change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:dt.datetime) -> ActionResult:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Change item quantity")
@@ -1575,12 +1578,12 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to update item quantity", exception=e)
+                return ActionResult(error_message="Failed to update item quantity", exception=e)
             else:
-                return Return_Formatted()
+                return ActionResult()
 
 
-        def change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:dt.datetime) -> Return_Formatted:
+        def change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:dt.datetime) -> ActionResult:
             return self._change_item_quantity(new_quantity=new_quantity, item_name=item_name, storage_name=storage_name, timestamp=timestamp)
 
 
@@ -1604,14 +1607,14 @@ class Database:
 
 
 
-        def _add_item_to_inventory(self, item_name:str, storage_name:str, expiry:dt.datetime|None=None, quantity:float=1.0) -> Return_Formatted:
+        def _add_item_to_inventory(self, item_name:str, storage_name:str, expiry:dt.datetime|None=None, quantity:float=1.0) -> ActionResult:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Check item type exists
             select_item_data = self._select_item_type(name=item_name).get_data()
             if type(select_item_data) is not list or len(select_item_data) == 0:
-                return Return_Formatted(error_message="ItemType does not exist")
+                return ActionResult(error_message="ItemType does not exist")
 
             # Try to add the item to inventory
             try:
@@ -1620,20 +1623,20 @@ class Database:
                 cursor.execute(statement, data)
             except IntegrityError as e:
                 if "FOREIGN" in str(e) and "storage_name" in str(e):
-                    return Return_Formatted(error_message="Storage location does not exist", exception=e)
+                    return ActionResult(error_message="Storage location does not exist", exception=e)
                 else:
-                    return Return_Formatted(error_message="Item already exists in inventory", exception=e)
+                    return ActionResult(error_message="Item already exists in inventory", exception=e)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to add item to inventory", exception=e)
+                return ActionResult(error_message="Failed to add item to inventory", exception=e)
 
-            return Return_Formatted(success=True)
+            return ActionResult(success=True)
 
         def add_item_to_inventory(self, 
                                   item_name:str, 
                                   storage_name:str, 
                                   expiry:dt.datetime|None=None, 
                                   quantity:float=1.0
-                                  ) -> Return_Formatted:
+                                  ) -> ActionResult:
             return self._add_item_to_inventory(item_name=item_name, 
                                                storage_name=storage_name, 
                                                expiry=expiry, 
@@ -1645,7 +1648,7 @@ class Database:
                                  storage_name:str="",
                                  timestamp_from:dt.datetime=dt.datetime.min,
                                  timestamp_to:dt.datetime=dt.datetime.max
-                                 ) -> Return_Formatted:
+                                 ) -> ActionResult:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
@@ -1663,7 +1666,7 @@ class Database:
             data = (item_name, storage_name, timestamp_from, timestamp_to)
             cursor.execute(statement, data)
 
-            return Return_Formatted(data=cursor.fetchall())
+            return ActionResult(data=cursor.fetchall())
 
 
         def move_item_storage_location(self,
@@ -1671,7 +1674,7 @@ class Database:
                                        item_name:str,
                                        old_storage_name:str,
                                        timestamp:dt.datetime
-                                       ) -> Return_Formatted:
+                                       ) -> ActionResult:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
@@ -1682,15 +1685,15 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to move item", exception=e)
+                return ActionResult(error_message="Failed to move item", exception=e)
 
-            return Return_Formatted(success=True)
+            return ActionResult(success=True)
 
         def _remove_item_from_inventory(self,
                                         item_name:str,
                                         storage_name:str,
                                         timestamp:dt.datetime
-                                        ) -> Return_Formatted:
+                                        ) -> ActionResult:
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Remove item from inventory")
@@ -1700,19 +1703,19 @@ class Database:
             try:
                 cursor.execute(statement, data)
             except Exception as e:
-                return Return_Formatted(error_message="Failed to delete item", exception=e)
+                return ActionResult(error_message="Failed to delete item", exception=e)
 
-            return Return_Formatted(success=True)
+            return ActionResult(success=True)
 
 
 
 
         # Miscellaneous actions (for now)
 
-        def consume_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime, quantity:float, user:str) -> Return_Formatted:
+        def consume_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime, quantity:float, user:str) -> ActionResult:
             return self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, user)
 
-        def throw_out_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime, quantity:float) -> Return_Formatted:
+        def throw_out_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime, quantity:float) -> ActionResult:
             return self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, None)
 
         def _remove_and_log_inventory(self,
@@ -1721,7 +1724,7 @@ class Database:
                                       timestamp:dt.datetime,
                                       quantity_removed:float,
                                       user:str|None
-                                      ) -> Return_Formatted:
+                                      ) -> ActionResult:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
@@ -1742,11 +1745,11 @@ class Database:
                     raise ValueError("The quantity of the item could not be collected because the item does not exist in inventory");
             except Exception as e:
                 self.__parent.rollback()
-                return Return_Formatted(error_message="Failed to get inventory quantity", exception=e)
+                return ActionResult(error_message="Failed to get inventory quantity", exception=e)
 
 
             # Reduce the quantity of the item by the desired amount or remove the item if its quantity has been exhausted.
-            result:Return_Formatted
+            result:ActionResult
             if new_quantity > 0:
                 result = self._change_item_quantity(new_quantity, item_name, storage_name, timestamp)
             else:
@@ -1769,54 +1772,40 @@ class Database:
                     cursor.execute(stmt, data)
             except Exception as e:
                 self.__parent.rollback()
-                return Return_Formatted(error_message="Failed to log usage of item", exception=e)
+                return ActionResult(error_message="Failed to log usage of item", exception=e)
                 
 
             # If all went well, commit the changes
             self.__parent.commit()
-            return Return_Formatted(success=True)
+            return ActionResult(success=True)
 
+        def add_recipe(self, recipe_name:str, ingredients:list[(str, float)]) -> ActionResult:
+            cursor:MySQLCursor = self.__parent._Database__cursor
 
+            self.__parent.start_transaction()
 
+            try:
+                stmt_template = self.__parent._Database__sql_statements.get_query(group="Template", name="Create template")
+                template_data = (recipe_name,)
+                cursor.execute(stmt_template, template_data)
 
-            # try:
-            #
-            #     self._select_item_quantity_from_inventory
-            #     stmt1 = self.__parent._Database__sql_statements.get_query(group="Inventory", name="Select item quantity from inventory")
-            #     data1 = (item_name, storage_name, timestamp)
-            #     cursor.execute(stmt1, data1)
-            #
-            #     old_quantity = cursor.fetchone()["quantity"] # TODO Handle null case (_remove_and_log_inventory MUST fail if it's null. -D)
-            #     new_quantity = old_quantity - quantity_removed
-            #
-            #
-            #     if new_quantity > 0:
-            #         stmt2 = self.__parent._Database__sql_statements.get_query(group="Inventory", name="Change item quantity")
-            #         data2 = (new_quantity, item_name, storage_name, timestamp)
-            #         cursor.execute(stmt2, data2)
-            #     else:
-            #         stmt2 = self.__parent._Database__sql_statements.get_query(group="Inventory", name="Remove item from inventory")
-            #         data2 = (item_name, storage_name, timestamp)
-            #         cursor.execute(stmt2, data2)
-            #
-            #     if user is None:
-            #         stmt3 = self.__parent._Database__sql_statements.get_query(group="Wasted", name="Add item wasted record")
-            #         data3 = (item_name, quantity_removed)
-            #         cursor.execute(stmt3, data3)
-            #     else:
-            #         stmt3 = self.__parent._Database__sql_statements.get_query(group="Used", name="Add item used record")
-            #         data3 = (item_name, quantity_removed, user)
-            #         cursor.execute(stmt3, data3)
-            # except Error as e:
-            #     print(e)
-            #     # TODO Report failure of call.
-            #     self.__parent.rollback()
-            # else:
-            #     self.__parent.commit()
+                # self._add_food_type() # TODO 
 
+                stmt_recipe = self.__parent._Database__sql_statements.get_query(group="Recipe", name="Create recipe")
+                recipe_data = (recipe_name, recipe_name)
+                cursor.execute(stmt_recipe, recipe_data)
 
+                stmt_ingredients = self.__parent._Database__sql_statements.get_query(group="Ingredients", name="Add ingredient")
+                ri_tuples = []
+                for i in ingredients:
+                    ri_tuples.append((recipe_name, *i))
+                cursor.executemany(stmt_ingredients, ri_tuples)
+            except Exception as e:
+                self.__parent.rollback()
+                return ActionResult(error_message="Failed to create recipe", exception=e)
 
-
+            self.__parent.commit()
+            return ActionResult(success=True)
 
         # ----- PURCHASE -----
 
@@ -1830,43 +1819,22 @@ class Database:
                           item_unit:str="",
                           item_class:str="Food",
                           expiry:dt.datetime|None=None
-                          ) -> Return_Formatted:
+                          ) -> ActionResult:
 
             cursor:MySQLCursor = self.__parent._Database__cursor
 
             # Check quantity is greater than 0
             if quantity <= 0:
-                return Return_Formatted(error_message="Quantity for a purchase cannot be less than 0")
+                return ActionResult(error_message="Quantity for a purchase cannot be less than 0")
 
 
             # Check parent exists
             parent_info = self._select_parents(name=parent_name)
             if not parent_info.is_success() or parent_info.get_data() is None:
-                return Return_Formatted(error_message="Parent does not exist")
+                return ActionResult(error_message="Parent does not exist")
 
             # Start a database transaction
-            self.__parent.start_transaction()
-
-            # Check item via item name exists
-            # Create the item type if it does not already exist
-            match item_class:
-                case "Food":
-                    if self._select_food_type(name=item_name).get_data() is None:
-                        self._add_notfood_type(name=item_name, unit=item_unit)
-                case "NotFood":
-                    if self._select_notfood_type(name=item_name).get_data() is None:
-                        self._add_notfood_type(name=item_name, unit=item_unit)
-                case "Consumable":
-                    if self._select_consumable_type(name=item_name).get_data() is None:
-                        self._add_consumable_type(name=item_name, unit=item_unit)
-                case "Durable":
-                    if self._select_durable_type(name=item_name).get_data() is None:
-                        self._add_durable_type(name=item_name, unit=item_unit)
-                case _:
-                    if self._select_item_type(name=item_name).get_data() is None:
-                        self._add_item_type(name=item_name, unit=item_unit)
-
-            
+            self.__parent.start_transaction()            
 
             # Create purchase record
             try:
@@ -1875,7 +1843,7 @@ class Database:
                 cursor.execute(statement, data)
             except Exception as e:
                 self.__parent.rollback()
-                return Return_Formatted(error_message="Failed to add purchase record", exception=e)
+                return ActionResult(error_message="Failed to add purchase record", exception=e)
 
 
             # Add item to inventory
@@ -1886,6 +1854,6 @@ class Database:
 
             # Commit the changes if we successfully made it to this point
             self.__parent.commit()
-            return Return_Formatted(success=True)
+            return ActionResult(success=True)
                  
 

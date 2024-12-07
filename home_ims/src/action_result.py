@@ -1,9 +1,7 @@
 from mysql.connector.types import RowType
 from typing import Any
 
-
-
-class Return_Formatted:
+class ActionResult:
     """
     A simple object to standardise what a database action will return.
     """
@@ -46,7 +44,7 @@ class Return_Formatted:
     def is_success(self) -> bool:
         return self.success
 
-    def did_error_occur(self) -> bool:
+    def is_error(self) -> bool:
         return self.error_occurred
 
     def get_exception(self) -> Exception|None:
@@ -54,5 +52,3 @@ class Return_Formatted:
 
     def get_warnings(self) -> list|None:
         return self.warnings
-
-

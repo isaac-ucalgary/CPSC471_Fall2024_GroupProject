@@ -119,7 +119,7 @@
                 "CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (",
                 "recipe_name VARCHAR(255) NOT NULL,",
                 "food_name VARCHAR(255) NOT NULL,",
-                "PRIMARY KEY (recipe_name, food_name),",
+                "PRIMARY KEY (recipe_name),",
                 "FOREIGN KEY (recipe_name) REFERENCES Template(name),",
                 "FOREIGN KEY (food_name) REFERENCES Food(name)",
                 ");"
@@ -526,20 +526,15 @@
                 ]
             },
             "Select food type": {
-                "inputs": [
-                    "name",
-                    "unit"
-                ],
+                "inputs": [],
                 "outputs": [
                     "name",
                     "unit"
                 ],
                 "query": [
-                    "SELECT I.name, I.unit",
-                    "FROM Home_IMS.ItemType AS I",
-                    "JOIN Home_IMS.Food AS C ON I.name = C.name",
-                    "WHERE I.name LIKE %s",
-                    "AND I.unit LIKE %s;"
+                    "SELECT T.name, T.unit",
+                    "FROM Home_IMS.ItemType AS T",
+                    "JOIN Home_IMS.Food AS F ON T.name = F.name;"
                 ],
                 "notes": [
                     "Select food"
@@ -1370,6 +1365,18 @@
                 ]
             }
         },
+        "Template": {
+            "Create template": {
+                "inputs": [
+                    "template_name"
+                ],
+                "outputs": [],
+                "query": [
+                    "INSERT INTO Home_IMS.Template (name)",
+                    "VALUES (%s);"
+                ]
+            }
+        },
         "Recipe": {
             "Create recipe": {
                 "inputs": [
@@ -1387,14 +1394,12 @@
             },
             "Delete recipe": {
                 "inputs": [
-                    "recipe_name",
-                    "food_name"
+                    "recipe_name"
                 ],
                 "outputs": [],
                 "query": [
                     "DELETE FROM Home_IMS.Recipe",
-                    "WHERE recipe_name = %s",
-                    "AND food_name = %s;"
+                    "WHERE recipe_name = %s;"
                 ],
                 "notes": [
                     "Delete recipe"
@@ -1402,18 +1407,15 @@
             },
             "View recipes": {
                 "inputs": [
-                    "recipe_name",
-                    "food_name"
+                    "recipe_name"
                 ],
                 "outputs": [
-                    "recipe_name",
-                    "food_name"
+                    "recipe_name"
                 ],
                 "query": [
-                    "SELECT R.recipe_name, R.food_name",
+                    "SELECT R.recipe_name",
                     "FROM Home_IMS.Recipe AS R",
-                    "WHERE R.recipe_name LIKE %s",
-                    "AND R.food_name LIKE %s;"
+                    "WHERE R.recipe_name LIKE %s;"
                 ],
                 "notes": [
                     "View recipes"

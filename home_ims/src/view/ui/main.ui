@@ -315,7 +315,11 @@ QLineEdit:disabled {
 	background-color: #00ffffff;
 }</string>
                   </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_6"/>
+                  <layout class="QVBoxLayout" name="verticalLayout_6">
+                   <item>
+                    <widget class="QWidget" name="widget_6" native="true"/>
+                   </item>
+                  </layout>
                  </widget>
                 </widget>
                </item>
