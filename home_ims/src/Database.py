@@ -1816,8 +1816,6 @@ class Database:
                           store:str,
                           parent_name:str,
                           storage_location:str,
-                          item_unit:str="",
-                          item_class:str="Food",
                           expiry:dt.datetime|None=None
                           ) -> ActionResult:
 
@@ -1826,12 +1824,6 @@ class Database:
             # Check quantity is greater than 0
             if quantity <= 0:
                 return ActionResult(error_message="Quantity for a purchase cannot be less than 0")
-
-
-            # Check parent exists
-            parent_info = self._select_parents(name=parent_name)
-            if not parent_info.is_success() or parent_info.get_data() is None:
-                return ActionResult(error_message="Parent does not exist")
 
             # Start a database transaction
             self.__parent.start_transaction()            

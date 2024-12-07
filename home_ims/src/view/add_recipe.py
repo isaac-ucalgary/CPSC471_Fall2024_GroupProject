@@ -1,5 +1,5 @@
 from PyQt6 import uic
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import Qt
 
 from view import util
@@ -9,7 +9,7 @@ entry_form_tpl, entry_base_tpl = uic.loadUiType(util.get_ui_path("popup", "recip
 
 def show(window, dba):
     q = dba.dynamic_query("Food", "Select food type")
-    if q.is_error():
+    if not q.is_success():
         util.open_error_dialog(window)
         return
 
@@ -24,16 +24,18 @@ def show(window, dba):
             entry_widget = entry_base_tpl()
             entry_form = entry_form_tpl()
             entry_form.setupUi(entry_widget)
-            
+
             for t in food_types:
                 entry_form.itemSelector.addItem(t["name"], t["unit"])
 
-            def on_type_change(i):
+            def on_item_change(i):
                 unit = entry_form.itemSelector.itemData(i)
                 entry_form.unitLabel.setVisible(bool(unit))
                 entry_form.unitLabel.setText(unit)
 
-            entry_form.itemSelector.currentIndexChanged.connect(on_type_change)
+            on_item_change(0)
+
+            entry_form.itemSelector.currentIndexChanged.connect(on_item_change)
             entry_form.removeBtn.clicked.connect(entry_widget.deleteLater)
 
             form.ingredients.layout().addWidget(entry_widget)
