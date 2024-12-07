@@ -1,7 +1,6 @@
 # Build Database Script
 
 # -- Library Imports --
-from _typeshed import ExcInfo
 from mysql.connector import Error, IntegrityError, MySQLConnection
 from mysql.connector.cursor import MySQLCursor
 from types import FunctionType, MethodType
