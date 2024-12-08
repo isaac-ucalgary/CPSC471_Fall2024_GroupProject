@@ -73,7 +73,6 @@ class Database:
 
         # Initialize connection
         self.__connection:MySQLConnection = MySQLConnection()
-        self.__connection.config(**self.DB_CONN_CONFIG)
         self.__cursor:MySQLCursorDict = MySQLCursorDict(self.__connection) # Ignore error
 
         if auto_connect:
@@ -104,27 +103,24 @@ class Database:
             The status of if the connection was successful
         """
 
-        # Try to (re)connect to the database
-        if not self.__connection.is_connected():
-            try:
-                self.__connection.reconnect(attempts=attempts, delay=delay)
-            except InterfaceError as e:
-                print("Failed to connect to the database")
-                return False
+        # # Try to (re)connect to the database
+        # if not self.__connection.is_connected():
+        #     try:
+        #         self.__connection.reconnect(attempts=attempts, delay=delay)
+        #     except InterfaceError as e:
+        #         print("Failed to connect to the database")
+        #         return False
 
-        # Reinstate the cursor object to be fresh
-        if self.__connection.is_connected():
-            self.__cursor.close()
-            self.__cursor = MySQLCursorDict(self.__connection) # Ignore error
-        else:
-            print("Failed to connect to the database")
-            return False
-
-
-        return self.__connection.is_connected()
+        # # Reinstate the cursor object to be fresh
+        # if self.__connection.is_connected():
+        #     self.__cursor.close()
+        #     self.__cursor = MySQLCursorDict(self.__connection) # Ignore error
+        # else:
+        #     print("Failed to connect to the database")
+        #     return False
 
 
-
+        # return self.__connection.is_connected()
 
         # Try to connect to the database.
         try:
@@ -138,21 +134,21 @@ class Database:
                 get_warnings=True,
                 time_zone="MST"
             )
-            self.__connection.connect(**self.DB_CONN_CONFIG)
-
         except Error as e:
-            print("Failed to connect to database")
-            print(e)
-            # self.__connection = None
-            return False
-        else:
-            print("Connected to MariaDB.")
+            try:
+                # Terrible workaround for annoying connector code.
+                self.__connection.reconnect(attempts=attempts-1, delay=delay)
+            except InterfaceError as e:
+                print("Failed to connect to the database")
+                return False
 
-            # Make the cursor on the newly created connection.
-            # self.__cursor = self.__connection.cursor(cursor_class=MySQLCursorDict)
-            self.__cursor = MySQLCursorDict(self.__connection) # ignore error
-            # self.__cursor.rowtype = dict
-            return True
+        print("Connected to the database")
+
+        # Make the cursor on the newly created connection.
+        # self.__cursor = self.__connection.cursor(cursor_class=MySQLCursorDict)
+        self.__cursor = MySQLCursorDict(self.__connection) # ignore error
+        # self.__cursor.rowtype = dict
+        return True
         
 
     def close_connection(self) -> None:
@@ -483,7 +479,7 @@ class Database:
                             try:
                                 result = old_func(*args, **kargs)
                             except Exception as e:
-                                result = ActionResult(error_message="An Unknown error occurred", exception=e)
+                                result = ActionResult(error_message="An unknown error occurred", exception=e)
                         else:
                             result = ActionResult(error_message="Function pre-conditions were not met. Function aborted.")
                         post_func()

@@ -7,7 +7,7 @@ import view
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    db = Database()
+    db = Database(auto_connect=False)
     if db.connect():
         # Build the database if it doesn't exist
         db.build_database()
