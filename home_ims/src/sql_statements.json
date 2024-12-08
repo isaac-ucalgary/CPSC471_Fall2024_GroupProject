@@ -1603,11 +1603,8 @@
                     "JOIN Home_IMS.ItemType AS T ON I.item_name = T.name",
                     "WHERE I.item_name LIKE %s ESCAPE '!'",
                     "AND I.storage_name LIKE %s ESCAPE '!'",
-                    "AND (",
-                    "I.expiry BETWEEN %s AND %s",
-                    "OR (",
-                    "I.expiry IS NULL AND %s",
-                    "));"
+                    "AND (I.expiry BETWEEN %s AND %s OR (I.expiry IS NULL AND %s))",
+                    "ORDER BY ISNULL(I.expiry), I.expiry;"
                 ],
                 "notes": [
                     "View all"

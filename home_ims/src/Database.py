@@ -1730,11 +1730,12 @@ class Database:
                                  storage_name:str="",
                                  timestamp_from:dt.datetime|None=None,
                                  timestamp_to:dt.datetime|None=None,
-                                 include_non_perishable:bool|None=None
+                                 include_non_perishable:bool=True
                                  ) -> ActionResult:
 
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
+            # TODO This should be its own function and be applied to all LIKE clauses.
             # Escape characters
             item_name.replace("%", "!%")
             item_name.replace("!", "!!")
@@ -1743,10 +1744,6 @@ class Database:
 
             item_name = f"%{item_name}%"
             storage_name = f"%{storage_name}%"
-
-            # If unset, set non-perishables to be included if no expiry time frame was provided
-            if include_non_perishable is None:
-                include_non_perishable = timestamp_from is None and timestamp_to is None
 
             # Set min and max values for the expiry range
             if timestamp_from is None: timestamp_from = dt.datetime.min
