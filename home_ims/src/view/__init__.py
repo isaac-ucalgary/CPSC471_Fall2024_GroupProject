@@ -9,6 +9,7 @@ from view.history import HistoryView
 from view.purchases import PurchasesView
 from view.analytics import AnalyticsView
 
+import view.shopping_list as shopping_list
 import view.add_item_type as add_item_type
 import view.add_storage as add_storage
 import view.add_location as add_location
@@ -71,6 +72,7 @@ def show_window(dba:DB_Actions):
     on_tab_change(0)
     on_user_change(0)
 
+    window.shoppingListBtn.clicked.connect(lambda: shopping_list.show(window, dba))
     window.addItemTypeBtn.clicked.connect(lambda: add_item_type.show(window, dba))
     window.addStorageBtn.clicked.connect(lambda: add_storage.show(window, dba))
     window.addLocationBtn.clicked.connect(lambda: add_location.show(window, dba))

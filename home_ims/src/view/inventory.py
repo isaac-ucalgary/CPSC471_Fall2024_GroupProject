@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from PyQt6 import uic
 
+import view.add_inventory as add_inventory
 from view import util
 from Database import Database
 DB_Actions = Database.DB_Actions
@@ -12,6 +13,8 @@ class InventoryView:
         self.window = window
         self.dba:DB_Actions = dba
         self.current_user = None
+
+        self.window.addItemBtn.clicked.connect(lambda: add_inventory.show(self.window, self.dba))
     
     def rebuild_ui(self):
         inv:list[dict] = self.dba.view_inventory_items().get_data_list()

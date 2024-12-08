@@ -1010,7 +1010,7 @@
                     "SUM(CASE WHEN H.wasted = false THEN H.quantity ELSE 0 END) AS amt_used,",
                     "SUM(CASE WHEN H.wasted = true THEN H.quantity ELSE 0 END) AS amt_wasted,",
                     "(",
-                    "  SELECT COALESCE(SUM(P.price), 0)",
+                    "  SELECT IFNULL(SUM(P.price), 0)",
                     "  FROM Home_IMS.Purchase AS P",
                     "  WHERE P.item_name = H.item_name",
                     ") AS money_spent",
@@ -1631,6 +1631,42 @@
                 ],
                 "notes": [
                     "View all"
+                ]
+            }
+        },
+        "Shopping List": {
+            "Select missing ingredients": {
+                "inputs": [
+                    "timestamp_required",
+                    "timestamp_stock"
+                ],
+                "outputs": [
+                    "food_name",
+                    "unit",
+                    "quantity"
+                ],
+                "query": [
+                    "SELECT Required.food_name, Required.unit, Required.total - IFNULL(Stock.total, 0) AS quantity",
+                    "FROM (",
+                        "SELECT I.food_name, T.unit, SUM(I.quantity) as total",
+                        "FROM Home_IMS.MealSchedule AS M",
+                        "JOIN Home_IMS.Ingredients AS I ON I.recipe_name = M.recipe_name",
+                        "JOIN Home_IMS.ItemType AS T ON I.food_name = T.name",
+                        "WHERE M.timestamp <= %s",
+                        "GROUP BY I.food_name",
+                    ") AS Required",
+                    "JOIN (",
+                        "SELECT S.item_name, SUM(S.quantity) AS total",
+                        "FROM Home_IMS.Inventory AS S",
+                        "WHERE EXISTS (",
+                        "SELECT * FROM Home_IMS.MealSchedule AS M",
+                        "JOIN Home_IMS.Ingredients AS I ON M.recipe_name = I.recipe_name",
+                        "WHERE M.timestamp <= %s",
+                        "AND I.food_name = S.item_name",
+                        ")",
+                        "GROUP BY S.item_name",
+                    ") AS Stock ON Required.food_name = Stock.item_name",
+                    "HAVING quantity > 0;"
                 ]
             }
         }

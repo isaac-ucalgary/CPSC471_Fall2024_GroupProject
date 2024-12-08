@@ -1899,6 +1899,17 @@ class Database:
             self.__parent.commit()
             return ActionResult(success=True)
 
+        def gen_shopping_list(self, timestamp:dt.datetime=dt.datetime.now() + dt.timedelta(days=7)):
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
+
+            try:
+                statement = self.__parent._Database__sql_statements.get_query(group="Shopping List", name="Select missing ingredients")
+                data = (timestamp, timestamp)
+                cursor.execute(statement, data)
+                return ActionResult(data=cursor.fetchall())
+            except Exception as e:
+                return ActionResult(error_message="Failed to generate shopping list", exception=e)
+
         # ----- PURCHASE -----
 
         def purchase_item(self,
@@ -1908,8 +1919,6 @@ class Database:
                           store:str,
                           parent_name:str,
                           storage_location:str,
-                          item_unit:str="",
-                          item_class:str="Food",
                           expiry:dt.datetime|None=None
                           ) -> ActionResult:
 
@@ -1918,12 +1927,6 @@ class Database:
             # Check quantity is greater than 0
             if quantity <= 0:
                 return ActionResult(error_message="Quantity for a purchase cannot be less than 0")
-
-
-            # Check parent exists
-            parent_info = self._select_parents(name=parent_name)
-            if not parent_info.is_success() or parent_info.get_data() is None:
-                return ActionResult(error_message="Parent does not exist")
 
             # Start a database transaction
             self.__parent.start_transaction()            

@@ -8,7 +8,7 @@ def get_ui_path(*path):
     return os.path.join(root, "ui", *path)
 
 def format_quantity(quantity, unit):
-    return f"{quantity:.1f} {unit}"
+    return f"{quantity:.1f}{unit and ' '}{unit}"
 
 def format_date(timestamp):
     return timestamp.strftime("%-d %b %Y")
