@@ -1413,7 +1413,7 @@ class Database:
                 location_name=location_name,
                 capacity=capacity
             )
-            
+
         def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             return self._add_appliance_storage_subclass(
                 subclass_name="Freezer",

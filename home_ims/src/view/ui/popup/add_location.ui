@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>156</width>
-    <height>129</height>
+    <height>106</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,7 +38,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Add User</string>
+      <string>Add Location</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -78,13 +78,6 @@
        </widget>
       </item>
      </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="isParent">
-     <property name="text">
-      <string>Parent</string>
-     </property>
     </widget>
    </item>
    <item>

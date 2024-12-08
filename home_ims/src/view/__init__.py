@@ -8,6 +8,8 @@ from view.recipes import RecipesView
 from view.history import HistoryView
 from view.purchases import PurchasesView
 from view.analytics import AnalyticsView
+import view.add_user as add_user
+import view.add_location as add_location
 from action_result import ActionResult
 from Database import Database
 DB_Actions = Database.DB_Actions
@@ -64,6 +66,7 @@ def show_window(dba:DB_Actions):
     on_tab_change(0)
     on_user_change(0)
 
-    # TODO Connect buttons
+    window.addUserBtn.clicked.connect(lambda: add_user.show(window, dba))
+    window.addLocationBtn.clicked.connect(lambda: add_location.show(window, dba))
 
     window.show()
