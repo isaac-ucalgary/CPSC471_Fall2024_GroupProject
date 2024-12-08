@@ -12,7 +12,7 @@ def format_quantity(quantity, unit):
     return f"{qf} {unit}" if unit else qf
 
 def format_date(timestamp):
-    return timestamp.strftime("%-d %b %Y")
+    return timestamp.strftime("")
 
 def format_datetime(timestamp):
     return timestamp.strftime("%I:%M:%S %p, %-d %b %Y")
