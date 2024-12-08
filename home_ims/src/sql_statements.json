@@ -1589,7 +1589,8 @@
                     "item_name",
                     "storage_name",
                     "expiry_from",
-                    "expiry_to"
+                    "expiry_to",
+                    "include_non_perishable"
                 ],
                 "outputs": [
                     "item_name",
@@ -1607,8 +1608,9 @@
                     "AND I.storage_name LIKE %s ESCAPE '!'",
                     "AND (",
                     "I.expiry BETWEEN %s AND %s",
-                    "OR I.expiry IS NULL",
-                    ");"
+                    "OR (",
+                    "I.expiry IS NULL AND %s",
+                    "));"
                 ],
                 "notes": [
                     "View all"

@@ -1732,7 +1732,8 @@ class Database:
                                  item_name:str="",
                                  storage_name:str="",
                                  timestamp_from:dt.datetime=dt.datetime.min,
-                                 timestamp_to:dt.datetime=dt.datetime.max
+                                 timestamp_to:dt.datetime=dt.datetime.max,
+                                 include_non_perishable:bool=True
                                  ) -> ActionResult:
 
             cursor:MySQLCursorDict = self.__parent._Database__cursor
@@ -1748,7 +1749,7 @@ class Database:
 
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "View inventory items")
-            data = (item_name, storage_name, timestamp_from, timestamp_to)
+            data = (item_name, storage_name, timestamp_from, timestamp_to, include_non_perishable)
             cursor.execute(statement, data)
 
             return ActionResult(data=cursor.fetchall())
