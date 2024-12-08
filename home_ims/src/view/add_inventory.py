@@ -93,7 +93,6 @@ def show(window, dba):
                     expiryDate,
                     quantity
                 )
-                pass
 
             if not result.is_success():
                 print(result.get_exception())
