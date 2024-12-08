@@ -1,9 +1,10 @@
 # Build Database Script
 
 # -- Library Imports --
-from mysql.connector import Error, IntegrityError, MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from mysql.connector import Error, IntegrityError, InterfaceError, MySQLConnection
+from mysql.connector.cursor import MySQLCursorDict
 from types import FunctionType, MethodType
+from typing import Any
 import datetime as dt
 import inspect
 import mysql.connector
@@ -16,7 +17,6 @@ from sql_statements import SQL_Statements
 from action_result import ActionResult
 
 
-
 class Database:
 
 
@@ -25,8 +25,33 @@ class Database:
                  db_port:int=MARIADB_PORT,
                  db_user:str=MARIADB_USER,
                  db_password:str=MARIADB_PASSWORD,
-                 db_name:str=MARIADB_DATABASE_NAME
+                 db_name:str=MARIADB_DATABASE_NAME,
+                 auto_connect:bool=True
                  ):
+        """
+        Creates a database object to use to interact with a mysql database.
+
+        Parameters
+        ----------
+        `db_host` : str
+            The host address or url of the database to connect to.
+            Defaults to the value in the env file.
+        `db_port` : int
+            The port of the database to connect to.
+            Default in env.
+        `db_user` : str
+            The user name to connect to the database as.
+            Default in env.
+        `db_password` : str
+            The password to use to connect to the database.
+            Default in env.
+        `db_name` : str
+            The name of the database to use.
+            Default in env.
+        `auto_connect` : bool
+            Whether to connect to the database as part of this initialization.
+            Default True.
+        """
 
         self.db_host = db_host
         self.db_port = db_port
@@ -34,8 +59,24 @@ class Database:
         self.db_password = db_password
         self.db_name = db_name
 
-        self.__connection = None
-        self.__cursor = None
+        self.DB_CONN_CONFIG = {
+            'host':self.db_host,
+            'port':self.db_port,
+            'user':self.db_user,
+            'password':self.db_password,
+            'collation':"utf8mb4_unicode_ci",
+            'autocommit':True,
+            'get_warnings':True,
+            'time_zone':"MST"
+        }
+
+        # Initialize connection
+        self.__connection:MySQLConnection = MySQLConnection()
+        self.__connection.config(**self.DB_CONN_CONFIG)
+        self.__cursor:MySQLCursorDict = MySQLCursorDict(self.__connection) # Ignore error
+
+        if auto_connect:
+            self.connect()
 
         self.db_actions = self.DB_Actions(self)
 
@@ -46,37 +87,76 @@ class Database:
 
     # Connect to database
     # Creates a connection and a cursor
-    def connect(self) -> bool:
+    def connect(self, attempts:int=4, delay:int=0) -> bool:
+        """
+        Parameters
+        ----------
+        `attempts` : int
+            The number of times to retry connecting to the database upon 
+            connection failure.
+        `delay` : int
+            The time to wait inbetween retry attempts in seconds (integer only).
+
+        Returns
+        -------
+        bool
+            The status of if the connection was successful
+        """
+
+        # Try to (re)connect to the database
+        if not self.__connection.is_connected():
+            try:
+                self.__connection.reconnect(attempts=attempts, delay=delay)
+            except InterfaceError as e:
+                print("Failed to connect to the database")
+                return False
+
+        # Reinstate the cursor object to be fresh
+        if self.__connection.is_connected():
+            self.__cursor.close()
+            self.__cursor = MySQLCursorDict(self.__connection) # Ignore error
+        else:
+            print("Failed to connect to the database")
+            return False
+
+
+        return self.__connection.is_connected()
+
+
+
 
         # Try to connect to the database.
         try:
-            self.__connection = mysql.connector.connect(
+            self.__connection.connect(
                 host=self.db_host,
                 port=self.db_port,
                 user=self.db_user,
                 password=self.db_password,
                 collation="utf8mb4_unicode_ci",
                 autocommit=True,
-                get_warnings=True
+                get_warnings=True,
+                time_zone="MST"
             )
+            self.__connection.connect(**self.DB_CONN_CONFIG)
 
         except Error as e:
             print("Failed to connect to database")
             print(e)
-            self.__connection = None
+            # self.__connection = None
             return False
         else:
             print("Connected to MariaDB.")
 
             # Make the cursor on the newly created connection.
-            self.__cursor:MySQLCursor = self.__connection.cursor(dictionary = True)
-            self.__cursor.rowtype = dict
+            # self.__cursor = self.__connection.cursor(cursor_class=MySQLCursorDict)
+            self.__cursor = MySQLCursorDict(self.__connection) # ignore error
+            # self.__cursor.rowtype = dict
             return True
         
 
     def close_connection(self) -> None:
         """
-        Closes cursor and connection to the database.
+        Closes cursor and disconnects from the database.
         """
         # Close cursor.
         if self.__cursor is not None:
@@ -84,13 +164,15 @@ class Database:
 
         # Close connection.
         if self.__connection is not None:
-            self.__connection.close()
+            self.__connection.disconnect()
+
 
     def close(self) -> None:
         """
         Alias for `close_connection`.
         """
         self.close_connection()
+
 
     def start_transaction(self) -> None:
         """
@@ -99,12 +181,14 @@ class Database:
         if self.__connection is not None:
             self.__connection.start_transaction()
 
+
     def commit(self) -> None:
         """
         Commits any pending changes to the database.
         """
         if self.__connection is not None:
             self.__connection.commit()
+
 
     def rollback(self) -> None:
         """
@@ -115,8 +199,7 @@ class Database:
 
 
     # Execute an SQL statement on the connected database
-    # NOTE I think this function would work for all SQL queries?
-    # NOTE We may want this to be psydo public
+    @DeprecationWarning
     def __exec_sql(self, sql_statement) -> bool:
 
         # Nothing has failed yet
@@ -136,8 +219,6 @@ class Database:
             else:
                 print("Could not execute SQL statement. Connection not established.")
 
-
-
         # Return success status
         return operation_successful
 
@@ -156,12 +237,12 @@ class Database:
         ddl = self.__sql_statements.get_ddl_sql_functions()
 
         # Connect to the database
-        if not self.__connection:
+        if not self.__connection.is_connected():
             operation_successful = self.connect() and operation_successful
             connected_at_start = False
 
         # Create the database and tables.
-        if self.__connection and self.__cursor is not None:
+        if self.__connection.is_connected() and self.__cursor is not None:
 
             # Loop through the SQL statements for creating tables
             for function in ddl:
@@ -180,7 +261,6 @@ class Database:
                             break
                     else:
                         print(f"Success: {function_name}") # TODO Implement proper logging using the logging library
-
 
         else:
             operation_successful = False
@@ -504,7 +584,7 @@ class Database:
 
 
             # -- Execute the SQL statement --
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
             cursor.execute(query, inputs)
 
 
@@ -539,7 +619,7 @@ class Database:
             - The `name` of the item to add does not already exist in the table.
             """
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "ItemType", name = "Add item type")
             data = (name, unit)
@@ -595,7 +675,7 @@ class Database:
             - The database connection cursor is open.
             """
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "ItemType", name = "Select item type")
             data = (name, unit)
@@ -652,7 +732,7 @@ class Database:
             """
 
             # Get the cursor
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
             if create_parents:
@@ -693,7 +773,7 @@ class Database:
             """
 
             # Get the cursor
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Select {subclass_name.lower()} type")
             data = (name, unit)
@@ -1029,7 +1109,7 @@ class Database:
             - The `name` of the location to add does not already exist in the table.
             """
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Location", name = "Add location")
             data = (name,)
@@ -1059,7 +1139,7 @@ class Database:
             - The `name` of the location to remove is not used elsewhere in the database.
             """
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Location", name = "Delete location")
             data = (name,)
@@ -1088,7 +1168,7 @@ class Database:
             - The database connection cursor is open.
             """
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Location", name = "Select locations")
             data = (name,)
@@ -1122,7 +1202,7 @@ class Database:
             - The `storage_name` of the storage to add does not already exist in the table.
             """
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Add storage")
             data = (storage_name, location_name, capacity)
@@ -1177,7 +1257,7 @@ class Database:
 
             # Get the connection and cursor
             connection:MySQLConnection = self.__parent._Database__connection
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group="Storage", name = f"Delete storage")
             data = (storage_name,)  
@@ -1225,7 +1305,7 @@ class Database:
             - The database connection cursor is open.
             """
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Select storage")
             data = (storage_name, location_name, capacity_low, capacity_high)
@@ -1263,7 +1343,7 @@ class Database:
             """
 
             # Get the cursor
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
             add_storage_exception = self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity).get_exception()
@@ -1346,7 +1426,7 @@ class Database:
 
             # Get the connection and cursor
             connection:MySQLConnection = self.__parent._Database__connection
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name = f"Delete {subclass_name.lower()} storage")
             data = (storage_name,)  
@@ -1406,7 +1486,7 @@ class Database:
             """
 
             # Get the cursor
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Select {subclass_name.lower()} storage")
             data = (storage_name, location_name, capacity_low, capacity_high)  
@@ -1457,7 +1537,7 @@ class Database:
         # ----- User -----
 
         def _add_user(self, name:str) -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Add user")
             data = (name,)
@@ -1477,7 +1557,7 @@ class Database:
 
 
         def add_parent(self, name:str) -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
             
             # Add user if it doesn't already exist
             add_user_result = self._add_user(name=name)
@@ -1499,7 +1579,7 @@ class Database:
 
 
         def add_dependent(self, name:str) -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Add the user if it doesn't already exist
             add_user_result = self._add_user(name=name)
@@ -1525,7 +1605,7 @@ class Database:
             Gets a list of all the users.
 
             """
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select users")
             data = (name,)
@@ -1543,7 +1623,7 @@ class Database:
 
 
         def _select_parents(self, name:str="%") -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Parent", name = "Select parents")
             data = (name,)
@@ -1559,7 +1639,7 @@ class Database:
 
 
         def select_items_used_by_user(self, user_name:str="%") -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select items used by user")
             data = (user_name,)
@@ -1575,7 +1655,7 @@ class Database:
         # ----- Inventory -----
 
         def _change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:dt.datetime) -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Change item quantity")
             data = (new_quantity, item_name, storage_name, timestamp)
@@ -1593,7 +1673,7 @@ class Database:
 
 
         def _select_item_quantity_from_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime) -> float:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             existing_quantity = 0.0
             
@@ -1614,7 +1694,7 @@ class Database:
 
         def _add_item_to_inventory(self, item_name:str, storage_name:str, expiry:dt.datetime|None=None, quantity:float=1.0) -> ActionResult:
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Check item type exists
             select_item_data = self._select_item_type(name=item_name).get_data()
@@ -1655,7 +1735,7 @@ class Database:
                                  timestamp_to:dt.datetime=dt.datetime.max
                                  ) -> ActionResult:
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Escape characters
             item_name.replace("%", "!%")
@@ -1681,7 +1761,7 @@ class Database:
                                        timestamp:dt.datetime
                                        ) -> ActionResult:
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Move item storage location")
             data = (new_storage_name, item_name, old_storage_name, timestamp)
@@ -1699,7 +1779,7 @@ class Database:
                                         storage_name:str,
                                         timestamp:dt.datetime
                                         ) -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Remove item from inventory")
             data = (item_name, storage_name, timestamp)
@@ -1731,7 +1811,7 @@ class Database:
                                       user:str|None
                                       ) -> ActionResult:
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Start a database transaction
             self.__parent.start_transaction()
@@ -1785,7 +1865,7 @@ class Database:
             return ActionResult(success=True)
 
         def add_recipe(self, recipe_name:str, ingredients:list[(str, float)]) -> ActionResult:
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             self.__parent.start_transaction()
 
@@ -1826,7 +1906,7 @@ class Database:
                           expiry:dt.datetime|None=None
                           ) -> ActionResult:
 
-            cursor:MySQLCursor = self.__parent._Database__cursor
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Check quantity is greater than 0
             if quantity <= 0:

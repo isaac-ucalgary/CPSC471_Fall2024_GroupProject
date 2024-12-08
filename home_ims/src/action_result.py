@@ -1,12 +1,18 @@
-from mysql.connector.types import RowType
-from typing import Any
+from mysql.connector.types import ToPythonOutputTypes
 
 class ActionResult:
     """
     A simple object to standardise what a database action will return.
     """
 
-    def __init__(self, success:bool=True, data:list[dict[str, Any]]|str|None=None, error_message:str|None=None, exception:Exception|None=None, warnings:list|None=None) -> None:
+    def __init__(self,
+                 success:bool=True,
+                 data:list[dict[str,
+                 ToPythonOutputTypes] | None]|str|None=None,
+                 error_message:str|None=None,
+                 exception:Exception|None=None,
+                 warnings:list|None=None
+                 ) -> None:
         self.error_occurred:bool = not error_message is None or not exception is None
         self.success:bool = success and not self.error_occurred
 
@@ -21,19 +27,19 @@ class ActionResult:
 
         self.warnings:list|None = warnings
 
-        self.data:list[dict[str,Any]]|str|None = data
+        self.data:list[dict[str,ToPythonOutputTypes]|None]|str|None = data
 
         self.error_message:str|None = error_message
 
         self.exception:Exception|None = exception
 
 
-    def get_data(self) -> list[dict[str,Any]]|str|None:
+    def get_data(self) -> list[dict[str,ToPythonOutputTypes]|None]|str|None:
         return self.data
 
-    def get_data_list(self) -> list[dict[str,Any]]:
+    def get_data_list(self) -> list[dict[str,ToPythonOutputTypes]]:
         if type(self.data) is list:
-            return self.data
+            return [x for x in self.data if x is not None]
         else:
             return []
 
