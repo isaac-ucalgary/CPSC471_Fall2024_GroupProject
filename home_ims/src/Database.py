@@ -1,6 +1,7 @@
 # Build Database Script
 
 # -- Library Imports --
+from time import time
 from mysql.connector import Error, IntegrityError, InterfaceError, MySQLConnection
 from mysql.connector.cursor import MySQLCursorDict
 from types import FunctionType, MethodType
@@ -1731,9 +1732,9 @@ class Database:
         def view_inventory_items(self,
                                  item_name:str="",
                                  storage_name:str="",
-                                 timestamp_from:dt.datetime=dt.datetime.min,
-                                 timestamp_to:dt.datetime=dt.datetime.max,
-                                 include_non_perishable:bool=True
+                                 timestamp_from:dt.datetime|None=None,
+                                 timestamp_to:dt.datetime|None=None,
+                                 include_non_perishable:bool|None=None
                                  ) -> ActionResult:
 
             cursor:MySQLCursorDict = self.__parent._Database__cursor
@@ -1747,6 +1748,13 @@ class Database:
             item_name = f"%{item_name}%"
             storage_name = f"%{storage_name}%"
 
+            # If unset, set non-perishables to be included if no expiry time frame was provided
+            if include_non_perishable is None:
+                include_non_perishable = timestamp_from is None and timestamp_to is None
+
+            # Set min and max values for the expiry range
+            if timestamp_from is None: timestamp_from = dt.datetime.min
+            if timestamp_to is None: timestamp_to = dt.datetime.max
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "View inventory items")
             data = (item_name, storage_name, timestamp_from, timestamp_to, include_non_perishable)
