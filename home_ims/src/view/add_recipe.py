@@ -8,12 +8,10 @@ form_tpl, base_tpl = uic.loadUiType(util.get_ui_path("popup", "add_recipe.ui"))
 entry_form_tpl, entry_base_tpl = uic.loadUiType(util.get_ui_path("popup", "recipe_ingredient.ui"))
 
 def show(window, dba):
-    q = dba.dynamic_query("Food", "Select food type")
-    if q.is_error():
+    food_types = dba.dynamic_query("Food", "Select food type")
+    if food_types.is_error():
         util.open_error_dialog(window)
         return
-
-    food_types = q.get_data_list()
 
     def gen_widget(close_dlg):
         widget = base_tpl()
@@ -25,7 +23,7 @@ def show(window, dba):
             entry_form = entry_form_tpl()
             entry_form.setupUi(entry_widget)
             
-            for t in food_types:
+            for t in food_types.get_data_list():
                 entry_form.itemSelector.addItem(t["name"], t["unit"])
 
             def on_type_change(i):
@@ -63,9 +61,9 @@ def show(window, dba):
                 util.open_error_dialog(window, "No ingredients given.")
                 return
 
-            q2 = dba.add_recipe(recipe_name, ingredients)
-            if not q2.is_success():
-                print(q2.get_exception())
+            add = dba.add_recipe(recipe_name, ingredients)
+            if not add.is_success():
+                print(add.get_exception())
                 util.open_error_dialog(window)
                 return
 

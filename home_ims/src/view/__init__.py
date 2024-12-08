@@ -8,8 +8,12 @@ from view.recipes import RecipesView
 from view.history import HistoryView
 from view.purchases import PurchasesView
 from view.analytics import AnalyticsView
-import view.add_user as add_user
+
+import view.add_item_type as add_item_type
+import view.add_storage as add_storage
 import view.add_location as add_location
+import view.add_user as add_user
+
 from action_result import ActionResult
 from Database import Database
 DB_Actions = Database.DB_Actions
@@ -36,6 +40,7 @@ def show_window(dba:DB_Actions):
         user = window.userSelector.itemText(i)
         privileged = window.userSelector.itemData(i)
 
+        window.addItemTypeBtn.setEnabled(privileged)
         window.addStorageBtn.setEnabled(privileged)
         window.addLocationBtn.setEnabled(privileged)
         window.addUserBtn.setEnabled(privileged)
@@ -66,7 +71,9 @@ def show_window(dba:DB_Actions):
     on_tab_change(0)
     on_user_change(0)
 
-    window.addUserBtn.clicked.connect(lambda: add_user.show(window, dba))
+    window.addItemTypeBtn.clicked.connect(lambda: add_item_type.show(window, dba))
+    window.addStorageBtn.clicked.connect(lambda: add_storage.show(window, dba))
     window.addLocationBtn.clicked.connect(lambda: add_location.show(window, dba))
+    window.addUserBtn.clicked.connect(lambda: add_user.show(window, dba))
 
     window.show()

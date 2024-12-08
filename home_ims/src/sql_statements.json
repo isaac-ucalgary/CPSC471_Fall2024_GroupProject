@@ -118,10 +118,8 @@
             "query": [
                 "CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (",
                 "recipe_name VARCHAR(255) NOT NULL,",
-                "food_name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (recipe_name),",
-                "FOREIGN KEY (recipe_name) REFERENCES Template(name),",
-                "FOREIGN KEY (food_name) REFERENCES Food(name)",
+                "FOREIGN KEY (recipe_name) REFERENCES Template(name)",
                 ");"
             ],
             "order": 9
@@ -1380,13 +1378,12 @@
         "Recipe": {
             "Create recipe": {
                 "inputs": [
-                    "recipe_name",
-                    "food_name"
+                    "recipe_name"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Recipe (recipe_name, food_name)",
-                    "VALUES (%s, %s);"
+                    "INSERT INTO Home_IMS.Recipe (recipe_name)",
+                    "VALUES (%s);"
                 ],
                 "notes": [
                     "Create recipe"
@@ -1449,13 +1446,13 @@
         "Ingredients": {
             "Add ingredient": {
                 "inputs": [
-                    "food_name",
                     "recipe_name",
+                    "food_name",
                     "quantity"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)",
+                    "INSERT INTO Home_IMS.Ingredients (recipe_name, food_name, quantity)",
                     "VALUES (%s, %s, %s);"
                 ],
                 "notes": [

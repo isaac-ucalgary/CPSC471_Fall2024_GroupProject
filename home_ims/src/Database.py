@@ -1883,10 +1883,8 @@ class Database:
                 template_data = (recipe_name,)
                 cursor.execute(stmt_template, template_data)
 
-                # self._add_food_type() # TODO 
-
                 stmt_recipe = self.__parent._Database__sql_statements.get_query(group="Recipe", name="Create recipe")
-                recipe_data = (recipe_name, recipe_name)
+                recipe_data = (recipe_name,)
                 cursor.execute(stmt_recipe, recipe_data)
 
                 stmt_ingredients = self.__parent._Database__sql_statements.get_query(group="Ingredients", name="Add ingredient")
