@@ -39,6 +39,11 @@ While you should always read a script before you run it, for those of you that a
 wget -O- https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh?token=GHSAT0AAAAAAC3JNKMXXD32GIEPG5NEL7Y4Z2XPDZA | bash
 ```
 
+Assuming all went well you should now be able to run it using:
+```
+cd ~/Home_IMS && sh run.sh
+```
+
 
 ## Windows Install
 Good luck.
