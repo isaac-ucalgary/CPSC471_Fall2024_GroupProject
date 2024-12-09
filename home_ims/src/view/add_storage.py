@@ -8,7 +8,7 @@ form_tpl, base_tpl = uic.loadUiType(util.get_ui_path("popup", "add_storage.ui"))
 
 def show(window, dba):
     locations = dba.select_locations()
-    if locations.is_error():
+    if not locations.is_success():
         util.open_error_dialog(window)
         return
 

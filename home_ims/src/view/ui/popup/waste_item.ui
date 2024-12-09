@@ -31,7 +31,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="itemLabel">
+    <widget class="QLabel" name="item">
      <property name="font">
       <font>
        <pointsize>14</pointsize>
@@ -69,7 +69,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="currQuantityLabel">
+       <widget class="QLabel" name="currentQuantity">
         <property name="layoutDirection">
          <enum>Qt::LeftToRight</enum>
         </property>

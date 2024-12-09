@@ -95,7 +95,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="unitLabel">
+       <widget class="QLabel" name="unit">
         <property name="text">
          <string>Units</string>
         </property>

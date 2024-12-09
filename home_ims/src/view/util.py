@@ -33,7 +33,7 @@ def open_error_dialog(window, msg=None):
         form.setupUi(widget)
 
         if msg is not None:
-            form.warningLabel.setText(msg)
+            form.warning.setText(msg)
 
         form.closeBtn.clicked.connect(close)
 

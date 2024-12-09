@@ -22,7 +22,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="QLabel" name="itemType">
+    <widget class="QLabel" name="recipeName">
      <property name="text">
       <string>Recipe name</string>
      </property>
@@ -45,7 +45,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QPushButton" name="throwOutBtn">
+    <widget class="QPushButton" name="scheduleBtn">
      <property name="text">
       <string>Schedule</string>
      </property>

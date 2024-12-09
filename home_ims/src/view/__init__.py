@@ -55,6 +55,7 @@ def show_window(dba:DB_Actions):
         tab = window.tabs.widget(i).objectName()
         match tab:
             case "recipesTab":
+                recipes_tab.rebuild_ui()
                 pass
             case "mealsTab":
                 pass
@@ -67,11 +68,11 @@ def show_window(dba:DB_Actions):
             case _:
                 inventory_tab.rebuild_ui()
 
-    window.tabs.currentChanged.connect(on_tab_change)
     window.tabs.setCurrentIndex(0)
     on_tab_change(0)
     on_user_change(0)
 
+    window.tabs.currentChanged.connect(on_tab_change)
     window.shoppingListBtn.clicked.connect(lambda: shopping_list.show(window, dba))
     window.addItemTypeBtn.clicked.connect(lambda: add_item_type.show(window, dba))
     window.addStorageBtn.clicked.connect(lambda: add_storage.show(window, dba))

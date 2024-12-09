@@ -358,7 +358,7 @@ class Database:
             for storage in freezer_storages:
                 self.db_actions.add_freezer_storage(**storage)
 
-            parents = [ "John", "Penny", "Jaquise" ]
+            parents = [ "John (Admin)", "Penny (Admin)", "Jaquise (Admin)" ]
             dependents = [ "Harry", "Han Solo", "Sarah" ]
             for parent in parents:
                 self.db_actions.add_parent(name=parent)

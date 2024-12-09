@@ -190,7 +190,7 @@
                 "quantity FLOAT NOT NULL,",
                 "PRIMARY KEY (food_name, recipe_name),",
                 "FOREIGN KEY (food_name) REFERENCES Food(name),",
-                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name),",
+                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE,",
                 "CHECK (quantity > 0)",
                 ");"
             ],
@@ -325,7 +325,7 @@
     ],
     "dml/dql": {
         "MealSchedule": {
-            "Create a meal schedule": {
+            "Schedule a meal": {
                 "inputs": [
                     "recipe_name",
                     "timestamp",
@@ -338,10 +338,10 @@
                     "VALUES (%s, %s, %s, %s);"
                 ],
                 "notes": [
-                    "Create a meal schedule"
+                    "Schedule a meal"
                 ]
             },
-            "Delete a meal schedule": {
+            "Delete a meal": {
                 "inputs": [
                     "recipe_name",
                     "timestamp"
@@ -353,10 +353,10 @@
                     "AND timestamp = %s;"
                 ],
                 "notes": [
-                    "Delete a meal schedule"
+                    "Delete a meal"
                 ]
             },
-            "Select meal schedules": {
+            "Select meals": {
                 "inputs": [
                     "recipe_name",
                     "timestamp_from",
@@ -379,7 +379,7 @@
                     "AND meal_type LIKE %s;"
                 ],
                 "notes": [
-                    "Select meal schedules"
+                    "Select meals"
                 ]
             }
         },
@@ -1412,7 +1412,7 @@
                 "query": [
                     "SELECT R.recipe_name",
                     "FROM Home_IMS.Recipe AS R",
-                    "WHERE R.recipe_name LIKE %s;"
+                    "WHERE R.recipe_name LIKE %s ESCAPE '!';"
                 ],
                 "notes": [
                     "View recipes"

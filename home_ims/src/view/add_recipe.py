@@ -7,9 +7,9 @@ from view import util
 form_tpl, base_tpl = uic.loadUiType(util.get_ui_path("popup", "add_recipe.ui"))
 entry_form_tpl, entry_base_tpl = uic.loadUiType(util.get_ui_path("popup", "recipe_ingredient.ui"))
 
-def show(window, dba):
+def show(window, dba, refresh):
     food_types = dba.dynamic_query("Food", "Select food type")
-    if food_types.is_error():
+    if not food_types.is_success():
         util.open_error_dialog(window)
         return
 
@@ -28,8 +28,8 @@ def show(window, dba):
 
             def on_item_change(i):
                 unit = entry_form.itemSelector.itemData(i)
-                entry_form.unitLabel.setVisible(bool(unit))
-                entry_form.unitLabel.setText(unit)
+                entry_form.unit.setVisible(bool(unit))
+                entry_form.unit.setText(unit)
 
             on_item_change(0)
 
@@ -70,7 +70,9 @@ def show(window, dba):
                 return
 
             close_dlg()
+            refresh()
 
+        form.scrollArea.horizontalScrollBar().setEnabled(False)
         form.addIngredientBtn.clicked.connect(add_ingredient)
         form.cancelBtn.clicked.connect(close_dlg)
         form.addBtn.clicked.connect(create)

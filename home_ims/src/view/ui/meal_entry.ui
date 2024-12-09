@@ -45,7 +45,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QPushButton" name="throwOutBtn">
+    <widget class="QPushButton" name="consumeBtn">
      <property name="text">
       <string>Consume</string>
      </property>

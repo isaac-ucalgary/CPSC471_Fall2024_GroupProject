@@ -17,20 +17,23 @@ class InventoryView:
     def __init__(self, window, dba:DB_Actions):
         self.window = window
         self.dba:DB_Actions = dba
-        self.current_user = None
 
-        self.window.addItemBtn.clicked.connect(lambda: add_inventory.show(self.window, self.dba))
-        self.window.refreshBtn.clicked.connect(self.update_inv_view)
+        self.window.addItemBtn.clicked.connect(
+            lambda: add_inventory.show(self.window, self.dba, self.update_view)
+        )
+        self.window.refreshInventoryBtn.clicked.connect(self.update_view)
         self.window.filterExpiry.checkStateChanged.connect(
             lambda s: self.window.expiryInput.setVisible(s == Qt.CheckState.Checked)
         )
 
         self.window.filterExpiry.setCheckState(Qt.CheckState.Unchecked)
-        self.window.expiryInput.setDateTime(QDateTime.currentDateTime())
         self.window.expiryInput.setVisible(False)
 
     def rebuild_ui(self):
+        self.window.inventorySearch.clear()
         self.window.storageSelector.clear()
+        self.window.filterExpiry.setCheckState(Qt.CheckState.Unchecked)
+        self.window.expiryInput.setDateTime(QDateTime.currentDateTime())
 
         storages = self.dba.select_storage()
         if not storages.is_success():
@@ -43,9 +46,9 @@ class InventoryView:
             location_name = s["location_name"]
             self.window.storageSelector.addItem(f"{storage_name} ({location_name})", s["storage_name"])
 
-        self.update_inv_view()
+        self.update_view()
 
-    def update_inv_view(self):
+    def update_view(self):
         expiry_threshold = None
         if self.window.filterExpiry.checkState() == Qt.CheckState.Checked:
             expiry_threshold = self.window.expiryInput.dateTime().toPyDateTime()
@@ -89,8 +92,6 @@ class InventoryView:
         self.window.inventoryView.setWidget(container)
 
     def configure_user(self, user, privileged):
-        self.current_user = user
-
         self.window.addItemBtn.setEnabled(privileged)
         for widget in self.window.inventoryView.widget().findChildren(QWidget, "removeBtn"):
             widget.setEnabled(privileged)
@@ -106,10 +107,10 @@ class InventoryView:
             else:
                 form.expiration.hide()
 
-            form.itemLabel.setText(entry["item_name"])
-            form.quantityLabel.setText(util.format_quantity(entry["quantity"], entry["unit"]))
-            form.storageLabel.setText(entry["storage_name"])
-            form.locationLabel.setText(entry["location_name"])
+            form.item.setText(entry["item_name"])
+            form.quantity.setText(util.format_quantity(entry["quantity"], entry["unit"]))
+            form.storage.setText(entry["storage_name"])
+            form.location.setText(entry["location_name"])
             form.closeBtn.clicked.connect(close_dlg)
 
             return widget
@@ -151,11 +152,11 @@ class InventoryView:
                     util.open_error_dialog(self.window)
                     return
 
-                self.update_inv_view() # TODO Update only this entry.
+                self.update_view() # TODO Update only this entry.
                 close_dlg()
 
-            form.itemLabel.setText(entry["item_name"])
-            form.currQuantityLabel.setText(util.format_quantity(entry["quantity"], entry["unit"]))
+            form.item.setText(entry["item_name"])
+            form.currentQuantity.setText(util.format_quantity(entry["quantity"], entry["unit"]))
             form.cancelBtn.clicked.connect(close_dlg)
             form.consumeBtn.clicked.connect(consume)
 
@@ -189,11 +190,11 @@ class InventoryView:
                     util.open_error_dialog(self.window)
                     return
 
-                self.update_inv_view() # TODO Update only this entry.
+                self.update_view() # TODO Update only this entry.
                 close_dlg()
 
-            form.itemLabel.setText(entry["item_name"])
-            form.currQuantityLabel.setText(util.format_quantity(entry["quantity"], entry["unit"]))
+            form.item.setText(entry["item_name"])
+            form.currentQuantity.setText(util.format_quantity(entry["quantity"], entry["unit"]))
             form.cancelBtn.clicked.connect(close_dlg)
             form.wasteBtn.clicked.connect(waste)
 
@@ -219,10 +220,10 @@ class InventoryView:
                     util.open_error_dialog(self.window)
                     return
 
-                self.update_inv_view() # TODO Update only this entry.
+                self.update_view() # TODO Update only this entry.
                 close_dlg()
 
-            form.itemLabel.setText(entry["item_name"])
+            form.item.setText(entry["item_name"])
             form.cancelBtn.clicked.connect(close_dlg)
             form.deleteBtn.clicked.connect(delete)
 
