@@ -1,7 +1,7 @@
 # Build Database Script
 
 # -- Library Imports --
-from time import time
+from typing_extensions import CapsuleType
 from mysql.connector import Error, IntegrityError, InterfaceError, MySQLConnection
 from mysql.connector.cursor import MySQLCursorDict
 from types import FunctionType, MethodType
@@ -1315,7 +1315,7 @@ class Database:
         # ----- STORAGE SUBCLASSES -----
 
 
-        def _add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+        def _add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
             """
             Adds a storage subclass record to the database.
             Also creates the respective storage record as well if
@@ -1343,9 +1343,10 @@ class Database:
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Create the item type if it doesn't exist
-            add_storage_exception = self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity).get_exception()
-            if add_storage_exception not in [IntegrityError, None]:
-                return ActionResult(error_message="Failed to create storage", exception=add_storage_exception)
+            if create_parents:
+                add_storage_exception = self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity).get_exception()
+                if add_storage_exception not in [IntegrityError, None]:
+                    return ActionResult(error_message="Failed to create storage", exception=add_storage_exception)
             
 
             # Create the subclass type
@@ -1360,50 +1361,67 @@ class Database:
                 return ActionResult()
 
 
-        def add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+        def _add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
             return self._add_storage_subclass(
                 subclass_name="Dry",
                 storage_name=storage_name,
                 location_name=location_name,
-                capacity=capacity
+                capacity=capacity,
+                create_parents=create_parents
+            )
+
+        def add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+            return self._add_dry_storage(
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity,
+                create_parents=True
             )
 
     
 
-        def _add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+        def _add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
             return self._add_storage_subclass(
                 subclass_name="Appliance",
                 storage_name=storage_name,
                 location_name=location_name,
-                capacity=capacity
+                capacity=capacity,
+                create_parents=create_parents
             )
+
 
         def add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             return self._add_appliance_storage(
                     storage_name=storage_name,
                     location_name=location_name,
-                    capacity=capacity
+                    capacity=capacity,
+                    create_parents=True
             )
 
-        def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+
+        def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
             # Add the appliance if it doesn't already exist
-            add_appliance_exception = self._add_appliance_storage(
-                        storage_name=storage_name,
-                        location_name=location_name,
-                        capacity=capacity
-                ).get_exception()
-            if add_appliance_exception not in [IntegrityError, None]:
-                return ActionResult(error_message="Failed to appliance storage", exception=add_appliance_exception)
+            if create_parents:
+                add_appliance_exception = self._add_appliance_storage(
+                            storage_name=storage_name,
+                            location_name=location_name,
+                            capacity=capacity,
+                            create_parents=True
+                    ).get_exception()
+                if add_appliance_exception not in [IntegrityError, None]:
+                    return ActionResult(error_message="Failed to appliance storage", exception=add_appliance_exception)
 
             # Add the subclass
             return self._add_storage_subclass(
                 subclass_name=subclass_name,
                 storage_name=storage_name,
                 location_name=location_name,
-                capacity=capacity
+                capacity=capacity,
+                create_parents=False
             )
 
-        def add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+
+        def _add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
             return self._add_appliance_storage_subclass(
                 subclass_name="Fridge",
                 storage_name=storage_name,
@@ -1411,12 +1429,31 @@ class Database:
                 capacity=capacity
             )
 
-        def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+
+        def add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+            return self._add_fridge_storage(
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity,
+                create_parents=True
+            )
+
+
+        def _add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
             return self._add_appliance_storage_subclass(
                 subclass_name="Freezer",
                 storage_name=storage_name,
                 location_name=location_name,
-                capacity=capacity
+                capacity=capacity,
+                create_parents=create_parents
+            )
+
+        def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+            return self._add_freezer_storage(
+                storage_name=storage_name,
+                location_name=location_name,
+                capacity=capacity,
+                create_parents=True
             )
 
         def _delete_storage_subclass(self, subclass_name:str, storage_name:str) -> ActionResult:
