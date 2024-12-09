@@ -1,3 +1,4 @@
+
 from typing import Any
 
 class ActionResult:
@@ -27,17 +28,21 @@ class ActionResult:
 
         self.warnings:list|None = warnings
 
+
         self.data:list[dict[str,Any]|None]|str|None = data
+
 
         self.error_message:str|None = error_message
 
         self.exception:Exception|None = exception
 
 
+
     def get_data(self) -> list[dict[str,Any]|None]|str|None:
         return self.data
 
     def get_data_list(self) -> list[dict[str,Any]]:
+
         if type(self.data) is list:
             return [x for x in self.data if x is not None]
         else:

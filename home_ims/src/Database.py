@@ -388,6 +388,7 @@ class Database:
 
             parents = [ "John (Admin)", "Penny (Admin)", "Jaquise (Admin)" ]
             dependents = [ "Harry", "Han Solo", "Sarah" ]
+
             for parent in parents:
                 self.db_actions.add_parent(name=parent)
             for dep in dependents:
@@ -2366,7 +2367,7 @@ class Database:
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Add user if it doesn't already exist
-            add_user_result = self._add_user(name=name)
+            add_user_result = self._add_user(name=name + " (Admin)")
             if add_user_result.get_exception() not in [IntegrityError, None]:
                 return add_user_result
 
