@@ -52,10 +52,8 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Location (
 
 CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (
   recipe_name VARCHAR(255) NOT NULL,
-  food_name VARCHAR(255) NOT NULL,
-  PRIMARY KEY (recipe_name, food_name),
-  FOREIGN KEY (recipe_name) REFERENCES Template(name),
-  FOREIGN KEY (food_name) REFERENCES Food(name)
+  PRIMARY KEY (recipe_name),
+  FOREIGN KEY (recipe_name) REFERENCES Template(name)
 );
 
 CREATE TABLE IF NOT EXISTS Home_IMS.MealSchedule (
@@ -91,7 +89,7 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Ingredients (
   quantity FLOAT NOT NULL,
   PRIMARY KEY (food_name, recipe_name),
   FOREIGN KEY (food_name) REFERENCES Food(name),
-  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name),
+  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE,
   CHECK (quantity > 0)
 );
 
@@ -175,16 +173,16 @@ CREATE TABLE IF NOT EXISTS Home_IMS.History (
 --------------------
 --- MealSchedule ---
 --------------------
--- Create a meal schedule --
+-- Schedule a meal --
 INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)
 VALUES (%s, %s, %s, %s);
 
--- Delete a meal schedule --
+-- Delete a meal --
 DELETE FROM Home_IMS.MealSchedule
 WHERE recipe_name = %s
       AND timestamp = %s;
 
--- Select meal schedules --
+-- Select meals --
 SELECT recipe_name, timestamp, location_name, meal_type
 FROM Home_IMS.MealSchedule
 WHERE recipe_name LIKE %s
@@ -251,11 +249,9 @@ INSERT INTO Home_IMS.Food (name)
 VALUES (%s);
 
 -- Select food type --
-SELECT I.name, I.unit
-FROM Home_IMS.ItemType AS I
-JOIN Home_IMS.Food AS C ON I.name = C.name
-WHERE I.name LIKE %s
-      AND I.unit LIKE %s;
+SELECT T.name, T.unit
+FROM Home_IMS.ItemType AS T
+JOIN Home_IMS.Food AS F ON T.name = F.name;
 
 
 ---------------
@@ -398,7 +394,7 @@ VALUES (%s);
 
 -- Select users --
 SELECT name, EXISTS (
-          SELECT *
+          SELECT P.name
           FROM Home_IMS.Parent AS P
           WHERE P.name = U.name
        ) AS is_parent
@@ -417,6 +413,11 @@ WHERE user_name = %s;
 -- Add parent --
 INSERT INTO Home_IMS.Parent (name)
 VALUES (%s);
+
+-- Select parents --
+SELECT name
+FROM Home_IMS.Parent
+WHERE name LIKE %s;
 
 
 -----------------
@@ -438,10 +439,10 @@ JOIN Home_IMS.ItemType AS T ON H.item_name = T.name;
 -- Select usage statistics --
 SELECT H.item_name,
        T.unit,
-       SUM(CASE WHEN H.wasted = false THEN H.quantity END) AS amt_used,
-       SUM(CASE WHEN H.wasted = true THEN H.quantity END) AS amt_wasted,
+       SUM(CASE WHEN H.wasted = false THEN H.quantity ELSE 0 END) AS amt_used,
+       SUM(CASE WHEN H.wasted = true THEN H.quantity ELSE 0 END) AS amt_wasted,
        (
-           SELECT SUM(P.price)
+           SELECT IFNULL(SUM(P.price), 0)
            FROM Home_IMS.Purchase AS P
            WHERE P.item_name = H.item_name
        ) AS money_spent
@@ -573,23 +574,29 @@ WHERE item_name LIKE %s
       AND parent_name LIKE %s;
 
 
+----------------
+--- Template ---
+----------------
+-- Create template --
+INSERT INTO Home_IMS.Template (name)
+VALUES (%s);
+
+
 --------------
 --- Recipe ---
 --------------
 -- Create recipe --
-INSERT INTO Home_IMS.Recipe (recipe_name, food_name)
-VALUES (%s, %s);
+INSERT INTO Home_IMS.Recipe (recipe_name)
+VALUES (%s);
 
 -- Delete recipe --
 DELETE FROM Home_IMS.Recipe
-WHERE recipe_name = %s
-      AND food_name = %s;
+WHERE recipe_name = %s;
 
 -- View recipes --
-SELECT R.recipe_name, R.food_name
+SELECT R.recipe_name
 FROM Home_IMS.Recipe AS R
-WHERE R.recipe_name LIKE %s
-      AND R.food_name LIKE %s;
+WHERE R.recipe_name LIKE %s ESCAPE '!';
 
 -- Get estimated recipe cost --
 SELECT R.recipe_name, SUM(P.avg_item_price) as cost
@@ -608,7 +615,7 @@ WHERE R.recipe_name = I.recipe_name
 --- Ingredients ---
 -------------------
 -- Add ingredient --
-INSERT INTO Home_IMS.Ingredients (food_name, recipe_name, quantity)
+INSERT INTO Home_IMS.Ingredients (recipe_name, food_name, quantity)
 VALUES (%s, %s, %s);
 
 -- Remove ingredient --
@@ -656,12 +663,14 @@ WHERE I.item_name = %s
       AND I.timestamp = %s;
 
 -- View inventory items --
-SELECT I.item_name, I.storage_name, I.timestamp, I.expiry, I.quantity, T.unit
+SELECT I.item_name, I.storage_name, S.location_name, I.timestamp, I.expiry, I.quantity, T.unit
 FROM Home_IMS.Inventory AS I
 JOIN Home_IMS.ItemType AS T ON I.item_name = T.name
+JOIN Home_IMS.Storage AS S ON S.storage_name = I.storage_name
 WHERE I.item_name LIKE %s ESCAPE '!'
       AND I.storage_name LIKE %s ESCAPE '!'
-      AND I.timestamp BETWEEN %s AND %s;
+      AND (I.expiry BETWEEN %s AND %s OR (I.expiry IS NULL AND %s))
+      ORDER BY ISNULL(I.expiry), I.expiry;
 
 -- Select item quantity from inventory --
 SELECT I.quantity
@@ -669,3 +678,30 @@ FROM Home_IMS.Inventory AS I
 WHERE I.item_name = %s
       AND I.storage_name = %s
       AND I.timestamp = %s;
+
+
+---------------------
+--- Shopping List ---
+---------------------
+-- Select missing ingredients --
+SELECT Required.food_name, Required.unit, Required.total - IFNULL(Stock.total, 0) AS quantity
+FROM (
+       SELECT I.food_name, T.unit, SUM(I.quantity) as total
+       FROM Home_IMS.MealSchedule AS M
+       JOIN Home_IMS.Ingredients AS I ON I.recipe_name = M.recipe_name
+       JOIN Home_IMS.ItemType AS T ON I.food_name = T.name
+       WHERE M.timestamp <= %s
+       GROUP BY I.food_name
+     ) AS Required
+      JOIN (
+       SELECT S.item_name, SUM(S.quantity) AS total
+       FROM Home_IMS.Inventory AS S
+       WHERE EXISTS (
+               SELECT * FROM Home_IMS.MealSchedule AS M
+               JOIN Home_IMS.Ingredients AS I ON M.recipe_name = I.recipe_name
+               WHERE M.timestamp <= %s
+                     AND I.food_name = S.item_name
+             )
+       GROUP BY S.item_name
+     ) AS Stock ON Required.food_name = Stock.item_name
+     HAVING quantity > 0;
