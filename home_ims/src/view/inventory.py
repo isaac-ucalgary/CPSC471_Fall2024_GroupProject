@@ -40,9 +40,6 @@ class InventoryView:
         self.update_inv_view()
 
     def update_inv_view(self):
-        c_layout = self.window.inventoryEntries.layout()
-        while c_layout.takeAt(0) is not None: pass
-
         expiry_threshold = None
         if self.window.filterExpiry.checkState() == Qt.CheckState.Checked:
             expiry_threshold = self.window.expiryInput.dateTime().toPyDateTime()
@@ -56,6 +53,12 @@ class InventoryView:
         if not inv.is_success():
             util.open_error_dialog(self.window)
             return
+
+        c_layout = QVBoxLayout()
+        container = QWidget()
+        container.setObjectName("inventoryEntries")
+        container.setStyleSheet("#inventoryEntries{background-color:#00ffffff;}")
+        container.setLayout(c_layout)
 
         for entry in inv.get_data_list():
             widget = entry_base_tpl()
@@ -76,6 +79,8 @@ class InventoryView:
             c_layout.addWidget(widget)
 
         c_layout.addStretch()
+
+        self.window.inventoryView.setWidget(container)
 
     def configure_user(self, user, privileged):
         self.current_user = user
