@@ -1,14 +1,11 @@
-# Build Database Script
-
 # -- Library Imports --
 from mysql.connector import Error, IntegrityError, InterfaceError, MySQLConnection
 from mysql.connector.cursor import MySQLCursorDict
 from types import FunctionType, MethodType
-from typing import Any
 import datetime as dt
 import inspect
-import mysql.connector
 import warnings
+
 
 # -- Local Imports --
 from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
@@ -18,7 +15,52 @@ from action_result import ActionResult
 
 
 class Database:
+    """
+    A `Database` object is created to interact with a mysql style database.
 
+    It connects to a database with provided parameters or those supplied in the `env.py` file 
+    located in the same directory.
+    A `secrets.py` file is also required to exist and be in the same directory as this class
+    and it must contain a variable called `MARIADB_PASSWORD` which is the default password
+    to use when connecting to the database.
+
+    Requirements
+    ------------
+    `env.py`
+        `MARIADB_HOST` : str
+            The IP address or URL of the server of the database to connect to.
+
+        `MARIADB_PORT` : int
+            The port number of the database service running on the server.
+
+        `MARIADB_DATABASE_NAME` : str
+            The name of the database to use.
+
+        `MARIADB_USER` : str
+            The username used to connect to the database.
+
+    `secrets.py`
+        `MARIADB_PASSWORD` : str
+            The password for the user that will be used to connect to the database.
+
+    Attributes
+    ----------
+    `db_host` : str
+        The IP address or URL of the database.
+
+    `db_port` : int
+        The port number that the database is connected on.
+
+    `db_user` : str
+        The username used to connect to the database.
+
+    `db_name` : str
+        The name of the database.
+
+    `db_actions` : DB_Actions
+        The instance of database actions at the disposal of this Database object 
+        to use.
+    """
 
     def __init__(self,
                  db_host:str=MARIADB_HOST,
@@ -36,18 +78,23 @@ class Database:
         `db_host` : str
             The host address or url of the database to connect to.
             Defaults to the value in the env file.
+
         `db_port` : int
             The port of the database to connect to.
             Default in env.
+
         `db_user` : str
             The user name to connect to the database as.
             Default in env.
+
         `db_password` : str
             The password to use to connect to the database.
             Default in env.
+
         `db_name` : str
             The name of the database to use.
             Default in env.
+
         `auto_connect` : bool
             Whether to connect to the database as part of this initialization.
             Default True.
@@ -83,76 +130,51 @@ class Database:
 
 
 
-
-    # Connect to database
-    # Creates a connection and a cursor
     def connect(self, attempts:int=4, delay:int=0) -> bool:
         """
+        Connects (or reconnects) to the database using the values provided in
+        the initialization.
+        Also creates a new `Cursor` object from the new connection to be
+        able to interact with the database.
+
+
         Parameters
         ----------
         `attempts` : int
             The number of times to retry connecting to the database upon 
             connection failure.
+
         `delay` : int
             The time to wait inbetween retry attempts in seconds (integer only).
+
 
         Returns
         -------
         bool
-            The status of if the connection was successful
+            The status of if the connection was successful.
         """
-
-        # # Try to (re)connect to the database
-        # if not self.__connection.is_connected():
-        #     try:
-        #         self.__connection.reconnect(attempts=attempts, delay=delay)
-        #     except InterfaceError as e:
-        #         print("Failed to connect to the database")
-        #         return False
-
-        # # Reinstate the cursor object to be fresh
-        # if self.__connection.is_connected():
-        #     self.__cursor.close()
-        #     self.__cursor = MySQLCursorDict(self.__connection) # Ignore error
-        # else:
-        #     print("Failed to connect to the database")
-        #     return False
-
-
-        # return self.__connection.is_connected()
-
         # Try to connect to the database.
         try:
-            self.__connection.connect(
-                host=self.db_host,
-                port=self.db_port,
-                user=self.db_user,
-                password=self.db_password,
-                collation="utf8mb4_unicode_ci",
-                autocommit=True,
-                get_warnings=True,
-                time_zone="MST"
-            )
-        except Error as e:
+            self.__connection.connect(**self.DB_CONN_CONFIG)
+        except Error:
             try:
                 # Terrible workaround for annoying connector code.
                 self.__connection.reconnect(attempts=attempts-1, delay=delay)
-            except InterfaceError as e:
+            except InterfaceError:
                 print("Failed to connect to the database")
                 return False
 
         print("Connected to the database")
 
         # Make the cursor on the newly created connection.
-        # self.__cursor = self.__connection.cursor(cursor_class=MySQLCursorDict)
         self.__cursor = MySQLCursorDict(self.__connection) # ignore error
-        # self.__cursor.rowtype = dict
         return True
-        
+
+
 
     def close_connection(self) -> None:
         """
-        Closes cursor and disconnects from the database.
+        Closes the cursor and disconnects from the database.
         """
         # Close cursor.
         if self.__cursor is not None:
@@ -163,11 +185,13 @@ class Database:
             self.__connection.disconnect()
 
 
+
     def close(self) -> None:
         """
-        Alias for `close_connection`.
+        Alias for `close_connection()`.
         """
         self.close_connection()
+
 
 
     def start_transaction(self) -> None:
@@ -178,49 +202,43 @@ class Database:
             self.__connection.start_transaction()
 
 
+
     def commit(self) -> None:
         """
         Commits any pending changes to the database.
+        Only has effect if `start_transaction()` was already
+        called. Calling `commit()` will also end said
+        transaction.
         """
         if self.__connection is not None:
             self.__connection.commit()
 
 
+
     def rollback(self) -> None:
         """
         Rolls back any pending changes to the database.
+        Only applies if `start_transaction()` was already 
+        called. Calling `rollback()` will also end said
+        transaction.
         """
         if self.__connection is not None:
             self.__connection.rollback()
 
 
-    # Execute an SQL statement on the connected database
-    @DeprecationWarning
-    def __exec_sql(self, sql_statement) -> bool:
-
-        # Nothing has failed yet
-        operation_successful:bool = True
-
-        if self.__cursor is not None:
-            try:
-                self.__cursor.execute(sql_statement)
-            except Exception as e:
-                print(e)
-                operation_successful = False # Record failure
-
-        else:
-            operation_successful = False # Record failure
-            if self.__connection is None:
-                print("Could not execute SQL statement. Connection and cursor not established.")
-            else:
-                print("Could not execute SQL statement. Connection not established.")
-
-        # Return success status
-        return operation_successful
-
-
-
     def build_database(self) -> bool:
+        """
+        Creates the database and all of the tables required for the app to operate.
+        If the database or tables already exist it will not overwrite them but if 
+        any are missing it will try to create them in the missing space even if
+        the already existing tables do not satisfy the requirements for the new 
+        table's existence. 
+        If the current state of the database is degraded, it is recommended to
+        delete the database prior to calling this function. Before doing so, back
+        any data first. While this method is non-destructive, deleting the database
+        is. There is no repair method so this is the only way to regenerate 
+        the database to its intended state.
+        """
 
         # Catch warnings as errors
         warnings.filterwarnings("error")
@@ -274,6 +292,16 @@ class Database:
 
 
     def build_demo_database(self) -> None:
+        """
+        THIS IS A DESTRUCTIVE OPERATION!
+
+        This method will drop the database along with all it's tables
+        and data and then rebuild it as new.
+        It will then populate the fresh database with default values.
+
+        This is useful for demonstrating the application or for 
+        testing purposes.
+        """
         print("This will DROP the whole database and create the database from new and populate it with demo data.")
         print("\033[91mALL DATA WILL BE LOST\033[0m")
         accept_message = "RESET TO DEMO"
@@ -394,10 +422,10 @@ class Database:
 
 
 
-        
 
 
-    
+
+
 
 
     # ---------------------------- #
@@ -405,8 +433,24 @@ class Database:
     # ---------------------------- #
 
     class DB_Actions(object):
+        """
+        A Collection of methods used to interact with the database.
+        This class requires that the json file consisting of all of 
+        the sql statements exists and are correct.
+        """
 
         def __init__(self, parent):
+            """
+            Creates a collection of database actions for the `parent` 
+            `Database` object to use.
+
+            All public functions will be pre_wrapped with error handling 
+            as well as a connection check. 
+            If the connection check fails, i.e. the connection to the 
+            database was lost or was not initialized yet, then the
+            action will not be run. It is the callers responsablity to 
+            connect to the database prior to using a database action.
+            """
 
             self.__parent = parent
 
@@ -416,7 +460,10 @@ class Database:
 
             def pre_func() -> bool:
                 """
-                The function to run before all class methods.
+                The function to run before all public class methods.
+
+                Checks that the parent database is connected prior
+                to letting the function run.
 
                 Returns
                 -------
@@ -455,13 +502,13 @@ class Database:
             def replace_func(name:str) -> None:
                 """
                 Replaces the function of name "name" with pre and post function functions.
-                
+
                 If the name is not a present attribute of self or is not a function then 
                 this function will have no result and will continue silently.
-                
+
                 Parameters
                 ----------
-                name : str
+                `name` : str
                     The name of the function to replace in self.
                 """
 
@@ -483,15 +530,6 @@ class Database:
                             result = ActionResult(error_message="Function pre-conditions were not met. Function aborted.")
                         post_func()
 
-                        # # Insure the resulting value is a ActionResult object
-                        # if result is None:
-                        #     result = ActionResult()
-                        # elif type(result) is str or type(result) is list:
-                        #     result = ActionResult(data=result)
-                        # else:
-                        #     result = ActionResult(error_message="Function did not return the correct type", 
-                        #                               exception=TypeError(f"Data value was of incorrect type {type(result)}"))
-
                         return result
 
                     # Set the new wrapped function in place of the unwrapped function
@@ -506,11 +544,11 @@ class Database:
 
                 # Check that the member is a function and is non-dunder
                 if (type(value) == FunctionType 
-                        and not name.startswith("_")
-                        and not name.endswith("__")
+                    and not name.startswith("_")
+                    and not name.endswith("__")
                         ):
                     replace_func(name) # Replace the function
-            
+
 
 
 
@@ -526,8 +564,10 @@ class Database:
             ----------
             `group` : str
                 The group that the desired query is apart of.
+
             `function_name` : str
                 The name of the sql function to execute.
+
             `**kargs`
                 See below
 
@@ -540,10 +580,12 @@ class Database:
             - `function_name` is a valid function name within the `group`.
             - All of the required inputs for the function are provided in `**kargs`.
 
+
             Keyword Arguments
             -----------------
             Set the keywords for the inputs defined for the sql function defined in
             the sql_statements.json file.
+
 
             Returns
             -------
@@ -601,12 +643,14 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to add.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -627,18 +671,22 @@ class Database:
             else:
                 return ActionResult()
 
+
+
         def add_item_type(self, name:str, unit:str) -> ActionResult:
             """
             Adds an item type record to the database.
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to add.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -649,6 +697,7 @@ class Database:
             return self._add_item_type(name, unit)
 
 
+
         def _select_item_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects item type records from the database.
@@ -656,14 +705,16 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to search for.
                 Example: "Milk"
                 Example: "M%"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
                 Example: "%"
+
 
             Assumptions
             -----------
@@ -681,6 +732,7 @@ class Database:
             return ActionResult(data=cursor.fetchall())
 
 
+
         def select_item_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects item type records from the database.
@@ -688,14 +740,16 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to search for.
                 Example: "Milk"
                 Example: "M%"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
                 Example: "%"
+
 
             Assumptions
             -----------
@@ -703,7 +757,8 @@ class Database:
             - The database connection cursor is open.
             """
             return self._select_item_type(name, unit)
-            
+
+
 
         def _add_item_type_subclass(self, subclass_name:str, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
@@ -713,12 +768,17 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `subclass_name` : str
+                The name of the subclass table to create the item in.
+
+            `name` : str
                 The name of the item to add.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -749,18 +809,24 @@ class Database:
                 return ActionResult()
 
 
+
         def _select_item_type_subclass(self, subclass_name:str, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects records of an item type subclass from the database.
 
             Parameters
             ----------
-            name : str
+            `subclass_name` : str
+                The name of the subclass table to select the item from.
+
+            `name` : str
                 The name of the item to search for.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -790,12 +856,17 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to add.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
 
             Assumptions
             -----------
@@ -811,6 +882,7 @@ class Database:
             )
 
 
+
         def add_consumable_type(self, name:str, unit:str="") -> ActionResult:
             """
             Adds a consumable type record to the database.
@@ -819,12 +891,14 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to add.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -835,18 +909,21 @@ class Database:
             return self._add_consumable_type(name, unit, True)
 
 
+
         def _select_consumable_type(self, name:str="%", unit:str="%") -> ActionResult:
             """
             Selects consumable type records from the database.
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to search for.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -860,6 +937,7 @@ class Database:
             )
 
 
+
         def _add_consumable_type_subclass(self, subclass_name:str, name:str, unit:str="", create_parents:bool=True) -> ActionResult:
             """
             Adds a consumable type subclass record to the database.
@@ -869,12 +947,20 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `subclass_name` : str
+                The name of the subclass to create an item for.
+
+            `name` : str
                 The name of the item to add.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
 
             Assumptions
             -----------
@@ -908,12 +994,17 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to add.
                 Example: "Hammer"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "" (What are you measuring hammers in?)
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
 
             Assumptions
             -----------
@@ -927,8 +1018,34 @@ class Database:
                 unit=unit,
                 create_parents=create_parents
             )
+
+
+
         def add_durable_type(self, name:str, unit:str="") -> ActionResult:
+            """
+            Adds a durable type record to the database.
+            Also creates the respective item type record as well if
+            it doesn't already exist using the optional `unit` option. 
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the item to add.
+                Example: "Hammer"
+
+            `unit` : str
+                The unit that the item quantity is measured in.
+                Example: "" (What are you measuring hammers in?)
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `name` of the item to add does not already exist in the table.
+            """
             return self._add_durable_type(name=name, unit=unit, create_parents=True)
+
 
 
         def _select_durable_type(self, name:str="%", unit:str="%") -> ActionResult:
@@ -937,12 +1054,14 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to search for.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -954,7 +1073,29 @@ class Database:
                 name=name,
                 unit=unit
             )
+
+
+
         def select_durable_type(self, name:str="%", unit:str="%") -> ActionResult:
+            """
+            Selects durable type records from the database.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the item to search for.
+                Example: "Milk"
+
+            `unit` : str
+                The unit that the item quantity is measured in.
+                Example: "L"
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
             return self._select_durable_type(name=name, unit=unit)
 
 
@@ -970,12 +1111,17 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the food item to add.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
 
             Assumptions
             -----------
@@ -990,8 +1136,34 @@ class Database:
                 create_parents=create_parents
             )
 
+
+
         def add_food_type(self, name:str, unit:str="") -> ActionResult:
+            """
+            Adds a food type record to the database.
+            Also creates respective consumable and item type records 
+            as well if they don't already exist using the optional 
+            `unit` option. 
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the food item to add.
+                Example: "Milk"
+
+            `unit` : str
+                The unit that the item quantity is measured in.
+                Example: "L"
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `name` of the food item to add does not already exist in the table.
+            """
             return self._add_food_type(name=name, unit=unit, create_parents=True)
+
 
 
         def _select_food_type(self, name:str="%", unit:str="%") -> ActionResult:
@@ -1000,12 +1172,14 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to search for.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
@@ -1017,7 +1191,29 @@ class Database:
                 name=name,
                 unit=unit
             )
+
+
+
         def select_food_type(self, name:str="%", unit:str="%") -> ActionResult:
+            """
+            Selects food type records from the database.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the item to search for.
+                Example: "Milk"
+
+            `unit` : str
+                The unit that the item quantity is measured in.
+                Example: "L"
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
             return self._select_food_type(name=name, unit=unit)
 
 
@@ -1033,12 +1229,17 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the not item to add.
                 Example: "TidePods"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "kg"
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
 
             Assumptions
             -----------
@@ -1052,8 +1253,35 @@ class Database:
                 unit=unit,
                 create_parents=create_parents
             )
+
+
+
         def add_notfood_type(self, name:str, unit:str="") -> ActionResult:
+            """
+            Adds a not food type record to the database.
+            Also creates respective consumable and item type records 
+            as well if they don't already exist using the optional 
+            `unit` option. 
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the not item to add.
+                Example: "TidePods"
+
+            `unit` : str
+                The unit that the item quantity is measured in.
+                Example: "kg"
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `name` of the not food item to add does not already exist in the table.
+            """
             return self._add_notfood_type(name=name, unit=unit, create_parents=True)
+
 
 
         def _select_notfood_type(self, name:str="%", unit:str="%") -> ActionResult:
@@ -1062,28 +1290,51 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the item to search for.
                 Example: "Milk"
-            unit : str
+
+            `unit` : str
                 The unit that the item quantity is measured in.
                 Example: "L"
+
 
             Assumptions
             -----------
             - The database connection is open.
             - The database connection cursor is open.
             """
-            return self._select_item_type_subclass(
-                subclass_name="NotFood",
-                name=name,
-                unit=unit
-            )
+            return self._select_item_type_subclass( subclass_name="NotFood",
+                                                   name=name,
+                                                   unit=unit
+                                                   )
+
+
+
         def select_notfood_type(self, name:str="%", unit:str="%") -> ActionResult:
+            """
+            Selects not food type records from the database.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the item to search for.
+                Example: "Milk"
+
+            `unit` : str
+                The unit that the item quantity is measured in.
+                Example: "L"
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
             return self._select_notfood_type(name=name, unit=unit)
 
 
-        
+
         # ----- LOCATION -----
 
         def add_location(self, name:str) -> ActionResult:
@@ -1092,11 +1343,12 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the location to add.
                 Example: "Home"
                 Example: "Smith Family Home"
                 Example: "Winter Cabin"
+
 
             Assumptions
             -----------
@@ -1104,7 +1356,6 @@ class Database:
             - The database connection cursor is open.
             - The `name` of the location to add does not already exist in the table.
             """
-
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Location", name = "Add location")
@@ -1118,6 +1369,7 @@ class Database:
                 return ActionResult()
 
 
+
         def delete_location(self, name:str) -> ActionResult:
             """
             Removes a location record to the database.
@@ -1125,8 +1377,9 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the location to delete.
+
 
             Assumptions
             -----------
@@ -1148,6 +1401,7 @@ class Database:
                 return ActionResult()
 
 
+
         def select_locations(self, name:str="%") -> ActionResult:
             """
             Selects location records from the database.
@@ -1155,8 +1409,9 @@ class Database:
 
             Parameters
             ----------
-            name : str
+            `name` : str
                 The name of the locaton to search for.
+
 
             Assumptions
             -----------
@@ -1174,7 +1429,7 @@ class Database:
             return ActionResult(data=cursor.fetchall())
 
 
-        
+
         # ----- STORAGE -----
 
         def _add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
@@ -1183,11 +1438,13 @@ class Database:
 
             Parameters
             ----------
-            storage_name : str
+            `storage_name` : str
                 The name of the storage to add.
-            location_name : str
+
+            `location_name` : str
                 The name of the location that the storage is in.
-            capacity : float
+
+            `capacity` : float
                 The percentage of the storage used.
                 Between 0 and 2.
 
@@ -1211,17 +1468,20 @@ class Database:
                 return ActionResult()
 
 
+
         def add_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
             """
             Adds a storage record to the database.
 
             Parameters
             ----------
-            storage_name : str
+            `storage_name` : str
                 The name of the storage to add.
-            location_name : str
+
+            `location_name` : str
                 The name of the location that the storage is in.
-            capacity : float
+
+            `capacity` : float
                 The percentage of the storage used.
                 Between 0 and 2.
 
@@ -1234,14 +1494,15 @@ class Database:
             return self._add_storage(storage_name, location_name, capacity)
 
 
-        def delete_storage(self, storage_name:str, return_warnings:bool=False) -> ActionResult:
+
+        def delete_storage(self, storage_name:str) -> ActionResult:
             """
             Removes a storage record from the database.
             The location must not be used by anywhere else in the database.
 
             Parameters
             ----------
-            storage_name : str
+            `storage_name` : str
                 The name of the storage to delete.
 
             Assumptions
@@ -1274,7 +1535,6 @@ class Database:
             else:
                 connection.commit()
                 return ActionResult(success=True)
-            
 
 
 
@@ -1285,22 +1545,24 @@ class Database:
 
             Parameters
             ----------
-            storage_name : str
+            `storage_name` : str
                 The name of the storage to search for.
-            location_name : str
+
+            `location_name` : str
                 The name of the location that the storage is in to search for.
-            capacity_low : float
+
+            `capacity_low` : float
                 The lower threshold value of the capacity.
-            capacity_high : float
+
+            `capacity_high` : float
                 The higher threshold value of the capacity.
-                
+
 
             Assumptions
             -----------
             - The database connection is open.
             - The database connection cursor is open.
             """
-
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Storage", name = "Select storage")
@@ -1310,11 +1572,17 @@ class Database:
 
             return ActionResult(data=cursor.fetchall())
 
-    
+
+
         # ----- STORAGE SUBCLASSES -----
 
-
-        def _add_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
+        def _add_storage_subclass(self,
+                                  subclass_name:str,
+                                  storage_name:str,
+                                  location_name:str,
+                                  capacity:float=0.0,
+                                  create_parents:bool=True
+                                  ) -> ActionResult:
             """
             Adds a storage subclass record to the database.
             Also creates the respective storage record as well if
@@ -1322,22 +1590,28 @@ class Database:
 
             Parameters
             ----------
-            subclass_name : str
+            `subclass_name` : str
                 The name of the subclass.
-            storage_name : str
+
+            `storage_name` : str
                 The name of the storage name to add.
-            location_name : str
+
+            `location_name` : str
                 The location of the new storage.
-            capacity : float
+
+            `capacity` : float
                 The initial capacity of the new storage.
                 Between 0 and 2.
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
 
             Assumptions
             -----------
             - The database connection is open.
             - The database connection cursor is open.
             """
-
             # Get the cursor
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
@@ -1346,7 +1620,7 @@ class Database:
                 add_storage_exception = self._add_storage(storage_name=storage_name, location_name=location_name, capacity=capacity).get_exception()
                 if add_storage_exception not in [IntegrityError, None]:
                     return ActionResult(error_message="Failed to create storage", exception=add_storage_exception)
-            
+
 
             # Create the subclass type
             statement = self.__parent._Database__sql_statements.get_query(group=subclass_name, name=f"Add {subclass_name.lower()} storage")
@@ -1360,8 +1634,40 @@ class Database:
                 return ActionResult()
 
 
-        def _add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
-            return self._add_storage_subclass(
+
+        def _add_dry_storage(self,
+                             storage_name:str,
+                             location_name:str,
+                             capacity:float=0.0,
+                             create_parents:bool=True
+                             ) -> ActionResult:
+            """
+            Adds a dry storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._add_storage_subclass( 
                 subclass_name="Dry",
                 storage_name=storage_name,
                 location_name=location_name,
@@ -1369,17 +1675,77 @@ class Database:
                 create_parents=create_parents
             )
 
-        def add_dry_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
-            return self._add_dry_storage(
+
+
+        def add_dry_storage(self,
+                            storage_name:str,
+                            location_name:str,
+                            capacity:float=0.0
+                            ) -> ActionResult:
+            """
+            Adds a dry storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._add_dry_storage( 
                 storage_name=storage_name,
                 location_name=location_name,
                 capacity=capacity,
                 create_parents=True
             )
 
-    
 
-        def _add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
+
+        def _add_appliance_storage(self,
+                                   storage_name:str,
+                                   location_name:str,
+                                   capacity:float=0.0,
+                                   create_parents:bool=True
+                                   ) -> ActionResult:
+            """
+            Adds a appliance storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
             return self._add_storage_subclass(
                 subclass_name="Appliance",
                 storage_name=storage_name,
@@ -1389,48 +1755,36 @@ class Database:
             )
 
 
-        def add_appliance_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
+
+        def add_appliance_storage(self,
+                                  storage_name:str,
+                                  location_name:str,
+                                  capacity:float=0.0
+                                  ) -> ActionResult:
+            """
+            Adds a appliance storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
             return self._add_appliance_storage(
-                    storage_name=storage_name,
-                    location_name=location_name,
-                    capacity=capacity,
-                    create_parents=True
-            )
-
-
-        def _add_appliance_storage_subclass(self, subclass_name:str, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
-            # Add the appliance if it doesn't already exist
-            if create_parents:
-                add_appliance_exception = self._add_appliance_storage(
-                            storage_name=storage_name,
-                            location_name=location_name,
-                            capacity=capacity,
-                            create_parents=True
-                    ).get_exception()
-                if add_appliance_exception not in [IntegrityError, None]:
-                    return ActionResult(error_message="Failed to appliance storage", exception=add_appliance_exception)
-
-            # Add the subclass
-            return self._add_storage_subclass(
-                subclass_name=subclass_name,
-                storage_name=storage_name,
-                location_name=location_name,
-                capacity=capacity,
-                create_parents=False
-            )
-
-
-        def _add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
-            return self._add_appliance_storage_subclass(
-                subclass_name="Fridge",
-                storage_name=storage_name,
-                location_name=location_name,
-                capacity=capacity
-            )
-
-
-        def add_fridge_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
-            return self._add_fridge_storage(
                 storage_name=storage_name,
                 location_name=location_name,
                 capacity=capacity,
@@ -1438,7 +1792,167 @@ class Database:
             )
 
 
-        def _add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0, create_parents:bool=True) -> ActionResult:
+
+        def _add_appliance_storage_subclass(self,
+                                            subclass_name:str,
+                                            storage_name:str,
+                                            location_name:str,
+                                            capacity:float=0.0,
+                                            create_parents:bool=True
+                                            ) -> ActionResult:
+            """
+            Adds an appliance storage subclass record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `subclass_name` : str
+                The name of the subclass.
+
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            `create_parents` : bool
+                Whether to create the parent storage records prior to adding this item.
+
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            # Add the appliance if it doesn't already exist
+            if create_parents:
+                add_appliance_exception = self._add_appliance_storage(
+                    storage_name=storage_name,
+                    location_name=location_name,
+                    capacity=capacity,
+                    create_parents=True
+                ).get_exception()
+                if add_appliance_exception not in [IntegrityError, None]:
+                    return ActionResult(error_message="Failed to appliance storage", exception=add_appliance_exception)
+
+            # Add the subclass
+            return self._add_storage_subclass(subclass_name=subclass_name,
+                                              storage_name=storage_name,
+                                              location_name=location_name,
+                                              capacity=capacity,
+                                              create_parents=False)
+
+
+
+        def _add_fridge_storage(self,
+                                storage_name:str,
+                                location_name:str,
+                                capacity:float=0.0,
+                                create_parents:bool=True
+                                ) -> ActionResult:
+            """
+            Adds a fridge storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._add_appliance_storage_subclass(subclass_name="Fridge",
+                                                        storage_name=storage_name,
+                                                        location_name=location_name,
+                                                        capacity=capacity,
+                                                        create_parents=create_parents)
+
+
+
+        def add_fridge_storage(self,
+                               storage_name:str,
+                               location_name:str,
+                               capacity:float=0.0
+                               ) -> ActionResult:
+            """
+            Adds a fridge storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._add_fridge_storage(storage_name=storage_name,
+                                            location_name=location_name,
+                                            capacity=capacity,
+                                            create_parents=True)
+
+
+
+        def _add_freezer_storage(self,
+                                 storage_name:str,
+                                 location_name:str,
+                                 capacity:float=0.0,
+                                 create_parents:bool=True
+                                 ) -> ActionResult:
+            """
+            Adds a freezer storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            `create_parents` : bool
+                Whether to create the parent records prior to adding this item.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
             return self._add_appliance_storage_subclass(
                 subclass_name="Freezer",
                 storage_name=storage_name,
@@ -1447,16 +1961,64 @@ class Database:
                 create_parents=create_parents
             )
 
-        def add_freezer_storage(self, storage_name:str, location_name:str, capacity:float=0.0) -> ActionResult:
-            return self._add_freezer_storage(
-                storage_name=storage_name,
-                location_name=location_name,
-                capacity=capacity,
-                create_parents=True
-            )
 
-        def _delete_storage_subclass(self, subclass_name:str, storage_name:str) -> ActionResult:
 
+        def add_freezer_storage(self,
+                                storage_name:str,
+                                location_name:str,
+                                capacity:float=0.0
+                                ) -> ActionResult:
+            """
+            Adds a freezer storage record to the database.
+            Also creates the respective storage record as well if
+            it doesn't already exist using the `location_name` parameter. 
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage name to add.
+
+            `location_name` : str
+                The location of the new storage.
+
+            `capacity` : float
+                The initial capacity of the new storage.
+                Between 0 and 2.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._add_freezer_storage(storage_name=storage_name,
+                                             location_name=location_name,
+                                             capacity=capacity,
+                                             create_parents=True)
+
+
+
+        def _delete_storage_subclass(self,
+                                     subclass_name:str,
+                                     storage_name:str
+                                     ) -> ActionResult:
+            """
+            Removes a storage record from the database of the desired subclass.
+            The location must not be used by anywhere else in the database.
+
+            Parameters
+            ----------
+            `subclass_name` : str
+                The name of the storage subclass.
+
+            `storage_name` : str
+                The name of the storage to delete.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to remove is not used elsewhere in the database.
+            """
             # Get the connection and cursor
             connection:MySQLConnection = self.__parent._Database__connection
             cursor:MySQLCursorDict = self.__parent._Database__cursor
@@ -1480,36 +2042,114 @@ class Database:
             else:
                 connection.commit()
                 return ActionResult(success=True)
-            
 
 
 
         def delete_dry_storage(self, storage_name:str) -> ActionResult:
+            """
+            Removes a dry storage record from the database.
+            The location must not be used by anywhere else in the database.
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to delete.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to remove is not used elsewhere in the database.
+            """
             return self._delete_storage_subclass( subclass_name="Dry", storage_name=storage_name )
 
+
+
         def delete_appliance_storage(self, storage_name:str) -> ActionResult:
+            """
+            Removes an appliance storage record from the database.
+            The location must not be used by anywhere else in the database.
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to delete.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to remove is not used elsewhere in the database.
+            """
             return self._delete_storage_subclass( subclass_name="Appliance", storage_name=storage_name )
 
+
+
         def delete_fridge_storage(self, storage_name:str) -> ActionResult:
+            """
+            Removes a fridge storage record from the database.
+            The location must not be used by anywhere else in the database.
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to delete.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to remove is not used elsewhere in the database.
+            """
             return self._delete_storage_subclass( subclass_name="Fridge", storage_name=storage_name )
 
+
+
         def delete_freezer_storage(self, storage_name:str) -> ActionResult:
+            """
+            Removes a freezer storage record from the database.
+            The location must not be used by anywhere else in the database.
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to delete.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            - The `storage_name` of the storage to remove is not used elsewhere in the database.
+            """
             return self._delete_storage_subclass( subclass_name="Freezer", storage_name=storage_name )
 
 
-        def _select_storage_subclass(self, subclass_name:str, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
+
+        def _select_storage_subclass(self,
+                                     subclass_name:str,
+                                     storage_name:str="%",
+                                     location_name:str="%",
+                                     capacity_low:float=0.0,
+                                     capacity_high:float=2.0
+                                     ) -> ActionResult:
             """
             Selects records of a storage subclass from the database.
 
             Parameters
             ----------
-            storage_name : str
+            `subclass_name` : str
+                The name of the storage subclass to select from.
+
+            `storage_name` : str
                 The name of the storage to search for.
-            location_name : str
+
+            `location_name` : str
                 The name of the location that the storage is in.
-            capacity_low : float
+
+            `capacity_low` : float
                 The lower bound of the current capacity of the storage.
-            capacity_high : float
+
+            `capacity_high` : float
                 The higher bound of the current capacity of the storage.
 
             Assumptions
@@ -1530,46 +2170,161 @@ class Database:
 
 
 
-        def select_dry_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
-            return self._select_storage_subclass(
-                subclass_name="Dry",
-                storage_name=storage_name,
-                location_name=location_name,
-                capacity_low=capacity_low,
-                capacity_high=capacity_high
-            )
+        def select_dry_storage(self,
+                               storage_name:str="%",
+                               location_name:str="%",
+                               capacity_low:float=0.0,
+                               capacity_high:float=2.0
+                               ) -> ActionResult:
+            """
+            Selects dry storage records from the database.
 
-        def select_appliance_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
-            return self._select_storage_subclass(
-                subclass_name="Appliance",
-                storage_name=storage_name,
-                location_name=location_name,
-                capacity_low=capacity_low,
-                capacity_high=capacity_high
-            )
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to search for.
 
-        def select_fridge_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
-            return self._select_storage_subclass(
-                subclass_name="Fridge",
-                storage_name=storage_name,
-                location_name=location_name,
-                capacity_low=capacity_low,
-                capacity_high=capacity_high
-            )
+            `location_name` : str
+                The name of the location that the storage is in.
 
-        def select_freezer_storage(self, storage_name:str="%", location_name:str="%", capacity_low:float=0.0, capacity_high:float=2.0) -> ActionResult:
-            return self._select_storage_subclass(
-                subclass_name="Freezer",
-                storage_name=storage_name,
-                location_name=location_name,
-                capacity_low=capacity_low,
-                capacity_high=capacity_high
-            )
-    
+            `capacity_low` : float
+                The lower bound of the current capacity of the storage.
+
+            `capacity_high` : float
+                The higher bound of the current capacity of the storage.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._select_storage_subclass(subclass_name="Dry",
+                                                 storage_name=storage_name,
+                                                 location_name=location_name,
+                                                 capacity_low=capacity_low,
+                                                 capacity_high=capacity_high)
+
+
+
+        def select_appliance_storage(self,
+                                     storage_name:str="%",
+                                     location_name:str="%",
+                                     capacity_low:float=0.0,
+                                     capacity_high:float=2.0
+                                     ) -> ActionResult:
+            """
+            Selects appliance storage records from the database.
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to search for.
+
+            `location_name` : str
+                The name of the location that the storage is in.
+
+            `capacity_low` : float
+                The lower bound of the current capacity of the storage.
+
+            `capacity_high` : float
+                The higher bound of the current capacity of the storage.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._select_storage_subclass(subclass_name="Appliance",
+                                                 storage_name=storage_name,
+                                                 location_name=location_name,
+                                                 capacity_low=capacity_low,
+                                                 capacity_high=capacity_high)
+
+
+
+        def select_fridge_storage(self,
+                                  storage_name:str="%",
+                                  location_name:str="%",
+                                  capacity_low:float=0.0,
+                                  capacity_high:float=2.0
+                                  ) -> ActionResult:
+            """
+            Selects fridge storage records from the database.
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to search for.
+
+            `location_name` : str
+                The name of the location that the storage is in.
+
+            `capacity_low` : float
+                The lower bound of the current capacity of the storage.
+
+            `capacity_high` : float
+                The higher bound of the current capacity of the storage.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._select_storage_subclass(subclass_name="Fridge",
+                                                 storage_name=storage_name,
+                                                 location_name=location_name,
+                                                 capacity_low=capacity_low,
+                                                 capacity_high=capacity_high)
+
+
+
+        def select_freezer_storage(self,
+                                   storage_name:str="%",
+                                   location_name:str="%",
+                                   capacity_low:float=0.0,
+                                   capacity_high:float=2.0
+                                   ) -> ActionResult:
+            """
+            Selects freezer storage records from the database.
+
+            Parameters
+            ----------
+            `storage_name` : str
+                The name of the storage to search for.
+
+            `location_name` : str
+                The name of the location that the storage is in.
+
+            `capacity_low` : float
+                The lower bound of the current capacity of the storage.
+
+            `capacity_high` : float
+                The higher bound of the current capacity of the storage.
+
+            Assumptions
+            -----------
+            - The database connection is open.
+            - The database connection cursor is open.
+            """
+            return self._select_storage_subclass(subclass_name="Freezer",
+                                                 storage_name=storage_name,
+                                                 location_name=location_name,
+                                                 capacity_low=capacity_low,
+                                                 capacity_high=capacity_high)
+
+
 
         # ----- User -----
 
         def _add_user(self, name:str) -> ActionResult:
+            """
+            Adds a user to the database.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to add.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Add user")
@@ -1585,13 +2340,31 @@ class Database:
                 return ActionResult()
 
 
+
         def add_user(self, name:str) -> ActionResult:
+            """
+            Adds a user to the database.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to add.
+            """
             return self._add_user(name=name)
 
 
+
         def add_parent(self, name:str) -> ActionResult:
+            """
+            Adds a parent user to the database.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to add.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
-            
+
             # Add user if it doesn't already exist
             add_user_result = self._add_user(name=name)
             if add_user_result.get_exception() not in [IntegrityError, None]:
@@ -1611,7 +2384,16 @@ class Database:
                 return ActionResult()
 
 
+
         def add_dependent(self, name:str) -> ActionResult:
+            """
+            Adds a dependent user to the database.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to add.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Add the user if it doesn't already exist
@@ -1633,10 +2415,16 @@ class Database:
                 return ActionResult()
 
 
+
         def _select_users(self, name:str="%") -> ActionResult:
             """
             Gets a list of all the users.
 
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to select.
+                Supports MySQL regex.
             """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
@@ -1648,14 +2436,31 @@ class Database:
             return ActionResult(data=cursor.fetchall())
 
 
+
         def select_users(self, name:str="%") -> ActionResult:
             """
             Gets a list of all the users.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to select.
+                Supports MySQL regex.
             """
             return self._select_users(name=name)
 
 
+
         def _select_parents(self, name:str="%") -> ActionResult:
+            """
+            Gets a list of all the parents.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to select.
+                Supports MySQL regex.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Parent", name = "Select parents")
@@ -1666,12 +2471,40 @@ class Database:
             return ActionResult(data=cursor.fetchall())
 
 
+
         def select_parents(self, name:str="%") -> ActionResult:
+            """
+            Gets a list of all the parents.
+
+            Parameters
+            ----------
+            `name` : str
+                The name of the user to select.
+                Supports MySQL regex.
+            """
             return self._select_parents(name=name)
 
 
 
         def select_items_used_by_user(self, user_name:str="%") -> ActionResult:
+            """
+            Selects all the items used by a user.
+
+            Parameters
+            ----------
+            `user_name` : str
+                Gets all the items used by this user.
+                Supports MySQL regex.
+
+            Examples
+            --------
+            `select_items_used_by_user("Jimmy")` 
+                Would get all the items used by `Jimmy`.
+
+            `select_items_used_by_user("%Smith")` 
+                Would get all the items used by either someone called `Smith` or
+                by all `users` with the surname `Smith`.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "User", name = "Select items used by user")
@@ -1683,11 +2516,31 @@ class Database:
 
 
 
-
-
         # ----- Inventory -----
 
-        def _change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:dt.datetime) -> ActionResult:
+        def _change_item_quantity(self,
+                                  new_quantity:float,
+                                  item_name:str,
+                                  storage_name:str,
+                                  timestamp:dt.datetime
+                                  ) -> ActionResult:
+            """
+            Changes the quantity of an `item` in inventory.
+
+            Parameters
+            ----------
+            `new_quantity` : float
+                The new quantity of the `item`.
+
+            `item_name` : str
+                The name of the `item` to change the quantity of.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of the `item` when it was added.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Change item quantity")
@@ -1701,15 +2554,66 @@ class Database:
                 return ActionResult()
 
 
-        def change_item_quantity(self, new_quantity:float, item_name:str, storage_name:str, timestamp:dt.datetime) -> ActionResult:
-            return self._change_item_quantity(new_quantity=new_quantity, item_name=item_name, storage_name=storage_name, timestamp=timestamp)
+
+        def change_item_quantity(self,
+                                 new_quantity:float,
+                                 item_name:str,
+                                 storage_name:str,
+                                 timestamp:dt.datetime
+                                 ) -> ActionResult:
+            """
+            Changes the quantity of an `item` in inventory.
+
+            Parameters
+            ----------
+            `new_quantity` : float
+                The new quantity of the `item`.
+
+            `item_name` : str
+                The name of the `item` to change the quantity of.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of the `item` when it was added.
+            """
+            return self._change_item_quantity(new_quantity=new_quantity,
+                                              item_name=item_name,
+                                              storage_name=storage_name,
+                                              timestamp=timestamp)
 
 
-        def _select_item_quantity_from_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime) -> float:
+
+        def _select_item_quantity_from_inventory(self,
+                                                 item_name:str,
+                                                 storage_name:str,
+                                                 timestamp:dt.datetime
+                                                 ) -> float:
+            """
+            Gets the quantiy of an item in inventory.
+
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item`.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of the `item` when it was added.
+
+            Returns
+            -------
+            float
+                The quantity of the `item`.
+                If the item does not exist; returns 0.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             existing_quantity = 0.0
-            
+
             try:
                 statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Select item quantity from inventory")
                 data = (item_name, storage_name, timestamp)
@@ -1725,8 +2629,35 @@ class Database:
 
 
 
-        def _add_item_to_inventory(self, item_name:str, storage_name:str, expiry:dt.datetime|None=None, quantity:float=1.0) -> ActionResult:
+        def _add_item_to_inventory(self,
+                                   item_name:str,
+                                   storage_name:str,
+                                   expiry:dt.datetime|None=None,
+                                   quantity:float=1.0
+                                   ) -> ActionResult:
+            """
+            Adds an item to inventory.
+            Uses the current timestamp to create the item.
 
+            Will not increase the quantity of an item if it already exists.
+            Since this uses the current timestamp, the possibility of 
+            trying to create an item and it already existing is very small.
+
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item`.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `expiry` : datetime
+                The datetime of when the item will expire.
+                None if the item does not expire, or is a non-perishable.
+
+            `quantity` : float
+                The quantity of the item to add.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Check item type exists
@@ -1749,26 +2680,73 @@ class Database:
 
             return ActionResult(success=True)
 
+
+
         def add_item_to_inventory(self, 
                                   item_name:str, 
                                   storage_name:str, 
                                   expiry:dt.datetime|None=None, 
                                   quantity:float=1.0
                                   ) -> ActionResult:
+            """
+            Adds an item to inventory.
+            Uses the current timestamp to create the item.
+
+            Will not increase the quantity of an item if it already exists.
+            Since this uses the current timestamp, the possibility of 
+            trying to create an item and it already existing is very small.
+
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item`.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `expiry` : datetime
+                The datetime of when the item will expire.
+                None if the item does not expire, or is a non-perishable.
+
+            `quantity` : float
+                The quantity of the item to add.
+            """
             return self._add_item_to_inventory(item_name=item_name, 
                                                storage_name=storage_name, 
                                                expiry=expiry, 
                                                quantity=quantity)
 
 
+
         def view_inventory_items(self,
                                  item_name:str="",
                                  storage_name:str="",
-                                 timestamp_from:dt.datetime|None=None,
-                                 timestamp_to:dt.datetime|None=None,
+                                 expiry_from:dt.datetime|None=None,
+                                 expiry_to:dt.datetime|None=None,
                                  include_non_perishable:bool=True
                                  ) -> ActionResult:
+            """
+            Selects all the items that match the search parameters.
 
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item` to search for.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `expiry_from` : datetime | None
+                The lower bound datetime of when the item will expire.
+                Use `None` to not include a lower bound.
+
+            `expiry_to` : datetime | None
+                The upper bound datetime of when the item will expire.
+                Use `None` to not include a upper bound.
+
+            `include_non_perishable` : bool
+                Whether to include items that don't have an expiry date.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # TODO This should be its own function and be applied to all LIKE clauses.
@@ -1780,14 +2758,15 @@ class Database:
             storage_name = f"%{storage_name}%"
 
             # Set min and max values for the expiry range
-            if timestamp_from is None: timestamp_from = dt.datetime.min
-            if timestamp_to is None: timestamp_to = dt.datetime.max
+            if expiry_from is None: expiry_from = dt.datetime.min
+            if expiry_to is None: expiry_to = dt.datetime.max
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "View inventory items")
-            data = (item_name, storage_name, timestamp_from, timestamp_to, include_non_perishable)
+            data = (item_name, storage_name, expiry_from, expiry_to, include_non_perishable)
             cursor.execute(statement, data)
 
             return ActionResult(data=cursor.fetchall())
+
 
 
         def move_item_storage_location(self,
@@ -1796,12 +2775,28 @@ class Database:
                                        old_storage_name:str,
                                        timestamp:dt.datetime
                                        ) -> ActionResult:
+            """
+            Moves an item from one storage location to another.
 
+            Parameters
+            ----------
+            `new_storage_name` : str
+                The name of the storage to move the item to.
+
+            `item_name` : str
+                The name of the `item` to move.
+
+            `old_storage_name` : str
+                The current name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of the `item` when it was added.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Move item storage location")
             data = (new_storage_name, item_name, old_storage_name, timestamp)
-            
+
             # Try to move the item
             try:
                 cursor.execute(statement, data)
@@ -1810,16 +2805,37 @@ class Database:
 
             return ActionResult(success=True)
 
+
+
         def _remove_item_from_inventory(self,
                                         item_name:str,
                                         storage_name:str,
                                         timestamp:dt.datetime
                                         ) -> ActionResult:
+            """
+            Adds an item to inventory.
+            Uses the current timestamp to create the item.
+
+            Will not increase the quantity of an item if it already exists.
+            Since this uses the current timestamp, the possibility of 
+            trying to create an item and it already existing is very small.
+
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item`.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of when the `item` was added.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             statement = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Remove item from inventory")
             data = (item_name, storage_name, timestamp)
-            
+
             # Try to delete the item
             try:
                 cursor.execute(statement, data)
@@ -1830,14 +2846,79 @@ class Database:
 
 
 
+        def consume_inventory(self,
+                              item_name:str,
+                              storage_name:str,
+                              timestamp:dt.datetime,
+                              quantity:float,
+                              user:str
+                              ) -> ActionResult:
+            """
+            Removes an item from the inventory and logs it
+            as consumed.
 
-        # Miscellaneous actions (for now)
+            If the desired quantity to remove is move than what 
+            is currently left in inventory then the quantity
+            remaining will be what is logged and the inventory 
+            record will be removed.
 
-        def consume_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime, quantity:float, user:str) -> ActionResult:
-            return self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, user)
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item`.
 
-        def throw_out_inventory(self, item_name:str, storage_name:str, timestamp:dt.datetime, quantity:float) -> ActionResult:
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of when the `item` was added.
+
+            `quantity` : float
+                The desired quantity of the item to consume.
+
+            `user` : str
+                The name of the user who used the item.
+            """
+            return self._remove_and_log_inventory(item_name=item_name,
+                                                  storage_name=storage_name,
+                                                  timestamp=timestamp,
+                                                  quantity_removed=quantity,
+                                                  user=user)
+
+
+
+        def throw_out_inventory(self,
+                                item_name:str,
+                                storage_name:str,
+                                timestamp:dt.datetime,
+                                quantity:float
+                                ) -> ActionResult:
+            """
+            Removes an item from the inventory and logs it
+            as wasted.
+
+            If the desired quantity to remove is move than what 
+            is currently left in inventory then the quantity
+            remaining will be what is logged and the inventory 
+            record will be removed.
+
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item`.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of when the `item` was added.
+
+            `quantity` : float
+                The desired quantity of the item to throw out.
+            """
             return self._remove_and_log_inventory(item_name, storage_name, timestamp, quantity, None)
+
+
 
         def _remove_and_log_inventory(self,
                                       item_name:str,
@@ -1846,7 +2927,33 @@ class Database:
                                       quantity_removed:float,
                                       user:str|None
                                       ) -> ActionResult:
+            """
+            Removes an item from the inventory and logs it.
 
+            If the desired quantity to remove is move than what 
+            is currently left in inventory then the quantity
+            remaining will be what is logged and the inventory 
+            record will be removed.
+
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the `item`.
+
+            `storage_name` : str
+                The name of the storage location the `item` is stored in.
+
+            `timestamp` : datetime
+                The timestamp of when the `item` was added.
+
+            `quantity_removed` : float
+                The desired quantity of the item to remove.
+
+            `user` : str | None
+                The name of the user who used the item.
+                If this value is `None` then the item will be logged 
+                as wasted.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Start a database transaction
@@ -1860,8 +2967,9 @@ class Database:
                 cursor.execute(stmt1, data1)
                 value = cursor.fetchone()
                 if type(value) is dict:
-                    old_quantity = value["quantity"] 
-                    new_quantity = old_quantity - quantity_removed
+                    # This handles weird RowItemType conversions because MySQL has no good documentation
+                    old_quantity = str(value["quantity"]) 
+                    new_quantity = float(old_quantity) - quantity_removed
                 else:
                     raise ValueError("The quantity of the item could not be collected because the item does not exist in inventory");
             except Exception as e:
@@ -1897,13 +3005,33 @@ class Database:
             except Exception as e:
                 self.__parent.rollback()
                 return ActionResult(error_message="Failed to log usage of item", exception=e)
-                
+
 
             # If all went well, commit the changes
             self.__parent.commit()
             return ActionResult(success=True)
 
-        def add_recipe(self, recipe_name:str, ingredients:list[(str, float)]) -> ActionResult:
+
+
+        def add_recipe(self, 
+                       recipe_name:str, 
+                       ingredients:list[tuple[str, float]]
+                       ) -> ActionResult:
+            """
+            Adds a recipe to the database.
+
+            Parameters
+            ----------
+            `recipe_name` : str
+                The name of the recipe to add.
+
+            `ingredients` : list[[tuple[[str, float]]]]
+                The list of ingredients required by the recipe.
+                Each ingredient in this list is a tuple with the first 
+                value being the name of the ingredient and the second 
+                being the quantity of that ingredient required by the 
+                recipe.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             self.__parent.start_transaction()
@@ -1929,7 +3057,21 @@ class Database:
             self.__parent.commit()
             return ActionResult(success=True)
 
-        def gen_shopping_list(self, timestamp:dt.datetime=dt.datetime.now() + dt.timedelta(days=7)):
+
+
+        def gen_shopping_list(self, timestamp:dt.datetime=dt.datetime.now() + dt.timedelta(days=7)) -> ActionResult:
+            """
+            Generates a Shopping list from the items that will be needed 
+            for planned meals within the period from now until the provided
+            `timestamp` and that there currently is not enough of in inventory.
+
+            Parameters
+            ----------
+            `timestamp` : datetime
+                The upper bound timestamp for meals to gather out of stock items 
+                for to populate the shopping list out of.
+                Defaults to now plus seven days.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             try:
@@ -1939,6 +3081,8 @@ class Database:
                 return ActionResult(data=cursor.fetchall())
             except Exception as e:
                 return ActionResult(error_message="Failed to generate shopping list", exception=e)
+
+
 
         # ----- PURCHASE -----
 
@@ -1951,7 +3095,35 @@ class Database:
                           storage_location:str,
                           expiry:dt.datetime|None=None
                           ) -> ActionResult:
+            """
+            Purchases an item and adds it to the inventory.
 
+            Parameters
+            ----------
+            `item_name` : str
+                The name of the item that was purchased.
+
+            `quantity` : float
+                The quantity of the item that was purchased.
+
+            `price` : float
+                The price that this item cost.
+                This is the price for the whole item, not per unit integer.
+
+            `store` : str
+                The name of the store the item was bought at.
+
+            `parent_name` : str
+                The name of the parent user who bought the item.
+
+            `storage_location` : str
+                The name of the storage location to store the item at
+                in inventory.
+
+            `expiry` : datetime | None
+                The expiry date of the item.
+                `None` if the item does not have an expiry date.
+            """
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Check quantity is greater than 0
@@ -1980,5 +3152,5 @@ class Database:
             # Commit the changes if we successfully made it to this point
             self.__parent.commit()
             return ActionResult(success=True)
-                 
+
 
