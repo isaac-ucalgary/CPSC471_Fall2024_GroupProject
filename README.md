@@ -2,67 +2,49 @@
 This is a group project for the CPSC 471 Fall 2024 course at the University of Calgary.
 
 # Project Description
-Inventory Managment System for small to medium sized contractors.
+Inventory Managment System for you, your home and your family, to help manage your daily needs, keep track of your consumable items and record waste.
 
 # Install 
 ## Prerequsites
-The following are assumed to already be installed:
-- Docker (https://docs.docker.com/engine/install/)
-- Docker Compose (https://docs.docker.com/compose/install/)
+### MariaDB (or MySQL)
+It is assumed that you already have a MariaDB or MySQL database setup and have the following parameters:
+- The **host IP address or URL** of the database.
+- The **port** number of the database.
+- The name of the **user** which has full access to a database called **Home_IMS** inside your database.
+- The **password** for that user.
+
+If you do not have a database there is a simple docker compose file that will help you create a database [here](mariadb/).
+(Of course, this requires that you have [docker](https://docs.docker.com/engine/install/) and [docker compose](https://docs.docker.com/compose/install/) set up on the machine that will host the database)
+
+### Python
+This app runs on [python 3.12](https://www.python.org/downloads/).
+It should run on any version of python 3.12.x but specifically it was developed on python 3.12.7.
+While other versions of python may work, it is known that python 3.13+ does not work and version below 3.12 are untested.
 
 ## <a name="linux-install"></a> Linux Install
-1. Clone the git repo onto your computer.
-   ```bash
-   git clone 
+1. Download the install script
    ```
-2. In the project root directory, create a file called ".env" and add to it "MARIADB_ROOT_PASSWORD=MySecretPassword" and change "MySecretPassword" to a password of your choosing.
-   ```bash
-   echo "MARIADB_ROOT_PASSWORD=MySecretPassword" >> .env
+   wget https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh?token=GHSAT0AAAAAAC3JNKMXXD32GIEPG5NEL7Y4Z2XPDZA
    ```
-3. In the project root directory, create a directory called "data" and then in data create a directory called "mariadb". This will be the directory to keep the database data persistant upon updating or shuting down the container.
-   ```bash
-   mkdir -p data/mariadb
+2. Run the install script
    ```
-4. Then run initiate docker containers.
-   ```bash
-   sudo docker compose up -d
+   sh install.sh
    ```
-5. Check that the containers are running with
-   ```bash
-   sudo docker ps -a
-   ```
-6. If "mariadb-CPSC471_Fall2024_GroupProject" is exited, bootlooping, or otherwise failing to run then its likely because the database data directory we created in step 3 does not have the correct permission for the mariadb docker container to be able to access it. To fix this run the following:
-   ```bash
-   sudo chmod 777 ./data/mariadb
-   ```
-   And reload the docker compose file with
-   ```bash
-   sudo docker compose restart
-   ```
-   or
-   ```bash
-   sudo docker compose down && sudo docker compose up -d
-   ```
-7. Now if everything has gone correctly we should now be able to access the database by using (insure you are in the root project directory):
-   ```bash
-   source .env; sudo docker exec -it mariadb-CPSC471_Fall2024_GroupProject mariadb -u root --password=$MARIADB_ROOT_PASSWORD -P 3306 -D Project_Database
-   ```
-   It may prompt for a password, this is (assuming everything has gone right) your user password for the "sudo" command and not the password for the database.
-8. If you already have mariadb, mysql or another database tool (GUI or CLI) then to connect to the database use the following values:
-   - Port: 49152
-   - Host: 127.0.0.1 (Assuming you are connecting from the same machine the docker container is installed on)
-   - Password: <The password you set in the .env file>
-   - User: root
-   - Database: Project_Database
-  
+
+This script will clone the git repo to your home directory under *~/Home_IMS*, ask you about the details for connecting to [your database](#MariaDB (or MySQL)), and create 
+the appropriate config files using this information.
+
+While you should always read a script before you run it, for those of you that are particularly lazy, just run:
+```
+wget -O- https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh?token=GHSAT0AAAAAAC3JNKMXXD32GIEPG5NEL7Y4Z2XPDZA | bash
+```
 
 
 ## Windows Install
-It should be enough to just follow the descriptions of the [Linux Install](#linux-install) but the cli commands may not work.
-Maybe try WSL?
+Good luck.
 
 ## MacOS Install
-It should be enough to just follow the descriptions of the [Linux Install](#linux-install) but the cli commands may not work.
+Even more good luck and pray to the apple gods.
 
 
 
