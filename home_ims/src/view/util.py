@@ -8,13 +8,14 @@ def get_ui_path(*path):
     return os.path.join(root, "ui", *path)
 
 def format_quantity(quantity, unit):
-    return f"{quantity:.1f}{unit and ' '}{unit}"
+    qf = f"{quantity:.1f}".removesuffix(".0")
+    return f"{qf} {unit}" if unit else qf
 
 def format_date(timestamp):
-    return timestamp.strftime("%-d %b %Y")
+    return timestamp.strftime("%d %b %Y")
 
 def format_datetime(timestamp):
-    return timestamp.strftime("%I:%M:%S %p, %-d %b %Y")
+    return timestamp.strftime("%I:%M:%S %p, %d %b %Y")
 
 def open_dialog(window, gen):
     dialog = QDialog(window)

@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtCore import Qt, QDateTime
 from PyQt6 import uic
 
 import view.add_inventory as add_inventory
@@ -15,9 +16,43 @@ class InventoryView:
         self.current_user = None
 
         self.window.addItemBtn.clicked.connect(lambda: add_inventory.show(self.window, self.dba))
-    
+        self.window.refreshBtn.clicked.connect(self.update_inv_view)
+        self.window.filterExpiry.checkStateChanged.connect(
+            lambda s: self.window.expiryInput.setVisible(s == Qt.CheckState.Checked)
+        )
+
+        self.window.filterExpiry.setCheckState(Qt.CheckState.Unchecked)
+        self.window.expiryInput.setDateTime(QDateTime.currentDateTime())
+        self.window.expiryInput.setVisible(False)
+
     def rebuild_ui(self):
-        inv:list[dict] = self.dba.view_inventory_items().get_data_list()
+        self.window.storageSelector.clear()
+
+        storages = self.dba.select_storage()
+        if not storages.is_success():
+            util.open_error_dialog(self.window)
+            return
+
+        self.window.storageSelector.addItem("<Any storage>", "")
+        for s in storages.get_data_list():
+            self.window.storageSelector.addItem(s["storage_name"], s["storage_name"])
+
+        self.update_inv_view()
+
+    def update_inv_view(self):
+        expiry_threshold = None
+        if self.window.filterExpiry.checkState() == Qt.CheckState.Checked:
+            expiry_threshold = self.window.expiryInput.dateTime().toPyDateTime()
+
+        inv = self.dba.view_inventory_items(
+            self.window.inventorySearch.text(),
+            self.window.storageSelector.currentData(),
+            expiry_threshold
+        )
+
+        if not inv.is_success():
+            util.open_error_dialog(self.window)
+            return
 
         c_layout = QVBoxLayout()
         container = QWidget()
@@ -25,7 +60,7 @@ class InventoryView:
         container.setStyleSheet("#inventoryEntries{background-color:#00ffffff;}")
         container.setLayout(c_layout)
 
-        for entry in inv:
+        for entry in inv.get_data_list():
             widget = entry_base_tpl()
             form = entry_form_tpl()
             form.setupUi(widget)
@@ -64,7 +99,7 @@ class InventoryView:
                 10,
                 self.current_user
             )
-            self.rebuild_ui() # TODO Update only this entry.
+            self.update_inv_view() # TODO Update only this entry.
         return consume
 
     def gen_throw_out_slot(self, entry):
@@ -75,7 +110,7 @@ class InventoryView:
                 entry["timestamp"],
                 10
             )
-            self.rebuild_ui() # TODO Update only this entry.
+            self.update_inv_view() # TODO Update only this entry.
         return throw_out
 
     def gen_remove_slot(self, entry):
@@ -87,5 +122,5 @@ class InventoryView:
                 storage_name=entry["storage_name"],
                 timestamp=entry["timestamp"]
             )
-            self.rebuild_ui() # TODO Update only this entry.
+            self.update_inv_view() # TODO Update only this entry.
         return remove

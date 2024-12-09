@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
+    <width>795</width>
     <height>761</height>
    </rect>
   </property>
@@ -205,15 +205,8 @@
                 <number>10</number>
                </property>
                <property name="bottomMargin">
-                <number>10</number>
+                <number>0</number>
                </property>
-               <item>
-                <widget class="QToolButton" name="addItemBtn">
-                 <property name="text">
-                  <string>+</string>
-                 </property>
-                </widget>
-               </item>
                <item>
                 <widget class="QLineEdit" name="inventorySearch">
                  <property name="sizePolicy">
@@ -264,12 +257,45 @@
                   <enum>Qt::LeftToRight</enum>
                  </property>
                  <property name="text">
-                  <string>Expires By</string>
+                  <string>Not Expired Before</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QDateEdit" name="expiryInput"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_4" native="true">
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <widget class="QPushButton" name="refreshBtn">
+                 <property name="text">
+                  <string>Refresh</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="addItemBtn">
+                 <property name="text">
+                  <string>Add Item</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -309,8 +335,8 @@
                    <rect>
                     <x>0</x>
                     <y>0</y>
-                    <width>624</width>
-                    <height>622</height>
+                    <width>636</width>
+                    <height>592</height>
                    </rect>
                   </property>
                   <property name="styleSheet">

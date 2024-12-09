@@ -25,7 +25,9 @@ def show(window, dba):
 
         form.listText.setText("\n".join(text))
         form.closeBtn.clicked.connect(close_dlg)
-        form.copyBtn.clicked.connect(lambda: QApplication.clipboard().setText("test"))
+        form.copyBtn.clicked.connect(
+            lambda: QApplication.clipboard().setText(form.listText.toPlainText())
+        )
 
         return widget
 
