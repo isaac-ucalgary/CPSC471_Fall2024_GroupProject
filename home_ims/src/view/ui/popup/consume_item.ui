@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>194</width>
+    <width>184</width>
     <height>205</height>
    </rect>
   </property>
@@ -31,7 +31,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="itemNameLabel">
+    <widget class="QLabel" name="item">
      <property name="font">
       <font>
        <pointsize>14</pointsize>
@@ -69,7 +69,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="currentQuantityLabel">
+       <widget class="QLabel" name="currentQuantity">
         <property name="layoutDirection">
          <enum>Qt::LeftToRight</enum>
         </property>
@@ -160,7 +160,7 @@
     <widget class="QWidget" name="widget" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="spacing">
-       <number>-1</number>
+       <number>6</number>
       </property>
       <property name="leftMargin">
        <number>0</number>
@@ -176,9 +176,6 @@
       </property>
       <item>
        <widget class="QPushButton" name="cancelBtn">
-        <property name="styleSheet">
-         <string>background-color: #FFCCCC; color: black;</string>
-        </property>
         <property name="text">
          <string>Cancel</string>
         </property>
@@ -186,9 +183,6 @@
       </item>
       <item>
        <widget class="QPushButton" name="consumeBtn">
-        <property name="styleSheet">
-         <string>background-color: #CCFFCC; color: black;</string>
-        </property>
         <property name="text">
          <string>Consume</string>
         </property>

@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>163</width>
-    <height>140</height>
+    <width>224</width>
+    <height>121</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Delete Item</string>
+   <string>Error</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -31,7 +31,13 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="warningLabel">
+    <widget class="QLabel" name="warning">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
       <string>Something went wrong. Please try again.</string>
      </property>

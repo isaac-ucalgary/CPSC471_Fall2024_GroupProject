@@ -1,7 +1,7 @@
 import os
 from PyQt6 import uic
 from PyQt6.QtCore import Qt, QSortFilterProxyModel
-from PyQt6.QtWidgets import QDialog, QVBoxLayout
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QDateTimeEdit, QDateTime
 
 root = os.path.dirname(__file__)
 def get_ui_path(*path):
@@ -17,11 +17,15 @@ def format_date(timestamp):
 def format_datetime(timestamp):
     return timestamp.strftime("%I:%M:%S %p, %d %b %Y")
 
+def config_dateedit(inst: QDateTimeEdit):
+    inst.setDateTime(QDateTime.currentDateTime())
+
 def open_dialog(window, gen):
     dialog = QDialog(window)
     layout = QVBoxLayout()
     layout.addWidget(gen(dialog.accept))
     dialog.setLayout(layout)
+    dialog.resize(dialog.minimumSize())
     dialog.open()
 
 error_form_tpl, error_widget_tpl = uic.loadUiType(get_ui_path("popup", "error_generic.ui"))
@@ -32,7 +36,7 @@ def open_error_dialog(window, msg=None):
         form.setupUi(widget)
 
         if msg is not None:
-            form.warningLabel.setText(msg)
+            form.warning.setText(msg)
 
         form.closeBtn.clicked.connect(close)
 

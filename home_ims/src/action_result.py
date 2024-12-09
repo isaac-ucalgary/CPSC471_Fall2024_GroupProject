@@ -1,4 +1,5 @@
-#from mysql.connector.types import any
+
+from typing import Any
 
 class ActionResult:
     """
@@ -8,7 +9,7 @@ class ActionResult:
     def __init__(self,
                  success:bool=True,
                  data:list[dict[str,
-                 any] | None]|str|None=None,
+                 Any] | None]|str|None=None,
                  error_message:str|None=None,
                  exception:Exception|None=None,
                  warnings:list|None=None
@@ -27,17 +28,21 @@ class ActionResult:
 
         self.warnings:list|None = warnings
 
-        self.data:list[dict[str,any]|None]|str|None = data
+
+        self.data:list[dict[str,Any]|None]|str|None = data
+
 
         self.error_message:str|None = error_message
 
         self.exception:Exception|None = exception
 
 
-    def get_data(self) -> list[dict[str,any]|None]|str|None:
+
+    def get_data(self) -> list[dict[str,Any]|None]|str|None:
         return self.data
 
-    def get_data_list(self) -> list[dict[str,any]]:
+    def get_data_list(self) -> list[dict[str,Any]]:
+
         if type(self.data) is list:
             return [x for x in self.data if x is not None]
         else:

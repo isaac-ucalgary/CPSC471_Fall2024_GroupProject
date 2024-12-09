@@ -6,7 +6,7 @@ from action_result import ActionResult
 
 form_tpl, base_tpl = uic.loadUiType(util.get_ui_path("popup", "add_item.ui"))
 
-def show(window, dba):
+def show(window, dba, refresh):
     item_types = dba.select_item_type()
     if not item_types.is_success():
         util.open_error_dialog(window)
@@ -41,12 +41,13 @@ def show(window, dba):
 
         def on_item_change(i):
             unit = form.itemSelector.itemData(i)
-            form.unitLabel.setVisible(bool(unit))
-            form.unitLabel.setText(unit)
+            form.unit.setVisible(bool(unit))
+            form.unit.setText(unit)
 
         on_item_change(0)
 
         form.itemSelector.currentIndexChanged.connect(on_item_change)
+        util.config_dateedit(form.expiryInput)
         form.canExpire.checkStateChanged.connect(
             lambda s: form.expiryData.setVisible(s == Qt.CheckState.Checked)
         )
@@ -100,6 +101,7 @@ def show(window, dba):
                 return
 
             close_dlg()
+            refresh()
 
         form.cancelBtn.clicked.connect(close_dlg)
         form.addBtn.clicked.connect(create)

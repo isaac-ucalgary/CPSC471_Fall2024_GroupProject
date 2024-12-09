@@ -11,10 +11,13 @@ class AnalyticsView:
         self.dba:DB_Actions = dba
 
     def rebuild_ui(self):
-        records = self.dba.dynamic_query("History", "Select usage statistics").get_data_list()
+        records = self.dba.dynamic_query("History", "Select usage statistics")
+        if not records.is_success():
+            util.open_error_dialog(self.window)
+            return
 
         proxy = util.Sorting(self.window.analyticsView)
-        proxy.setSourceModel(Model(records))
+        proxy.setSourceModel(Model(records.get_data_list()))
 
         self.window.analyticsView.setModel(proxy)
         self.window.analyticsView.sortByColumn(0, Qt.SortOrder.AscendingOrder)
