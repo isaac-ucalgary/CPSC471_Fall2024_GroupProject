@@ -330,7 +330,7 @@
                  <property name="widgetResizable">
                   <bool>true</bool>
                  </property>
-                 <widget class="QWidget" name="widget_7">
+                 <widget class="QWidget" name="inventoryEntries">
                   <property name="geometry">
                    <rect>
                     <x>0</x>
@@ -440,6 +440,38 @@
                   </size>
                  </property>
                 </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_8" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_12">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QScrollArea" name="recipeView">
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="scrollAreaWidgetContents">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>636</width>
+                    <height>631</height>
+                   </rect>
+                  </property>
+                 </widget>
+                </widget>
                </item>
               </layout>
              </widget>
