@@ -75,10 +75,10 @@ class InventoryView:
 
             form.itemType.setText(entry["item_name"])
             form.quantity.setText(util.format_quantity(entry["quantity"], entry["unit"]))
-            form.infoBtn.clicked.connect(lambda _, e=entry: self.item_info(e))
-            form.consumeBtn.clicked.connect(lambda _, e=entry: self.consume_item(e))
-            form.throwOutBtn.clicked.connect(lambda _, e=entry: self.throw_out_item(e))
-            form.removeBtn.clicked.connect(lambda _, e=entry: self.remove_item(e))
+            form.infoBtn.clicked.connect(lambda _, e=entry: self.item_info_dialog(e))
+            form.consumeBtn.clicked.connect(lambda _, e=entry: self.consume_item_dialog(e))
+            form.throwOutBtn.clicked.connect(lambda _, e=entry: self.throw_out_item_dialog(e))
+            form.removeBtn.clicked.connect(lambda _, e=entry: self.remove_item_dialog(e))
 
             if entry["expiry"] is None:
                 form.expiry.hide()
@@ -96,7 +96,7 @@ class InventoryView:
         for widget in self.window.inventoryView.widget().findChildren(QWidget, "removeBtn"):
             widget.setEnabled(privileged)
 
-    def item_info(self, entry):
+    def item_info_dialog(self, entry):
         def gen_dialog(close_dlg):
             widget = info_base_tpl()
             form = info_form_tpl()
@@ -117,7 +117,7 @@ class InventoryView:
 
         util.open_dialog(self.window, gen_dialog)            
 
-    def consume_item(self, entry):
+    def consume_item_dialog(self, entry):
         users = self.dba.select_users()
         if not users.is_success():
             util.open_error_dialog(self.window)
@@ -164,7 +164,7 @@ class InventoryView:
         
         util.open_dialog(self.window, gen_dialog)
 
-    def throw_out_item(self, entry):
+    def throw_out_item_dialog(self, entry):
         def gen_dialog(close_dlg):
             widget = waste_base_tpl()
             form = waste_form_tpl()
@@ -202,7 +202,7 @@ class InventoryView:
         
         util.open_dialog(self.window, gen_dialog)
 
-    def remove_item(self, entry):
+    def remove_item_dialog(self, entry):
         def gen_dialog(close_dlg):
             widget = remove_base_tpl()
             form = remove_form_tpl()

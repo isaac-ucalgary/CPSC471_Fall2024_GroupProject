@@ -1773,10 +1773,8 @@ class Database:
 
             # TODO This should be its own function and be applied to all LIKE clauses.
             # Escape characters
-            item_name.replace("%", "!%")
-            item_name.replace("!", "!!")
-            storage_name.replace("%", "!%")
-            storage_name.replace("!", "!!")
+            item_name = item_name.replace("!", "!!").replace("%", "!%")
+            storage_name = storage_name.replace("!", "!!").replace("%", "!%")
 
             item_name = f"%{item_name}%"
             storage_name = f"%{storage_name}%"

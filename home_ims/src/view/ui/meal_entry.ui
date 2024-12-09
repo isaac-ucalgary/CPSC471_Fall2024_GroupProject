@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>834</width>
+    <width>563</width>
     <height>40</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="QLabel" name="itemType">
+    <widget class="QLabel" name="recipe">
      <property name="text">
       <string>Recipe name</string>
      </property>
@@ -43,6 +43,13 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="scheduleDate">
+     <property name="text">
+      <string>Scheduled for Date</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QPushButton" name="consumeBtn">

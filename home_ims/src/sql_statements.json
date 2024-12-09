@@ -94,7 +94,7 @@
                 "CREATE TABLE IF NOT EXISTS Home_IMS.OtherTemplate (",
                 "name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (name),",
-                "FOREIGN KEY (name) REFERENCES Template(name)",
+                "FOREIGN KEY (name) REFERENCES Template(name) ON DELETE CASCADE",
                 ");"
             ],
             "order": 7
@@ -119,7 +119,7 @@
                 "CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (",
                 "recipe_name VARCHAR(255) NOT NULL,",
                 "PRIMARY KEY (recipe_name),",
-                "FOREIGN KEY (recipe_name) REFERENCES Template(name)",
+                "FOREIGN KEY (recipe_name) REFERENCES Template(name) ON DELETE CASCADE",
                 ");"
             ],
             "order": 9
@@ -135,7 +135,7 @@
                 "location_name VARCHAR(255) NOT NULL,",
                 "meal_type VARCHAR(31),",
                 "PRIMARY KEY (recipe_name, timestamp, location_name),",
-                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name),",
+                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE,",
                 "FOREIGN KEY (location_name) REFERENCES Location(name)",
                 ");"
             ],
@@ -373,10 +373,11 @@
                 "query": [
                     "SELECT recipe_name, timestamp, location_name, meal_type",
                     "FROM Home_IMS.MealSchedule",
-                    "WHERE recipe_name LIKE %s",
+                    "WHERE recipe_name LIKE %s ESCAPE '!'",
                     "AND timestamp BETWEEN %s AND %s",
-                    "AND location_name LIKE %s",
-                    "AND meal_type LIKE %s;"
+                    "AND location_name LIKE %s ESCAPE '!'",
+                    "AND meal_type LIKE %s ESCAPE '!'",
+                    "ORDER BY timestamp DESC;"
                 ],
                 "notes": [
                     "Select meals"
@@ -1372,6 +1373,16 @@
                 "query": [
                     "INSERT INTO Home_IMS.Template (name)",
                     "VALUES (%s);"
+                ]
+            },
+            "Delete template": {
+                "inputs": [
+                    "template_name"
+                ],
+                "outputs": [],
+                "query": [
+                    "DELETE FROM Home_IMS.Template",
+                    "WHERE name = %s;"
                 ]
             }
         },
