@@ -1,5 +1,6 @@
 **/.env
 **/secrets.py
+**/env.py
 data/
 **/__pycache__/
 home_ims/src/view/ui/popup/screen_needed.txt
