@@ -47,6 +47,7 @@ def show(window, dba, refresh):
         on_item_change(0)
 
         form.itemSelector.currentIndexChanged.connect(on_item_change)
+        util.config_dateedit(form.expiryInput)
         form.canExpire.checkStateChanged.connect(
             lambda s: form.expiryData.setVisible(s == Qt.CheckState.Checked)
         )

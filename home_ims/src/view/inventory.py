@@ -33,7 +33,7 @@ class InventoryView:
         self.window.inventorySearch.clear()
         self.window.storageSelector.clear()
         self.window.filterExpiry.setCheckState(Qt.CheckState.Unchecked)
-        self.window.expiryInput.setDateTime(QDateTime.currentDateTime())
+        util.config_dateedit(self.window.expiryInput)
 
         storages = self.dba.select_storage()
         if not storages.is_success():

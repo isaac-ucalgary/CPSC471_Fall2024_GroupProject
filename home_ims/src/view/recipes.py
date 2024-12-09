@@ -92,6 +92,7 @@ class RecipesView:
                 self.update_view()
                 close_dlg()
 
+            util.config_dateedit(form.dateInput)
             form.recipe.setText(entry["recipe_name"])
             form.cancelBtn.clicked.connect(close_dlg)
             form.scheduleBtn.clicked.connect(schedule)
