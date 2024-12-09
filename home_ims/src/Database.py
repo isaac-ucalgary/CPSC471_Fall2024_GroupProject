@@ -386,7 +386,7 @@ class Database:
             for storage in freezer_storages:
                 self.db_actions.add_freezer_storage(**storage)
 
-            parents = [ "John", "Penny", "Jaquise" ]
+            parents = [ "John (Admin)", "Penny (Admin)", "Jaquise (Admin)" ]
             dependents = [ "Harry", "Han Solo", "Sarah" ]
             for parent in parents:
                 self.db_actions.add_parent(name=parent)
@@ -2978,6 +2978,9 @@ class Database:
                 self.__parent.rollback()
                 return ActionResult(error_message="Failed to get inventory quantity", exception=e)
 
+            if new_quantity < 0:
+                self.__parent.rollback()
+                return ActionResult(error_message="Cannot remove more than present in inventory")
 
             # Reduce the quantity of the item by the desired amount or remove the item if its quantity has been exhausted.
             result:ActionResult

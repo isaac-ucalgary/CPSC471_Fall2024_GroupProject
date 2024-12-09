@@ -20,7 +20,6 @@ def show(window, dba):
                 return
 
             result = dba.add_location(name)
-
             if not result.is_success():
                 util.open_error_dialog(window)
                 return

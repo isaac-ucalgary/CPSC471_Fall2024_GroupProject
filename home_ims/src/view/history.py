@@ -21,10 +21,13 @@ class HistoryView:
         self.dba:DB_Actions = dba
     
     def rebuild_ui(self):
-        records = self.dba.dynamic_query("History", "Select history records").get_data_list()
+        records = self.dba.dynamic_query("History", "Select history records")
+        if not records.is_success():
+            util.open_error_dialog(self.window)
+            return
 
         proxy = util.Sorting(self.window.analyticsView)
-        proxy.setSourceModel(Model(records))
+        proxy.setSourceModel(Model(records.get_data_list()))
 
         self.window.historyView.setModel(proxy)
         self.window.historyView.sortByColumn(2, Qt.SortOrder.DescendingOrder)

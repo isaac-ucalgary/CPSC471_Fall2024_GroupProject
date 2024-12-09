@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>188</width>
-    <height>225</height>
+    <width>202</width>
+    <height>226</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -111,9 +111,6 @@
       </item>
       <item>
        <widget class="QPushButton" name="addBtn">
-        <property name="styleSheet">
-         <string>background-color: #CCFFFF; color: black;</string>
-        </property>
         <property name="text">
          <string>Add</string>
         </property>

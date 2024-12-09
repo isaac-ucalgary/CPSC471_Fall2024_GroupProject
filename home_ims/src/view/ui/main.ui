@@ -11,10 +11,12 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Home IMS</string>
   </property>
   <property name="styleSheet">
-   <string notr="true"/>
+   <string notr="true">[nobackground=true] {
+	background-color: #00ffffff;
+}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -271,16 +273,16 @@
              <widget class="QWidget" name="widget_4" native="true">
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
-                <widget class="QPushButton" name="refreshBtn">
+                <widget class="QPushButton" name="refreshInventoryBtn">
                  <property name="text">
-                  <string>Refresh</string>
+                  <string>Refresh List</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="addItemBtn">
                  <property name="text">
-                  <string>Add Item</string>
+                  <string>Add Inventory</string>
                  </property>
                 </widget>
                </item>
@@ -340,9 +342,7 @@
                    </rect>
                   </property>
                   <property name="styleSheet">
-                   <string notr="true">#inventoryEntries {
-	background-color: #00ffffff;
-}</string>
+                   <string notr="true">background-color: #00ffffff;</string>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_6"/>
                  </widget>
@@ -400,11 +400,31 @@
                 <number>10</number>
                </property>
                <item>
-                <widget class="QToolButton" name="addRecipeBtn">
+                <widget class="QPushButton" name="refreshRecipesBtn">
                  <property name="text">
-                  <string>+</string>
+                  <string>Refresh List</string>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="addRecipeBtn">
+                 <property name="text">
+                  <string>Add Recipe</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_5">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
                <item>
                 <widget class="QLineEdit" name="recipeSearch">
@@ -429,17 +449,72 @@
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacer_5">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+                <widget class="QRadioButton" name="searchByName">
+                 <property name="text">
+                  <string>By Name</string>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
+                 <property name="checked">
+                  <bool>true</bool>
                  </property>
-                </spacer>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroup</string>
+                 </attribute>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioButton_2">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="text">
+                  <string>By Ingredients</string>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">buttonGroup</string>
+                 </attribute>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_8" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_12">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>9</number>
+               </property>
+               <item>
+                <widget class="QScrollArea" name="recipesView">
+                 <property name="styleSheet">
+                  <string notr="true">#recipesView {
+	background-color: #00ffffff;
+	border: 1px solid;
+	border-color: #bbbbbb;
+}</string>
+                 </property>
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="scrollAreaWidgetContents">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>636</width>
+                    <height>622</height>
+                   </rect>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">background-color: #00ffffff;</string>
+                  </property>
+                 </widget>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -476,94 +551,35 @@
             </property>
             <item>
              <widget class="QWidget" name="widget_5" native="true">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>241</width>
-                <height>51</height>
-               </size>
-              </property>
-              <widget class="QPushButton" name="addMealBtn">
-               <property name="geometry">
-                <rect>
-                 <x>10</x>
-                 <y>10</y>
-                 <width>31</width>
-                 <height>31</height>
-                </rect>
-               </property>
-               <property name="autoFillBackground">
-                <bool>false</bool>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QPushButton:pressed {
-	background-color: #dfdfdf;
-}
-
-QPushButton:disabled {
-	border-color: #9b9b9b;
-}
-
-QPushButton {
-	background-color: #ffffff;
-	border-color: #000000;
+              <layout class="QVBoxLayout" name="verticalLayout_13">
+               <item>
+                <widget class="QScrollArea" name="mealsView">
+                 <property name="styleSheet">
+                  <string notr="true">#mealsView {
+	background-color: #00ffffff;
 	border: 1px solid;
-	border-radius: 15px;
+	border-color: #bbbbbb;
 }</string>
-               </property>
-               <property name="text">
-                <string>+</string>
-               </property>
-               <property name="autoDefault">
-                <bool>false</bool>
-               </property>
-               <property name="default">
-                <bool>false</bool>
-               </property>
-               <property name="flat">
-                <bool>false</bool>
-               </property>
-              </widget>
-              <widget class="QLineEdit" name="mealSearch">
-               <property name="geometry">
-                <rect>
-                 <x>50</x>
-                 <y>10</y>
-                 <width>181</width>
-                 <height>31</height>
-                </rect>
-               </property>
-               <property name="cursor">
-                <cursorShape>IBeamCursor</cursorShape>
-               </property>
-               <property name="tabletTracking">
-                <bool>false</bool>
-               </property>
-               <property name="styleSheet">
-                <string notr="true">QLineEdit {
-	background-color: #ffffff;
-	border: 1px solid;
-	border-radius: 15px;
-	padding-left: 15px;
-	padding-right: 15px;
-}
-
-QLineEdit:disabled {
-	border-color: #9b9b9b;
-}</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="placeholderText">
-                <string>Search</string>
-               </property>
-              </widget>
+                 </property>
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="widget_10">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>636</width>
+                    <height>655</height>
+                   </rect>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">background-color: #00ffffff;</string>
+                  </property>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
              </widget>
             </item>
            </layout>
@@ -663,4 +679,7 @@ QLineEdit:disabled {
  </widget>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="buttonGroup"/>
+ </buttongroups>
 </ui>

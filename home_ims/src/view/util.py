@@ -22,6 +22,7 @@ def open_dialog(window, gen):
     layout = QVBoxLayout()
     layout.addWidget(gen(dialog.accept))
     dialog.setLayout(layout)
+    dialog.resize(dialog.minimumSize())
     dialog.open()
 
 error_form_tpl, error_widget_tpl = uic.loadUiType(get_ui_path("popup", "error_generic.ui"))
@@ -32,7 +33,7 @@ def open_error_dialog(window, msg=None):
         form.setupUi(widget)
 
         if msg is not None:
-            form.warningLabel.setText(msg)
+            form.warning.setText(msg)
 
         form.closeBtn.clicked.connect(close)
 
