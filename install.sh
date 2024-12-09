@@ -56,7 +56,6 @@ printf "Data confirmed\n\n"
 cat > ./env.py << EOL
 MARIADB_HOST:str = \"${db_host}\"
 MARIADB_PORT:int = \"${db_port}\"
-MARIADB_DATABASE_NAME:str = \"Home_IMS\"
 MARIADB_USER:str = \"${db_user}\"
 EOL
 

@@ -8,7 +8,7 @@ import warnings
 
 
 # -- Local Imports --
-from env import MARIADB_HOST, MARIADB_PORT, MARIADB_DATABASE_NAME, MARIADB_USER
+from env import MARIADB_HOST, MARIADB_PORT, MARIADB_USER
 from secrets import MARIADB_PASSWORD # (ignore error, it's caused by .gitignore file and is expected.)
 from sql_statements import SQL_Statements
 from action_result import ActionResult
@@ -32,9 +32,6 @@ class Database:
 
         `MARIADB_PORT` : int
             The port number of the database service running on the server.
-
-        `MARIADB_DATABASE_NAME` : str
-            The name of the database to use.
 
         `MARIADB_USER` : str
             The username used to connect to the database.
@@ -67,7 +64,6 @@ class Database:
                  db_port:int=MARIADB_PORT,
                  db_user:str=MARIADB_USER,
                  db_password:str=MARIADB_PASSWORD,
-                 db_name:str=MARIADB_DATABASE_NAME,
                  auto_connect:bool=True
                  ):
         """
@@ -104,7 +100,7 @@ class Database:
         self.db_port = db_port
         self.db_user = db_user
         self.db_password = db_password
-        self.db_name = db_name
+        self.db_name = "Home_IMS"
 
         self.DB_CONN_CONFIG = {
             'host':self.db_host,
