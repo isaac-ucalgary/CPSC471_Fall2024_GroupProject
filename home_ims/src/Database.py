@@ -1,7 +1,6 @@
 # Build Database Script
 
 # -- Library Imports --
-from typing_extensions import CapsuleType
 from mysql.connector import Error, IntegrityError, InterfaceError, MySQLConnection
 from mysql.connector.cursor import MySQLCursorDict
 from types import FunctionType, MethodType
