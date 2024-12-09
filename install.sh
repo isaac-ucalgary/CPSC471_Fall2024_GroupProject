@@ -42,7 +42,7 @@ while [[ ! $data_confirmed ]]; do
         exit 1
         ;;
       *)
-        printf "Data rejected... Trying agin...\n"
+        printf "Data rejected... Trying again...\n"
         ;;
     esac
   fi
