@@ -359,8 +359,8 @@ class Database:
             for storage in freezer_storages:
                 self.db_actions.add_freezer_storage(**storage)
 
-            parents = [ "John", "Penny", "Jaquise" ]
-            dependents = [ "Harry", "Han Solo", "Sarah" ]
+            parents = [ "John" ]
+            dependents = [ "Harry", "Sarah" ]
             for parent in parents:
                 self.db_actions.add_parent(name=parent)
             for dep in dependents:
@@ -1557,7 +1557,7 @@ class Database:
             cursor:MySQLCursorDict = self.__parent._Database__cursor
             
             # Add user if it doesn't already exist
-            add_user_result = self._add_user(name=name)
+            add_user_result = self._add_user(name=name + " (Admin)")
             if add_user_result.get_exception() not in [IntegrityError, None]:
                 return add_user_result
 

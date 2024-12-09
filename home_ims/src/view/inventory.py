@@ -71,7 +71,8 @@ class InventoryView:
             form.removeBtn.clicked.connect(self.gen_remove_slot(entry))
 
             if entry["expiry"] is None:
-                form.expiry.hide()
+                #form.expiry.hide()
+                form.expiry.setText("                   ")
             else:
                 form.expiry.setText("Expires " + util.format_date(entry["expiry"]))
 
