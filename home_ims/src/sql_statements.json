@@ -1592,15 +1592,17 @@
                 "outputs": [
                     "item_name",
                     "storage_name",
+                    "location_name",
                     "timestamp",
                     "expiry",
                     "quantity",
                     "unit"
                 ],
                 "query": [
-                    "SELECT I.item_name, I.storage_name, I.timestamp, I.expiry, I.quantity, T.unit",
+                    "SELECT I.item_name, I.storage_name, S.location_name, I.timestamp, I.expiry, I.quantity, T.unit",
                     "FROM Home_IMS.Inventory AS I",
                     "JOIN Home_IMS.ItemType AS T ON I.item_name = T.name",
+                    "JOIN Home_IMS.Storage AS S ON S.storage_name = I.storage_name",
                     "WHERE I.item_name LIKE %s ESCAPE '!'",
                     "AND I.storage_name LIKE %s ESCAPE '!'",
                     "AND (I.expiry BETWEEN %s AND %s OR (I.expiry IS NULL AND %s))",

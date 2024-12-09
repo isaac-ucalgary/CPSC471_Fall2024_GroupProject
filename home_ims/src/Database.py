@@ -1834,6 +1834,9 @@ class Database:
                 self.__parent.rollback()
                 return ActionResult(error_message="Failed to get inventory quantity", exception=e)
 
+            if new_quantity < 0:
+                self.__parent.rollback()
+                return ActionResult(error_message="Cannot remove more than present in inventory")
 
             # Reduce the quantity of the item by the desired amount or remove the item if its quantity has been exhausted.
             result:ActionResult
