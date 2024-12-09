@@ -62,12 +62,13 @@ let
 
 in
 pkgs.mkShell {
-  packages = [
+  packages = with pkgs; [
     (python.withPackages (python-pkgs: with python-pkgs; [
       # select Python packages here
-      pandas
-      requests
       mysql-connector
+      numpydoc
+      pyqt6
     ]))
+    qt6.full
   ];
 }
