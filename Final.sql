@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Template (
 CREATE TABLE IF NOT EXISTS Home_IMS.OtherTemplate (
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (name),
-  FOREIGN KEY (name) REFERENCES Template(name)
+  FOREIGN KEY (name) REFERENCES Template(name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Home_IMS.Location (
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Location (
 CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (
   recipe_name VARCHAR(255) NOT NULL,
   PRIMARY KEY (recipe_name),
-  FOREIGN KEY (recipe_name) REFERENCES Template(name)
+  FOREIGN KEY (recipe_name) REFERENCES Template(name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Home_IMS.MealSchedule (
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS Home_IMS.MealSchedule (
   location_name VARCHAR(255) NOT NULL,
   meal_type VARCHAR(31),
   PRIMARY KEY (recipe_name, timestamp, location_name),
-  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name),
+  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE,
   FOREIGN KEY (location_name) REFERENCES Location(name)
 );
 
@@ -185,10 +185,11 @@ WHERE recipe_name = %s
 -- Select meals --
 SELECT recipe_name, timestamp, location_name, meal_type
 FROM Home_IMS.MealSchedule
-WHERE recipe_name LIKE %s
+WHERE recipe_name LIKE %s ESCAPE '!'
       AND timestamp BETWEEN %s AND %s
-      AND location_name LIKE %s
-      AND meal_type LIKE %s;
+      AND location_name LIKE %s ESCAPE '!'
+      AND meal_type LIKE %s ESCAPE '!'
+      ORDER BY timestamp DESC;
 
 
 ----------------
@@ -581,6 +582,10 @@ WHERE item_name LIKE %s
 INSERT INTO Home_IMS.Template (name)
 VALUES (%s);
 
+-- Delete template --
+DELETE FROM Home_IMS.Template
+WHERE name = %s;
+
 
 --------------
 --- Recipe ---
@@ -609,6 +614,13 @@ GROUP BY R.recipe_name
 WHERE R.recipe_name = I.recipe_name
       AND I.food_name = P.item_name
       AND R.recipe_name LIKE %s;
+
+-- Search recipes by ingredient --
+SELECT DISTINCT R.recipe_name
+FROM Home_IMS.Recipe AS R
+JOIN Home_IMS.Ingredients AS I
+     ON R.recipe_name = I.recipe_name
+WHERE I.food_name LIKE %s;
 
 
 -------------------
