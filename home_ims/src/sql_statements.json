@@ -1683,7 +1683,7 @@
                         "WHERE M.timestamp <= %s",
                         "GROUP BY I.food_name",
                     ") AS Required",
-                    "JOIN (",
+                    "LEFT JOIN (",
                         "SELECT S.item_name, SUM(S.quantity) AS total",
                         "FROM Home_IMS.Inventory AS S",
                         "WHERE EXISTS (",
