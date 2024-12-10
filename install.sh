@@ -18,7 +18,7 @@ while [[ $data_confirmed == false ]]; do
 
   # Check inputs
   if [[ $db_port -lt 1 ]] || [[ $db_port -gt 65535 ]] ; then 
-    printf "%d is not a valid port number, try again.\n\n" db_port
+    printf "%s is not a valid port number, try again.\n\n" "${db_port}"
 
   # If inputs are good, ask for confirmation on the data
   else
