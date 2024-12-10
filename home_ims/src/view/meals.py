@@ -51,11 +51,22 @@ class MealsView:
         self.window.mealsView.setWidget(container)
     
     def configure_user(self, user, privileged):
+        self.current_user = user
         self.window.addRecipeBtn.setEnabled(privileged)
         for widget in self.window.mealsView.widget().findChildren(QAbstractButton):
             widget.setEnabled(privileged)
 
     def consume_meal(self, entry):
+        result = self.dba.consume_meal(
+            entry["recipe_name"],
+            entry["timestamp"],
+            self.current_user
+        )
+
+        if not result.is_success():
+            util.open_error_dialog(self.window)
+            return
+
         self.update_view()
 
     def remove_meal(self, entry):

@@ -3104,6 +3104,67 @@ class Database:
 
 
 
+        def consume_meal(self, recipe_name:str, timestamp:dt.datetime, user:str) -> ActionResult:
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
+
+            self.__parent.start_transaction()
+
+            try:
+                # Get recipe ingredients.
+                stmt_ingredients = self.__parent._Database__sql_statements.get_query(group="Ingredients", name="View ingredients for a recipe")
+                data_ingredients = (recipe_name,)
+                cursor.execute(stmt_ingredients, data_ingredients)
+                ingredients = {}
+                use_log = []
+
+                # Collect ingredients into dictionary.
+                for i in cursor.fetchall():
+                    use_log.append((i["food_name"], i["quantity"], user))
+                    ingredients[i["food_name"]] = i["quantity"]
+                
+                # Get available inventory.
+                stmt_inventory = self.__parent._Database__sql_statements.get_query(group="Ingredients", name="Search inventory by ingredients")
+                data_inventory = (recipe_name,)
+                cursor.execute(stmt_inventory, data_inventory)
+
+                # Track inventory to remove and update.
+                remove_log = []
+                update_log = []
+
+                for i in cursor.fetchall():
+                    quantity = ingredients.get(i["item_name"])
+                    if quantity is None:
+                        continue
+
+                    new_quantity = i["quantity"] - quantity
+                    if new_quantity <= 0:
+                        remove_log.append((i["item_name"], i["storage_name"], i["timestamp"]))
+                    else:
+                        update_log.append((new_quantity, i["item_name"], i["storage_name"], i["timestamp"]))
+                    
+                    if new_quantity >= 0:
+                        del ingredients[i["item_name"]]
+
+                stmt_remove = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Remove item from inventory")
+                cursor.executemany(stmt_remove, remove_log)
+                
+                stmt_update = self.__parent._Database__sql_statements.get_query(group = "Inventory", name = "Change item quantity")
+                cursor.executemany(stmt_update, update_log)
+
+                stmt_use = stmt = self.__parent._Database__sql_statements.get_query(group="Used", name="Add item used record")
+                cursor.executemany(stmt_use, use_log)
+
+                stmt_consume = self.__parent._Database__sql_statements.get_query(group="MealSchedule", name="Delete a meal")
+                data_consume = (recipe_name, timestamp)
+                cursor.execute(stmt_consume, data_consume)
+            except Exception as e:
+                self.__parent.rollback()
+                return ActionResult(error_message="", exception=e)
+
+            self.__parent.commit()
+
+            return ActionResult(success=True)
+
         # ----- PURCHASE -----
 
         def purchase_item(self,

@@ -132,11 +132,9 @@
                 "CREATE TABLE IF NOT EXISTS Home_IMS.MealSchedule (",
                 "recipe_name VARCHAR(255) NOT NULL,",
                 "timestamp DATETIME NOT NULL,",
-                "location_name VARCHAR(255) NOT NULL,",
                 "meal_type VARCHAR(31),",
-                "PRIMARY KEY (recipe_name, timestamp, location_name),",
-                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE,",
-                "FOREIGN KEY (location_name) REFERENCES Location(name)",
+                "PRIMARY KEY (recipe_name, timestamp),",
+                "FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE",
                 ");"
             ],
             "order": 10
@@ -329,13 +327,12 @@
                 "inputs": [
                     "recipe_name",
                     "timestamp",
-                    "location_name",
                     "meal_type"
                 ],
                 "outputs": [],
                 "query": [
-                    "INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)",
-                    "VALUES (%s, %s, %s, %s);"
+                    "INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, meal_type)",
+                    "VALUES (%s,  %s, %s);"
                 ],
                 "notes": [
                     "Schedule a meal"
@@ -361,21 +358,18 @@
                     "recipe_name",
                     "timestamp_from",
                     "timestamp_to",
-                    "location_name",
                     "meal_type"
                 ],
                 "outputs": [
                     "recipe_name",
                     "timestamp",
-                    "location_name",
                     "meal_type"
                 ],
                 "query": [
-                    "SELECT recipe_name, timestamp, location_name, meal_type",
+                    "SELECT recipe_name, timestamp, meal_type",
                     "FROM Home_IMS.MealSchedule",
                     "WHERE recipe_name LIKE %s ESCAPE '!'",
                     "AND timestamp BETWEEN %s AND %s",
-                    "AND location_name LIKE %s ESCAPE '!'",
                     "AND meal_type LIKE %s ESCAPE '!'",
                     "ORDER BY timestamp DESC;"
                 ],
@@ -416,27 +410,6 @@
                 ],
                 "notes": [
                     "Select item type"
-                ]
-            },
-            "TODO: Daniel I have no idea what this does": {
-                "inputs": [
-                    "name"
-                ],
-                "outputs": [
-                    "recipe_name",
-                    "food_name",
-                    "timestamp",
-                    "location_name",
-                    "meal_type"
-                ],
-                "query": [
-                    "SELECT R.recipe_name, R.food_name, M.timestamp, M.location_name, M.meal_type",
-                    "FROM Home_IMS.MealSchedule AS M",
-                    "JOIN Home_IMS.Recipe AS R ON M.recipe_name = R.recipe_name",
-                    "WHERE R.food_name = %s;"
-                ],
-                "notes": [
-                    "TODO: Daniel I have no idea what this does"
                 ]
             }
         },
@@ -1525,15 +1498,34 @@
                     "recipe_name"
                 ],
                 "outputs": [
-                    "food_name"
+                    "food_name",
+                    "quantity"
                 ],
                 "query": [
-                    "SELECT food_name",
+                    "SELECT food_name, quantity",
                     "FROM Home_IMS.Ingredients",
                     "WHERE recipe_name LIKE %s;"
                 ],
                 "notes": [
                     "View ingredients for a recipe"
+                ]
+            },
+            "Search inventory by ingredients": {
+                "inputs": [
+                    "recipe_name"
+                ],
+                "outputs": [
+                    "item_name",
+                    "storage_name",
+                    "timestamp",
+                    "quantity"
+                ],
+                "query": [
+                    "SELECT S.item_name, S.storage_name, S.timestamp, S.quantity",
+                    "FROM Home_IMS.Inventory AS S",
+                    "JOIN Home_IMS.Ingredients AS I ON I.food_name = S.item_name",
+                    "WHERE I.recipe_name = %s",
+                    "ORDER BY S.expiry;"
                 ]
             }
         },
@@ -1588,26 +1580,6 @@
                 ],
                 "notes": [
                     "Change item quantity"
-                ]
-            },
-            "Move item storage location": {
-                "inputs": [
-                    "new_storage_name",
-                    "item_name",
-                    "old_storage_name",
-                    "timestamp"
-                ],
-                "outputs": [],
-                "query": [
-                    "UPDATE Home_IMS.Inventory AS I",
-                    "SET I.storage_name = %s",
-                    "WHERE I.item_name = %s",
-                    "AND I.storage_name = %s",
-                    "AND I.timestamp = %s;"
-                ],
-                "notes": [
-                    "Move item storage location",
-                    "TODO: This will fail if an entry with the same PK exists at the new location. -D"
                 ]
             },
             "View inventory items": {
