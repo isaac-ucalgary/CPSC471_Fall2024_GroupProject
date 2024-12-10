@@ -38,10 +38,6 @@ This app requires **Qt6**.
 This script will clone the git repo to your home directory under *~/Home_IMS*, ask you about the details for connecting to [your database](#MariaDB (or MySQL)), and create 
 the appropriate config files using this information.
 
-While you should always read a script before you run it, for those of you that are particularly lazy, just run:
-```
-wget -O- https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh | bash
-```
 
 Assuming all went well you should now be able to run it using:
 ```
