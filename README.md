@@ -22,10 +22,13 @@ This app runs on [python 3.12](https://www.python.org/downloads/).
 It should run on any version of python 3.12.x but specifically it was developed on python 3.12.7.
 While other versions of python may work, it is known that python 3.13+ does not work and version below 3.12 are untested.
 
+### Qt
+This app requires **Qt6**.
+
 ## <a name="linux-install"></a> Linux Install
 1. Download the install script
    ```
-   wget https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh?token=GHSAT0AAAAAAC3JNKMXXD32GIEPG5NEL7Y4Z2XPDZA
+   wget https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh
    ```
 2. Run the install script
    ```
@@ -37,7 +40,7 @@ the appropriate config files using this information.
 
 While you should always read a script before you run it, for those of you that are particularly lazy, just run:
 ```
-wget -O- https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh?token=GHSAT0AAAAAAC3JNKMXXD32GIEPG5NEL7Y4Z2XPDZA | bash
+wget -O- https://raw.githubusercontent.com/isaac-ucalgary/CPSC471_Fall2024_GroupProject/refs/heads/main/install.sh | bash
 ```
 
 Assuming all went well you should now be able to run it using:
