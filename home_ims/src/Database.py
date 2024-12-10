@@ -3054,6 +3054,28 @@ class Database:
             self.__parent.commit()
             return ActionResult(success=True)
 
+        
+
+        def search_recipes_by_ingredient(self, ingredient:str="%") -> ActionResult:
+            """
+            Gets a list of recipes that include the provide ingredient.
+
+            Parameters
+            ----------
+            `ingredient` : str
+                The food name of ingredient to search for in recipes.
+                Supports MySQL regex.
+            """
+            cursor:MySQLCursorDict = self.__parent._Database__cursor
+
+            try:
+                statement = self.__parent._Database__sql_statements.get_query(group="Recipe", name="Search recipes by ingredient")
+                data = (ingredient,)
+                cursor.execute(statement, data)
+                return ActionResult(data=cursor.fetchall())
+            except Exception as e:
+                return ActionResult(error_message="Failed to search recipes by ingredient", exception=e)
+
 
 
         def gen_shopping_list(self, timestamp:dt.datetime=dt.datetime.now() + dt.timedelta(days=7)) -> ActionResult:

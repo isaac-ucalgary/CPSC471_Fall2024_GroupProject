@@ -1452,6 +1452,24 @@
                 "notes": [
                     "Get estimated recipe cost"
                 ]
+            },
+            "Search recipes by ingredient": {
+                "inputs": [
+                    "ingredient"
+                ],
+                "outputs": [
+                    "recipe_name"
+                ],
+                "query": [
+                    "SELECT DISTINCT R.recipe_name",
+                    "FROM Home_IMS.Recipe AS R",
+                    "JOIN Home_IMS.Ingredients AS I",
+                    "ON R.recipe_name = I.recipe_name",
+                    "WHERE I.food_name LIKE %s;"
+                ],
+                "notes": [
+                    "Get a list of recipes that include the provided ingredient"
+                ]
             }
         },
         "Ingredients": {
