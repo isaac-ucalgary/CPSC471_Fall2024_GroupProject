@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QAbstractButton
 from PyQt6 import uic
 
+from action_result import ActionResult
 import view.add_recipe as add_recipe
 from view import util
 
@@ -25,13 +26,18 @@ class RecipesView:
 
     def update_view(self):
         # TODO To Database.py
-        search = self.window.recipeSearch.text().replace("!", "!!").replace("%", "!%")
+        search = self.window.recipeSearch.text()
 
-        recipes = self.dba.dynamic_query(
-            "Recipe",
-            "View recipes",
-            recipe_name=f"%{search}%"
-        )
+        recipes:ActionResult
+        if self.window.searchByName.isChecked():
+            search = search.replace("!", "!!").replace("%", "!%")
+            recipes = self.dba.dynamic_query(
+                "Recipe",
+                "View recipes",
+                recipe_name=f"%{search}%"
+            )
+        else:
+            recipes = self.dba.search_recipes_by_ingredient(search)
 
         if not recipes.is_success():
             util.open_error_dialog(self.window)

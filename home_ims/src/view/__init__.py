@@ -23,10 +23,28 @@ DB_Actions = Database.DB_Actions
 def show_window(dba:DB_Actions):
     window = uic.loadUi(util.get_ui_path("main.ui"))
 
-    window.userSelector.addItem("<None>", False)
+    def refresh_users():
+        current_user = window.userSelector.currentText()
 
-    for user in dba.select_users().get_data_list():
-        window.userSelector.addItem(user['name'], user['is_parent'])
+        users = dba.select_users()
+        if not users.is_success():
+            util.open_error_dialog(window)
+            return
+
+        window.userSelector.blockSignals(True)
+        window.userSelector.clear()
+        
+        window.userSelector.addItem("<None>", False)
+
+        for (i, user) in enumerate(users.get_data_list()):
+            window.userSelector.addItem(user["name"], user["is_parent"])
+            if user["name"] == current_user:
+                window.userSelector.setCurrentIndex(i)
+                on_user_change(i + 1)
+
+        window.userSelector.blockSignals(False)
+
+    refresh_users()
 
     inventory_tab = InventoryView(window, dba)
     recipes_tab = RecipesView(window, dba)
@@ -91,6 +109,6 @@ def show_window(dba:DB_Actions):
     window.addItemTypeBtn.clicked.connect(lambda: add_item_type.show(window, dba))
     window.addStorageBtn.clicked.connect(lambda: add_storage.show(window, dba))
     window.addLocationBtn.clicked.connect(lambda: add_location.show(window, dba))
-    window.addUserBtn.clicked.connect(lambda: add_user.show(window, dba))
+    window.addUserBtn.clicked.connect(lambda: add_user.show(window, dba, refresh_users))
 
     window.show()

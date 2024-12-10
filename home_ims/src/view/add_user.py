@@ -7,7 +7,7 @@ from view import util
 
 form_tpl, base_tpl = uic.loadUiType(util.get_ui_path("popup", "add_user.ui"))
 
-def show(window, dba):
+def show(window, dba, refresh):
     def gen_widget(close_dlg):
         widget = base_tpl()
         form = form_tpl()
@@ -30,6 +30,7 @@ def show(window, dba):
                 return
 
             close_dlg()
+            refresh()
         
         form.cancelBtn.clicked.connect(close_dlg)
         form.addBtn.clicked.connect(create)

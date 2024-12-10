@@ -3056,7 +3056,7 @@ class Database:
 
         
 
-        def search_recipes_by_ingredient(self, ingredient:str="%") -> ActionResult:
+        def search_recipes_by_ingredient(self, ingredient:str="") -> ActionResult:
             """
             Gets a list of recipes that include the provide ingredient.
 
@@ -3069,8 +3069,9 @@ class Database:
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             try:
+                ingredient = ingredient.replace("!", "!!").replace("%", "!%")
                 statement = self.__parent._Database__sql_statements.get_query(group="Recipe", name="Search recipes by ingredient")
-                data = (ingredient,)
+                data = (f"%{ingredient}%",)
                 cursor.execute(statement, data)
                 return ActionResult(data=cursor.fetchall())
             except Exception as e:

@@ -1465,7 +1465,7 @@
                     "FROM Home_IMS.Recipe AS R",
                     "JOIN Home_IMS.Ingredients AS I",
                     "ON R.recipe_name = I.recipe_name",
-                    "WHERE I.food_name LIKE %s;"
+                    "WHERE I.food_name LIKE %s ESCAPE '!';"
                 ],
                 "notes": [
                     "Get a list of recipes that include the provided ingredient"
