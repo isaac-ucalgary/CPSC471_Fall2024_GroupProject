@@ -59,11 +59,9 @@ CREATE TABLE IF NOT EXISTS Home_IMS.Recipe (
 CREATE TABLE IF NOT EXISTS Home_IMS.MealSchedule (
   recipe_name VARCHAR(255) NOT NULL,
   timestamp DATETIME NOT NULL,
-  location_name VARCHAR(255) NOT NULL,
   meal_type VARCHAR(31),
-  PRIMARY KEY (recipe_name, timestamp, location_name),
-  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE,
-  FOREIGN KEY (location_name) REFERENCES Location(name)
+  PRIMARY KEY (recipe_name, timestamp),
+  FOREIGN KEY (recipe_name) REFERENCES Recipe(recipe_name) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Home_IMS.User (
@@ -174,8 +172,8 @@ CREATE TABLE IF NOT EXISTS Home_IMS.History (
 --- MealSchedule ---
 --------------------
 -- Schedule a meal --
-INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, location_name, meal_type)
-VALUES (%s, %s, %s, %s);
+INSERT INTO Home_IMS.MealSchedule (recipe_name, timestamp, meal_type)
+VALUES (%s,  %s, %s);
 
 -- Delete a meal --
 DELETE FROM Home_IMS.MealSchedule
@@ -183,11 +181,10 @@ WHERE recipe_name = %s
       AND timestamp = %s;
 
 -- Select meals --
-SELECT recipe_name, timestamp, location_name, meal_type
+SELECT recipe_name, timestamp, meal_type
 FROM Home_IMS.MealSchedule
 WHERE recipe_name LIKE %s ESCAPE '!'
       AND timestamp BETWEEN %s AND %s
-      AND location_name LIKE %s ESCAPE '!'
       AND meal_type LIKE %s ESCAPE '!'
       ORDER BY timestamp DESC;
 
@@ -204,12 +201,6 @@ SELECT name, unit
 FROM Home_IMS.ItemType
 WHERE name LIKE %s
       AND unit LIKE %s;
-
--- TODO: Daniel I have no idea what this does --
-SELECT R.recipe_name, R.food_name, M.timestamp, M.location_name, M.meal_type
-FROM Home_IMS.MealSchedule AS M
-JOIN Home_IMS.Recipe AS R ON M.recipe_name = R.recipe_name
-WHERE R.food_name = %s;
 
 
 ------------------
@@ -620,7 +611,7 @@ SELECT DISTINCT R.recipe_name
 FROM Home_IMS.Recipe AS R
 JOIN Home_IMS.Ingredients AS I
      ON R.recipe_name = I.recipe_name
-WHERE I.food_name LIKE %s;
+WHERE I.food_name LIKE %s ESCAPE '!';
 
 
 -------------------
@@ -642,9 +633,16 @@ WHERE I.food_name = %s
       AND I.recipe_name = %s;
 
 -- View ingredients for a recipe --
-SELECT food_name
+SELECT food_name, quantity
 FROM Home_IMS.Ingredients
 WHERE recipe_name LIKE %s;
+
+-- Search inventory by ingredients --
+SELECT S.item_name, S.storage_name, S.timestamp, S.quantity
+FROM Home_IMS.Inventory AS S
+JOIN Home_IMS.Ingredients AS I ON I.food_name = S.item_name
+WHERE I.recipe_name = %s
+      ORDER BY ISNULL(S.expiry), S.expiry;
 
 
 -----------------
@@ -663,13 +661,6 @@ WHERE item_name = %s
 -- Change item quantity --
 UPDATE Home_IMS.Inventory AS I
 SET I.quantity = %s
-WHERE I.item_name = %s
-      AND I.storage_name = %s
-      AND I.timestamp = %s;
-
--- Move item storage location --
-UPDATE Home_IMS.Inventory AS I
-SET I.storage_name = %s
 WHERE I.item_name = %s
       AND I.storage_name = %s
       AND I.timestamp = %s;
@@ -705,7 +696,7 @@ FROM (
        WHERE M.timestamp <= %s
        GROUP BY I.food_name
      ) AS Required
-      JOIN (
+           LEFT JOIN (
        SELECT S.item_name, SUM(S.quantity) AS total
        FROM Home_IMS.Inventory AS S
        WHERE EXISTS (
