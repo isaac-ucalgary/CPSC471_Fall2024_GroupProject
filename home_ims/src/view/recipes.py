@@ -69,18 +69,10 @@ class RecipesView:
             widget.setEnabled(privileged)
 
     def schedule_dialog(self, entry):
-        locations = self.dba.select_locations()
-        if not locations.is_success():
-            util.open_error_dialog(window)
-            return
-
         def gen_dialog(close_dlg):
             widget = schedule_base_tpl()
             form = schedule_form_tpl()
             form.setupUi(widget)
-
-            for l in locations.get_data_list():
-                form.locationSelector.addItem(l["name"])
 
             def schedule():
                 result = self.dba.dynamic_query(
@@ -88,7 +80,6 @@ class RecipesView:
                     "Schedule a meal",
                     recipe_name=entry["recipe_name"],
                     timestamp=form.dateInput.dateTime().toPyDateTime(),
-                    location_name=form.locationSelector.currentText(),
                     meal_type=form.mealTypeInput.text()
                 )
                 if not result.is_success():

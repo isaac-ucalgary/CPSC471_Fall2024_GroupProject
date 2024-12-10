@@ -2363,7 +2363,7 @@ class Database:
             cursor:MySQLCursorDict = self.__parent._Database__cursor
 
             # Add user if it doesn't already exist
-            add_user_result = self._add_user(name=name + " (Admin)")
+            add_user_result = self._add_user(name=name)
             if add_user_result.get_exception() not in [IntegrityError, None]:
                 return add_user_result
 

@@ -1525,7 +1525,7 @@
                     "FROM Home_IMS.Inventory AS S",
                     "JOIN Home_IMS.Ingredients AS I ON I.food_name = S.item_name",
                     "WHERE I.recipe_name = %s",
-                    "ORDER BY S.expiry;"
+                    "ORDER BY ISNULL(S.expiry), S.expiry;"
                 ]
             }
         },
