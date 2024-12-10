@@ -1,8 +1,9 @@
 # Group Project
-This is a group project for the CPSC 471 Fall 2024 course at the University of Calgary.
+This application was a group project for CPSC 471 (Fall 2024) at the University of Calgary.
+Designed and developed by Dane Beliveau, Daniel Bogorad, Isaac Shiells Thomas.
 
 # Project Description
-Inventory Managment System for you, your home and your family, to help manage your daily needs, keep track of your consumable items and record waste.
+Inventory Managment System for you, your home and your family, to help manage your daily needs, keep track of your consumable items and record waste. Please see user_manual.pdf for instructions on how to use this application. 
 
 # Install 
 ## Prerequsites
@@ -50,10 +51,3 @@ Good luck.
 
 ## MacOS Install
 Even more good luck and pray to the apple gods.
-
-
-
-# Group Members
-- Dane Beliveau
-- Daniel Bogorad
-- Isaac Shiells Thomas
