@@ -3,7 +3,7 @@ This application was a group project for CPSC 471 (Fall 2024) at the University 
 Designed and developed by Dane Beliveau, Daniel Bogorad, Isaac Shiells Thomas.
 
 # Project Description
-Inventory Managment System for you, your home and your family, to help manage your daily needs, keep track of your consumable items and record waste. Please see user_manual.pdf for instructions on how to use this application. 
+Inventory Managment System for you, your home and your family, to help manage your daily needs, keep track of your consumable items and record waste.
 
 # Install 
 ## Prerequsites
